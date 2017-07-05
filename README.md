@@ -1,2 +1,3 @@
-# USTC-Software-2017
-Foundation of USTC Software 2017.
+# Biohub-Server
+
+Server scaffold for igem 2017.
