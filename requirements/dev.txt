@@ -1,0 +1,6 @@
+-r base.txt
+-r test-base.txt
+-r doc-base.txt
+-r codestyle-base.txt
+
+coloredlogs==7.0

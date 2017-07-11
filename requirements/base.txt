@@ -1,0 +1,4 @@
+Django==1.11.3
+djangorestframework==3.6.3
+channels==1.1.6
+PyMySQL==0.7.11
