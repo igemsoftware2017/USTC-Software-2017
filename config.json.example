@@ -4,6 +4,9 @@
         "USER": "",
         "PASSWORD": "",
         "HOST": "",
-        "PORT": ""
+        "PORT": "",
+        "TEST": {
+            "NAME": ""
+        }
     }
 }
