@@ -1,3 +1,4 @@
+from importlib import import_module
 from os.path import dirname, abspath, realpath
 
 
@@ -13,4 +14,4 @@ def modpath(modname):
     """
     Returns the exact directory of a package.
     """
-    return filepath(__import__(modname).__file__)
+    return filepath(import_module(modname).__file__)
