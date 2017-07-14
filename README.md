@@ -10,6 +10,7 @@ Server scaffold for Biohub (igem 2017).
 
  + Python >= 3.5.0
  + MySQL 及对应的 dev 包
+ + Windows 下需要 C/C++ 编译环境（如 MinGW）
 
 #### virtualenv
 
