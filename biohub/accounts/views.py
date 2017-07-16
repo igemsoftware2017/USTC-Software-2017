@@ -1,5 +1,5 @@
-from rest_framework import viewsets, mixins
-from rest_framework.decorators import api_view
+from rest_framework import viewsets, mixins, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
@@ -7,7 +7,8 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 
 from biohub.utils.rest import pagination, permissions as p
 
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer,\
+    ChangePasswordSerializer
 from .models import User
 
 
@@ -33,13 +34,23 @@ login = make_view(LoginSerializer)
 
 
 @api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def logout(request):
-    if not request.user.is_authenticated():
-        raise NotFound
-
     auth_logout(request)
 
     return Response('OK')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+
+    serializer = ChangePasswordSerializer(
+        data=request.data, context=dict(request=request))
+
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return Response('OK')
 
 
 class UserViewSet(

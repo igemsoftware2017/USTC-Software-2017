@@ -60,3 +60,36 @@ class LoginSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         return self.__user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+
+    old = serializers.CharField(required=True)
+    new1 = serializers.CharField(required=True)
+    new2 = serializers.CharField(required=True)
+
+    def validate_old(self, value):
+        username = self.context['request'].user.username
+
+        if authenticate(username=username, password=value) is None:
+            raise serializers.ValidationError(
+                'Old password mismatched!')
+
+        return value
+
+    def validate(self, data):
+
+        new, new2 = data['new1'], data['new2']
+        if new and new2 and new != new2:
+            raise serializers.ValidationError(
+                'New passwords mismatched!')
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+
+        user.set_password(validated_data['new1'])
+        user.save()
+
+        return user
