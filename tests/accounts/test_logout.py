@@ -22,4 +22,4 @@ class Test(APITestCase):
         self.client.force_authenticate(None)
         resp = self.client.get('/api/users/logout/')
 
-        self.assertEqual(404, resp.status_code)
+        self.assertEqual(403, resp.status_code)
