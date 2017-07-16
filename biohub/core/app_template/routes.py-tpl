@@ -1,3 +1,0 @@
-{{ unicode_literals }}from rest_framework import routers
-
-# Place your route definition here.
