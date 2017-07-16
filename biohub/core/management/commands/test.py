@@ -37,7 +37,7 @@ class Command(BaseCommand):
         else:
             tests = [TESTS_PATH]
 
-        pytest_args = [*tests, '-s', '--reuse-db']
+        pytest_args = [*tests, '-s', '--reuse-db', '--nomigrations']
 
         if recreate:
             pytest_args.extend(['--create-db'])
