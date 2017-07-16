@@ -41,3 +41,8 @@ class Test(APITestCase):
 
         resp = self._patch(self.you)
         self.assertEqual(resp.status_code, 403)
+
+        resp = self._patch(self.me, education='')
+        self.assertDictContainsSubset({
+            'education': ''
+        }, resp.data)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'channels',
     'biohub.core',
     'biohub.accounts',
+    'biohub.notices',
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,14 @@ TEMPLATES = [
             ],
         },
     },
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'NAME': 'notices',
+        'OPTIONS': {
+            'autoescape': False,
+            'builtins': ['biohub.notices.template.filters']
+        }
+    }
 ]
 
 WSGI_APPLICATION = 'main.wsgi.application'
