@@ -11,7 +11,7 @@ def factory(base_class_name, **options):
     members of the new pagination class.
     """
 
-    base_cls = getattr(pagination, base_class_name, 'None')
+    base_cls = getattr(pagination, base_class_name, None)
 
     assert base_cls is not None, \
         'Cannot resolve %r into pagination class.' % base_class_name
