@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
+    # 'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
     'biohub.core',
@@ -138,39 +138,9 @@ REST_FRAMEWORK = {
 
 # Extra configurations
 
+from biohub.core.conf import settings as biohub_settings  # noqa:E402
 
-def load_extra_config():
-    """
-    Loads customized configuration specified via environment
-    `BIOHUB_CONFIG_PATH`.
-    """
+DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
+INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS
 
-    CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
-
-    if CONFIG_ENVIRON in os.environ:
-
-        import json
-
-        config_path = os.environ[CONFIG_ENVIRON]
-
-        try:
-            with open(config_path, 'r') as fp:
-                config_dict = json.load(fp)
-
-                # Setup database
-                DATABASES['default'].update(config_dict.get('DATABASE', {}))
-
-        except OSError as e:
-
-            import errno
-            from django.core.exceptions import ImproperlyConfigured
-
-            # Config file not exists
-            if e.errno == errno.ENOENT:
-                raise ImproperlyConfigured(
-                    "Config file %r doesn't exist." % config_path
-                )
-
-
-load_extra_config()
-del load_extra_config  # Clean up the context
+del biohub_settings
