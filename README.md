@@ -2,6 +2,8 @@
 
 Server scaffold for Biohub (igem 2017).
 
+**[组内文档](https://github.com/hsfzxjy/Biohub-Server/wiki)**
+
 ## 配置及开发相关要求
 
 ### 关于环境
@@ -147,31 +149,3 @@ logger.warn('WARNING message')
  + Windows 环境下请打开 git 的 `Auto CRLF` 选项（`git config --global core.autocrlf true`，默认已开启）以保持跨平台兼容性
  + `manage.py startapp` 命令已被重写，默认在 `biohub/` 下创建 app 目录
  + `manage.py` 已将 **项目的根目录** 加入 python 的搜索路径中，为防止包冲突，引用 `biohub` 中模块时需使用完整路径（如 `biohub.accounts.models.User` 而不是 `accounts.models.User`）,相对导入时除外
-
-## 初步设计
-
-### 插件系统概述
-
- + biohub 是一个基于 django 的插件系统
- + 插件 是一个合法的 django app，同时带有一些附加信息（描述、作者、依赖等）
- + 插件可以被热加载，不能被热卸载（插件依赖难以处理），但可以被热禁用，被禁用的插件无法被用户使用
- + biohub 前端是 Vue.js 构筑的单页应用，插件应提供基于 JSON 的 RESTful API 与前端通信，对于耗时/不定时操作，基于 django-channels 通过 WebSocket 与前端通信
- + biohub 应提供完整的文档及相关工具（脚手架、封装良好的工具库）供其他开发者使用
-
-### 自带模块
-
-根据需求，biohub 须有如下模块：
-
- + 用户系统（`accounts` app，对 django 内置 `auth` 模块进行扩展）
- + 通知系统（？ 可能并入交流平台中，未定）
- + 插件管理系统
-
-及如下默认插件：
-
- + 交流平台
- + ABACUS
- + BioBrick
- + 图像处理
- + 反向工程
-
-各模块具体设计待议。
