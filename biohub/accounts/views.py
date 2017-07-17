@@ -64,3 +64,4 @@ class UserViewSet(
     pagination_class = pagination.factory('CursorPagination', page_size=20)
     permission_classes = [
         p.C(p.IsAuthenticatedOrReadOnly) & p.check_owner()]
+    filter_fields = ('username', 'first_name', 'last_name')
