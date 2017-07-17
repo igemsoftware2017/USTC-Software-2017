@@ -5,11 +5,13 @@ class settings:
 
     DEFAULT_DATABASE = {}
     BIOHUB_PLUGINS = []
+    TIMEZONE = 'UTC'
 
 
 mapping = {
     'DEFAULT_DATABASE': 'DATABASE',
-    'BIOHUB_PLUGINS': 'PLUGINS'
+    'BIOHUB_PLUGINS': 'PLUGINS',
+    'TIMEZONE': 'TIMEZONE'
 }
 
 
