@@ -13,6 +13,8 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         exclude = ('password',)
+        read_only_fields = ('date_joined', 'is_active', 'is_staff',
+                            'is_superuser', 'last_logined')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
