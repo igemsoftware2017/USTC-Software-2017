@@ -19,6 +19,17 @@ class Test(APITestCase):
             'id': self.me.id
         }, resp.data)
 
+    def test_retrieve_me(self):
+        url = '/api/users/me/'
+        resp = self.client.get(url)
+
+        self.assertEqual(resp.status_code, 404)
+
+        self.client.force_authenticate(self.me)
+        resp = self.client.get(url)
+
+        self.assertEqual(resp.data['id'], self.me.id)
+
     def test_list(self):
         resp = self.client.get(reverse('api:accounts:user-list'))
 
