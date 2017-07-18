@@ -59,8 +59,23 @@ class UserViewSet(
         mixins.UpdateModelMixin,
         viewsets.GenericViewSet):
 
+    lookup_value_regex = r'\d+|me'
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = pagination.factory('CursorPagination', page_size=20)
     permission_classes = [
         p.C(p.IsAuthenticatedOrReadOnly) & p.check_owner()]
+    filter_fields = ('username', 'first_name', 'last_name')
+
+    def get_object(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        if self.kwargs[lookup_url_kwarg] == 'me':
+
+            if not self.request.user.is_authenticated():
+                raise NotFound
+
+            return self.request.user
+
+        return super(UserViewSet, self).get_object()
