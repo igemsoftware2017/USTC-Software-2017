@@ -1,0 +1,9 @@
+from biohub.core.plugins import PluginConfig
+
+
+class {{ camel_case_plugin_name }}Config(PluginConfig):
+
+    name = '{{ plugin_mod_path }}'
+    title = ''
+    author = ''
+    description = ''
