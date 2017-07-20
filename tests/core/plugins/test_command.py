@@ -36,9 +36,9 @@ class Test(TestCase):
                     result.left_only,
                     result.right_only))
 
-    def test_command(self):
-        call_command('newplugin', 'test', 'tests.core.plugins.test',
-                     directory=CWD)
+    def test_newplugin(self):
+        call_command('newplugin', 'tests.core.plugins.test',
+                     directory=CWD, verbosity=0)
         self.assertDirsIdentical(TEST_PATH, EXPECT_PATH)
 
     def tearDown(self):
