@@ -8,6 +8,7 @@ from django.conf import settings
 from django.apps import apps
 
 from biohub.utils import module as module_util
+from biohub.core.conf import settings as biohub_settings, dump_config
 
 from .config import PluginConfig
 from . import exceptions
@@ -58,7 +59,7 @@ class PluginManager(object):
     def migrating(self):
         return self._db_lock.locked
 
-    def _populate_plugins(self, plugin_names):
+    def populate_plugins(self, plugin_names):
         """
         Update plugins storage after new plugins installed.
         """
@@ -76,14 +77,14 @@ class PluginManager(object):
 
         self.plugin_infos[plugin_name] = PluginInfo(*properties)
 
-    def _validate_plugins(self, plugins):
+    def _validate_plugins(self, plugin_names):
         """
         Filter and wipe out existing plugins.
         """
-        plugins = [plugin for plugin in plugins
-                   if plugin not in settings.INSTALLED_APPS]
+        plugin_names = [plugin for plugin in plugin_names
+                        if plugin not in settings.INSTALLED_APPS]
 
-        for name in plugins:
+        for name in plugin_names:
 
             if not module_util.is_valid_module_path(name):
                 raise exceptions.InstallationError(
@@ -93,13 +94,14 @@ class PluginManager(object):
             # Get the plugin config class
             plugin_config_path = module_util.module_from_path(name)\
                 .default_app_config
-            plugin_config = module_util.object_from_path(plugin_config_path)
+            plugin_config_class = module_util.object_from_path(
+                plugin_config_path)
 
-            validate_plugin_config(name, plugin_config)
+            validate_plugin_config(name, plugin_config_class)
 
-        return plugins
+        return plugin_names
 
-    def _invalidate_urlconf(self, plugins):
+    def _invalidate_urlconf(self, plugin_names):
         """
         Django uses LRU Cache Strategy to cache up resolvers.
         The cache content can be cleared by calling `.cache_clear()`.
@@ -111,13 +113,14 @@ class PluginManager(object):
         except Exception as e:
             raise exceptions.URLConfError(e)
 
-    def install(self, plugins,
+    def install(self, plugin_names,
+                update_config=False,
                 invalidate_urlconf=True,
                 migrate_database=False, migrate_options=None):
         """
-        Install a list of plugins specified by `plugins`.
+        Install a list of plugins specified by `plugin_names`.
 
-        `plugins` should be a list of dot-separated python module path,
+        `plugin_names` should be a list of dot-separated python module path,
         existing plugins will be ignored.
 
         By setting `invalidate_urlconf` to True (default), biohub will
@@ -128,37 +131,49 @@ class PluginManager(object):
         can be specified using `migrate_options` (should be a dict).
         """
 
-        plugins = self._validate_plugins(plugins)
+        plugin_names = self._validate_plugins(plugin_names)
 
         with self._install_lock:
 
-            if not plugins:
-                return plugins
+            if not plugin_names:
+                return plugin_names
 
             # Update django apps list.
+            if not apps.ready:
+                raise exceptions.InstallationError(
+                    "Django app registry isn't ready yet.")
+
+            apps.app_configs = OrderedDict()
+            apps.apps_ready = apps.models_ready = apps.ready = False
+
             try:
-                apps.set_installed_apps(
-                    list(settings.INSTALLED_APPS) + plugins)
+                apps.clear_cache()
+                apps.populate(list(settings.INSTALLED_APPS) + plugin_names)
             except Exception as e:
                 raise exceptions.InstallationError(e)
 
             # Invalidate URLConf
             if invalidate_urlconf:
-                self._invalidate_urlconf(plugins)
+                self._invalidate_urlconf(plugin_names)
 
             # Migrate database
             if migrate_database:
-                self.prepare_database(plugins, **(migrate_options or {}))
+                self.prepare_database(plugin_names, **(migrate_options or {}))
 
-            self._populate_plugins(plugins)
+            self.populate_plugins(plugin_names)
 
-        return plugins
+            biohub_settings.BIOHUB_PLUGINS.extend(plugin_names)
+            if update_config:
+                dump_config()
 
-    def prepare_database(self, plugins, new_process=False,
+        return plugin_names
+
+    def prepare_database(self, plugin_names, new_process=False,
                          no_input=False, no_output=False,
                          verbosity=0, test=False):
         """
-        The function is to migrate models of plugins specified by `plugins`.
+        The function is to migrate models of plugins specified by
+        `plugin_names`.
         Note that it will not check whether the plugins are installed or not.
 
         The function is actually a wrapper of biohub command `migrateplugin`.
@@ -174,7 +189,7 @@ class PluginManager(object):
 
         with self._db_lock:
             try:
-                for plugin in plugins:
+                for plugin in plugin_names:
 
                     self._migrate_plugin(
                         plugin, new_process,
@@ -184,23 +199,29 @@ class PluginManager(object):
             except Exception as e:
                 raise exceptions.DatabaseError(e)
 
-    def _migrate_plugin(self, plugin, new_process=False,
+    def _migrate_plugin(self, plugin_name, new_process=False,
                         no_input=False, no_output=False,
                         verbosity=0, test=False):
         if new_process:
             args = filter(bool, [
                 'manage.py',
                 'migrateplugin',
-                plugin,
+                plugin_name,
                 '--verbosity=%s' % verbosity,
                 '--no-input' if no_input else '',
                 '--no-output' if no_output else '',
                 '--test' if test else ''
             ])
-            subprocess.call(list(args), stdout=sys.stdout)
+
+            p = subprocess.Popen(
+                list(args),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            sys.stdout.write(stdout.decode('utf-8'))
+            sys.stderr.write(stderr.decode('utf-8'))
         else:
             call_command(
-                'migrateplugin', plugin,
+                'migrateplugin', plugin_name,
                 interactive=no_input,
                 no_output=no_output,
                 verbosity=verbosity,
