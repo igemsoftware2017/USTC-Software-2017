@@ -1,20 +1,13 @@
-from django.apps import apps
-from django.core.management import BaseCommand, call_command
+from django.core.management import call_command
 
-from biohub.core.plugins import install
+from ._base import PluginCommand
 
 
-class Command(BaseCommand):
+class Command(PluginCommand):
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            'plugin',
-            help='mod_path of the plugin')
+    help = 'Creates new migration(s) for plugins.'
 
     def handle(self, plugin, **options):
-        install([plugin])
+        super(Command, self).handle(plugin, **options)
 
-        for app_config in apps.app_configs.values():
-
-            if app_config.name == plugin:
-                call_command('makemigrations', app_config.label)
+        call_command('makemigrations', self.plugin_config.label)
