@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
+from django.db.models.signals import pre_delete
 
 MAX_LEN_FOR_POST_CONTENT = 1000
 MAX_LEN_FOR_COMMENT_CONTENT = 300
@@ -9,20 +11,20 @@ MAX_LEN_FOR_THREAD_TITLE = 100
 class Thread(models.Model):
     title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE)
     content = models.TextField(
-        blank=True, default='', max_length=MAX_LEN_FOR_POST_CONTENT,)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
-    # update_time: The time the thread is updated by its author.
-    # It should be set to the current time automatically.
+        blank=True, default='', max_length=MAX_LEN_FOR_POST_CONTENT)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
-    # last_post_time: The time the last reply is posted.
-    last_post_time = models.DateTimeField('time of last reply', null=True)
-    # post_num: the number of the replies posted.
-    post_num = models.IntegerField(default=0)
     # Automatically set the pub_time to now when the object is first created.
     pub_time = models.DateField('publish date', auto_now_add=True)
     # is_visible: defines whether the thread is visible to the public.
     is_visible = models.BooleanField(default=True)
+
+    def hide(self):
+        self.is_visible = False
+
+    def show(self):
+        self.is_visible = True
 
 
 class Post(models.Model):
@@ -40,6 +42,12 @@ class Post(models.Model):
     down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
 
+    def hide(self):
+        self.is_visible = False
+
+    def show(self):
+        self.is_visible = True
+
 
 # Inherit Post to support comments of comments.
 class Comment(Post):
@@ -48,3 +56,16 @@ class Comment(Post):
         Post, on_delete=models.SET_NULL, null=True
     )
     content = models.TextField(blank=False, max_length=MAX_LEN_FOR_COMMENT_CONTENT)
+
+
+@receiver(pre_delete, sender=Thread)
+def hide_attached_posts(instance, **kwargs):
+    for post in instance.post_set.all():
+        post.hide()
+
+
+@receiver(pre_delete, sender=Post)
+def hide_attached_comments(instance, **kwargs):
+    for comment in instance.comment_set.all():
+        comment.hide()
+# TODO: test if it works on deleting comments
