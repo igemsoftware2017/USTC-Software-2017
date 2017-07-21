@@ -11,7 +11,6 @@ class Test(APITestCase):
             'username': 'user1',
             'email': '123@123.com',
             'password': 'password',
-            'password2': 'password'
         }
 
         if drops is not None:
@@ -27,24 +26,13 @@ class Test(APITestCase):
 
         self.assertEqual(resp.status_code, 200)
 
-    def test_mismatch(self):
-        resp = self._post_register(password2='2333')
-
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn(b'mismatch', resp.content)
-
     def test_empty(self):
         resp = self._post_register(drops=['password'])
 
         self.assertEqual(resp.status_code, 400)
         self.assertIn(b'required', resp.content)
 
-        resp = self._post_register(drops=['password2'])
-
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn(b'required', resp.content)
-
-        resp = self._post_register(password='', password2='')
+        resp = self._post_register(password='')
 
         self.assertEqual(resp.status_code, 400)
         self.assertIn(b'blank', resp.content)

@@ -7,3 +7,4 @@ PyMySQL==0.7.11
 numpy==1.13.1
 scipy==0.19.1
 biopython==1.70
+filelock==2.0.11

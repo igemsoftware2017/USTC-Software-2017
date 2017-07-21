@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'biohub.core',
     'biohub.accounts',
     'biohub.notices',
+    'biohub.core.plugins',
 ]
 
 MIDDLEWARE = [

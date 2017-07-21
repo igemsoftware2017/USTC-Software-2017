@@ -19,18 +19,7 @@ class UserSerializer(ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
 
-    password2 = serializers.CharField(required=True)
-
-    def validate(self, data):
-        password, password2 = data['password'], data['password2']
-        if password and password2 and password != password2:
-            raise serializers.ValidationError(
-                'Passwords mismatched!')
-
-        return data
-
     def create(self, validated_data):
-        validated_data.pop('password2', None)
         password = validated_data.pop('password')
 
         user = User(**validated_data)
@@ -41,7 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email')
+        fields = ('username', 'password', 'email')
 
 
 class LoginSerializer(serializers.Serializer):
