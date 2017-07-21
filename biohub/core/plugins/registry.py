@@ -195,7 +195,8 @@ class PluginManager(object):
                         plugin, new_process,
                         no_input, no_output,
                         verbosity, test)
-
+            except exceptions.DatabaseError as e:
+                raise e
             except Exception as e:
                 raise exceptions.DatabaseError(e)
 
