@@ -10,8 +10,6 @@ from django.utils.functional import LazyObject, empty
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
 
-manager = None
-
 mapping = {
     'DEFAULT_DATABASE': 'DATABASE',
     'BIOHUB_PLUGINS': 'PLUGINS',
@@ -31,19 +29,6 @@ class LazySettings(LazyObject):
         Returns a boolean indicating whether the settings is loaded.
         """
         return self._wrapped is not empty
-
-    def __init__(self, *args, **kwargs):
-        super(LazySettings, self).__init__(*args, **kwargs)
-
-        class settings:
-
-            DEFAULT_DATABASE = {}
-            BIOHUB_PLUGINS = []
-            TIMEZONE = 'UTC'
-
-        global manager
-
-        manager = SettingsManager(settings)
 
     def _setup(self):
 
@@ -70,6 +55,7 @@ class LazySettings(LazyObject):
         super(LazySettings, self).__setattr__(name, value)
 
     def __delattr__(self, name):
+
         super(LazySettings, self).__delattr__(name)
         self.__dict__.pop(name, None)
 
@@ -176,6 +162,7 @@ class SettingsManager(object):
 
 
 settings = LazySettings()
+manager = SettingsManager(Settings())
 
 load_config = manager.load
 dump_config = manager.dump
