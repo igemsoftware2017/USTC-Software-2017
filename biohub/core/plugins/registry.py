@@ -219,6 +219,10 @@ class PluginManager(object):
             stdout, stderr = p.communicate()
             sys.stdout.write(stdout.decode('utf-8'))
             sys.stderr.write(stderr.decode('utf-8'))
+
+            if p.returncode != 0:
+                raise exceptions.DatabaseError(
+                    'Migration processreturns non-zero exit code.')
         else:
             call_command(
                 'migrateplugin', plugin_name,
