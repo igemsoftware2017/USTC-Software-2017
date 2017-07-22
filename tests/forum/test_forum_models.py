@@ -43,12 +43,11 @@ def create_new_comment(thread, post, author, **kwargs):
 
 
 class ThreadModelTests(TestCase):
-    def set_up(self):
+    def setUp(self):
         self.user = create_new_user()
         self.studio = create_new_studio(self.user)
 
     def test_delete_a_thread_those_posts_and_comments_should_hide(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post1 = create_new_post(thread, self.user)
         post2 = create_new_post(thread, self.user)
@@ -63,7 +62,6 @@ class ThreadModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment2.id).is_visible, False)
 
     def test_hide_and_show_a_thread_and_the_actions_of_those_posts_and_comments(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post2 = create_new_post(thread, self.user)
         comment2 = create_new_comment(thread, post2, self.user)
@@ -77,7 +75,6 @@ class ThreadModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment2.id).is_visible, True)
 
     def test_delete_thread_queryset_and_posts_and_comments_should_hide(self):
-        self.set_up()
         thread1 = create_new_thread(self.user, self.studio)
         thread2 = create_new_thread(self.user, self.studio)
         post1 = create_new_post(thread1, self.user)
@@ -90,12 +87,11 @@ class ThreadModelTests(TestCase):
 
 
 class PostModelTests(TestCase):
-    def set_up(self):
+    def setUp(self):
         self.user = create_new_user()
         self.studio = create_new_studio(self.user)
 
     def test_delete_a_post_those_comments_should_hide(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post = create_new_post(thread, self.user)
         comment = create_new_comment(thread, post, self.user)
@@ -104,7 +100,6 @@ class PostModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment.id).is_visible, False)
 
     def test_hide_and_show_a_post_and_the_actions_of_those_comments(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post = create_new_post(thread, self.user)
         comment = create_new_comment(thread, post, self.user)
@@ -118,7 +113,6 @@ class PostModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment.id).is_visible, True)
 
     def test_delete_post_queryset_and_comments_should_hide(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post1 = create_new_post(thread, self.user, up_vote_num=10)
         post2 = create_new_post(thread, self.user, up_vote_num=10)
@@ -130,12 +124,11 @@ class PostModelTests(TestCase):
 
 
 class CommentModelTests(TestCase):
-    def set_up(self):
+    def setUp(self):
         self.user = create_new_user()
         self.studio = create_new_studio(self.user)
 
     def test_delete_a_comment_those_attached_comments_should_hide(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post = create_new_post(thread, self.user)
         comment1 = create_new_comment(thread, post, self.user)
@@ -151,7 +144,6 @@ class CommentModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment111.id).is_visible, False)
 
     def test_hide_and_show_a_comment_and_the_action_of_the_attached_comments(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post = create_new_post(thread, self.user)
         comment1 = create_new_comment(thread, post, self.user)
@@ -167,7 +159,6 @@ class CommentModelTests(TestCase):
         self.assertIs(Comment.objects.get(pk=comment111.id).is_visible, True)
 
     def test_delete_comment_queryset_and_attached_comments_should_hide(self):
-        self.set_up()
         thread = create_new_thread(self.user, self.studio)
         post = create_new_post(thread, self.user)
         comment1 = create_new_comment(thread, post, self.user, up_vote_num=10)
@@ -177,3 +168,68 @@ class CommentModelTests(TestCase):
         Comment.objects.filter(up_vote_num=10).delete()
         self.assertIs(Comment.objects.get(pk=comment11.id).is_visible, False)
         self.assertIs(Comment.objects.get(pk=comment21.id).is_visible, False)
+
+
+class StudioModelTests(TestCase):
+    def test_delete_studio_and_threads_should_hide(self):
+        user = create_new_user()
+        studio = create_new_studio(user)
+        thread = create_new_thread(user, studio)
+        self.assertIs(thread.is_visible, True)
+        studio.delete()
+        self.assertIs(Thread.objects.get(pk=thread.id).is_visible, False)
+
+    def test_if_all_users_quit_the_studio_should_be_deleted(self):
+        user1 = create_new_user()
+        studio1 = create_new_studio(user1)
+        user2 = create_new_user()
+        studio1.users.add(user2)
+        studio2 = Studio(name=create_random_string())
+        studio2.save()
+        studio2.users.add(user2)
+        studio3 = create_new_studio(user2)
+        user1.studio_set.remove(studio1)
+        user2.studio_set.remove(studio1, studio3)
+        Studio.objects.get(pk=studio2.id)
+        self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio1.id)
+        self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio3.id)
+
+    def test_if_studio_kicks_everyone_out_the_studio_should_be_deleted(self):
+        user1 = create_new_user()
+        studio = create_new_studio(user1)
+        user2 = create_new_user()
+        studio.users.add(user2)
+        studio.users.remove(user1, user2)
+        self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio.id)
+
+    def test_if_all_user_deleted_the_studio_should_be_deleted(self):
+        user1 = create_new_user()
+        studio = create_new_studio(user1)
+        user1.delete()
+        self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio.id)
+
+    # def test_if_a_user_clear_all_his_studio_and_cause_a_studio_to_have_no_member_that_should_be_deleted(self):
+    #     user1 = create_new_user()
+    #     studio = create_new_studio(user1)
+    #     user2 = create_new_user()
+    #     studio.users.add(user2)
+    #     user2.studio_set.clear()
+    #     self.assertEqual(studio.users.count(), 1)
+    #     user1.studio_set.clear()
+    #     self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio.id)
+
+    def test_delete_user_the_relation_will_be_deleted_at_the_same_time(self):
+        user1 = create_new_user()
+        studio = create_new_studio(user1)
+        user2 = create_new_user()
+        studio.users.add(user2)
+        user1.delete()
+        self.assertEqual(studio.users.count(), 1)
+        self.assertRaises(User.DoesNotExist, studio.users.get, pk=user1.id)
+
+    def test_delete_studio_the_relation_will_be_deleted_at_the_same_time(self):
+        user = create_new_user()
+        studio = create_new_studio(user)
+        studio.delete()
+        self.assertEqual(user.studio_set.count(), 0)
+        self.assertRaises(Studio.DoesNotExist, user.studio_set.get, pk=studio.id)

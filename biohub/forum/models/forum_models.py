@@ -107,8 +107,14 @@ def hide_attached_threads(instance, **kwargs):
         thread.hide()
 
 
-@receiver(m2m_changed, sender=Studio.users.through, action='post_remove')
-def delete_studio_with_no_user(instance, pk_set, **kwargs):
+@receiver(m2m_changed, sender=Studio.users.through)
+def delete_studio_with_no_user__m2m(instance, pk_set, action, **kwargs):
+    # Warning: Because using post_clear signal we can't get pk_set,
+    # which means we don't know what relations have been cleared.
+    # So please don't use something like user.studio_set.clear()
+    # That will leave some empty studio.
+    if action != 'post_remove':
+        return
     studios = []
     # consider two situations: user.studio_set.remove(s) and studio.users.remove(u)
     if isinstance(instance, Studio):
@@ -119,4 +125,14 @@ def delete_studio_with_no_user(instance, pk_set, **kwargs):
     for studio in studios:
         if studio.users.count() == 0:
             studio.delete()
-            studio.save()
+            # don't save after delete...'
+
+
+@receiver(pre_delete, sender=User)
+def delete_studio_with_no_user__del(instance, **kwargs):
+    studios = instance.studio_set.all()
+    for studio in studios:
+        # if the studio has only one user left, that means after this deletion,
+        # the studio will has no user left
+        if studio.users.count() == 1:
+            studio.delete()
