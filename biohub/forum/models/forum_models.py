@@ -80,7 +80,7 @@ class Post(models.Model):
 class Comment(Post):
     # Like Post, the comment won't be truly deleted if the post is deleted.
     # Note: relate_name is set, please use post.comments.all() rather than post.comment_set.all()
-    post = models.ForeignKey(
+    reply_to = models.ForeignKey(
         Post, on_delete=models.SET_NULL, null=True, related_name='comments'
     )
 
