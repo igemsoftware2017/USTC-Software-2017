@@ -41,10 +41,25 @@ class Settings(object):
 
         return value
 
-    def _set_settings_values(self, source):
+    def _set_settings_values(self, source=None):
         """
         Validate and store configuration items specified by `source` (a dict).
+
+        If source is `None`, the function will use default values to fill up
+        unset configuration items.
         """
+
+        if source is None:
+
+            for dest_name, (org_name, default_value) in mapping.items():
+
+                if not hasattr(self, dest_name):
+                    value = default_value() if callable(default_value) \
+                        else default_value
+
+                    setattr(self, dest_name, value)
+
+            return
 
         for dest_name, (org_name, default_value) in mapping.items():
 
@@ -200,9 +215,6 @@ class SettingsManager(object):
 
         path = self._resolve_config_path(path)
 
-        if path is None:
-            return
-
         locking = self._file_lock.is_locked
 
         with self._file_lock:
@@ -210,10 +222,13 @@ class SettingsManager(object):
             if locking:
                 return
 
-            with open(path, 'r') as fp:
-                source = json.load(fp)
+            if path is None:
+                source = None
+            else:
+                with open(path, 'r') as fp:
+                    source = json.load(fp)
 
-                self._settings_object._set_settings_values(source)
+            self._settings_object._set_settings_values(source)
 
     def dump(self, path=None):
         """
