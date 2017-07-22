@@ -30,8 +30,11 @@ class Thread(models.Model):
     is_visible = models.BooleanField(default=True)
     is_sticky = models.BooleanField(default=False)
     # choose one from the following two.
-    part = models.ForeignKey(Part, on_delete=models.CASCADE,)
-    studio = models.ForeignKey(Studio, on_delete=models.CASCADE,)
+    # Though the two field's default value are both None, one of them must be provided values.
+    # TODO: add check in serializers to make sure one of them (and only one of them) has values. \
+    # Or, can we check in models?
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, null=True, default=None)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, null=True, default=None)
 
     def hide(self):
         self.is_visible = False
