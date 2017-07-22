@@ -19,6 +19,7 @@ class Thread(models.Model):
     pub_time = models.DateField('publish date', auto_now_add=True)
     # is_visible: defines whether the thread is visible to the public.
     is_visible = models.BooleanField(default=True)
+    is_sticky = models.BooleanField(default=False)
 
     def hide(self):
         self.is_visible = False
@@ -68,4 +69,3 @@ def hide_attached_posts(instance, **kwargs):
 def hide_attached_comments(instance, **kwargs):
     for comment in instance.comment_set.all():
         comment.hide()
-# TODO: test if it works on deleting comments
