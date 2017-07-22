@@ -1,7 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.dispatch import receiver
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, m2m_changed
+
+from biohub.accounts.models import User
 
 from .bio_models import Part
 
@@ -32,8 +34,9 @@ class Thread(models.Model):
     # Though the two field's default value are both None, one of them must be provided values.
     # TODO: add check in serializers to make sure one of them (and only one of them) has values. \
     # Or, can we check in models?
-    part = models.ForeignKey(Part, on_delete=models.CASCADE, null=True, default=None)
-    studio = models.ForeignKey(Studio, on_delete=models.CASCADE, null=True, default=None)
+    # Deleting a studio or the bio-part, the threads won't be truly deleted. But they will hide.
+    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, default=None)
+    studio = models.ForeignKey(Studio, on_delete=models.SET_NULL, null=True, default=None)
 
     def hide(self):
         self.is_visible = False
@@ -95,3 +98,25 @@ def hide_attached_posts(instance, **kwargs):
 def hide_attached_comments(instance, **kwargs):
     for comment in instance.comments.all():
         comment.hide()
+
+
+@receiver(pre_delete, sender=Studio)
+@receiver(pre_delete, sender=Part)
+def hide_attached_threads(instance, **kwargs):
+    for thread in instance.thread_set.all():
+        thread.hide()
+
+
+@receiver(m2m_changed, sender=Studio.users.through, action='post_remove')
+def delete_studio_with_no_user(instance, pk_set, **kwargs):
+    studios = []
+    # consider two situations: user.studio_set.remove(s) and studio.users.remove(u)
+    if isinstance(instance, Studio):
+        studios.append(instance)
+    elif isinstance(instance, User):
+        for pk in pk_set:
+            studios.append(Studio.objects.get(pk=pk))
+    for studio in studios:
+        if studio.users.count() == 0:
+            studio.delete()
+            studio.save()
