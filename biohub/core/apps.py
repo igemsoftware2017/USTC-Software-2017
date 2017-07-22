@@ -4,7 +4,7 @@ from django.utils.module_loading import autodiscover_modules
 
 class CoreConfig(AppConfig):
 
-    name = 'core'
+    name = 'biohub.core'
     label = 'biohub_core'
 
     def ready(self):
