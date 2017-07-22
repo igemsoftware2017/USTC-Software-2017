@@ -6,10 +6,10 @@ import importlib
 from collections import OrderedDict, namedtuple
 
 from django.core.management import call_command
-from django.conf import settings
+from django.conf import settings as django_settings
 from django.apps import apps
 
-from biohub.utils import module as module_util
+from biohub.utils import module as module_util, path as path_util
 from biohub.utils.collections import unique
 from biohub.core.conf import settings as biohub_settings, dump_config
 
@@ -21,6 +21,8 @@ logger = logging.getLogger('biohub.plugins')
 REQUIRED_PROPERTIES = ('title', 'author', 'description',)
 
 PluginInfo = namedtuple('PluginInfo', REQUIRED_PROPERTIES)
+
+manage_py_file_path = path_util.join(django_settings.BIOHUB_DIR, 'manage.py')
 
 
 def validate_plugin_config(plugin_name, config_class):
@@ -87,7 +89,7 @@ class PluginManager(object):
         Returns the names of apps to be populated.
         """
 
-        return unique(settings.INSTALLED_APPS + self.available_plugins)
+        return unique(django_settings.INSTALLED_APPS + self.available_plugins)
 
     def populate_plugins(self, plugin_names):
         """
@@ -306,7 +308,7 @@ class PluginManager(object):
                         verbosity=0, test=False):
         if new_process:
             args = filter(bool, [
-                'manage.py',
+                manage_py_file_path,
                 'migrateplugin',
                 plugin_name,
                 '--verbosity=%s' % verbosity,
