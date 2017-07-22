@@ -5,8 +5,7 @@ from django.db.models.signals import pre_delete
 
 from .bio_models import Part
 
-MAX_LEN_FOR_POST_CONTENT = 1000
-MAX_LEN_FOR_COMMENT_CONTENT = 300
+MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
 
 
@@ -20,7 +19,7 @@ class Studio(models.Model):
 class Thread(models.Model):
     title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE)
     content = models.TextField(
-        blank=True, default='', max_length=MAX_LEN_FOR_POST_CONTENT)
+        blank=True, default='', max_length=MAX_LEN_FOR_CONTENT)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
@@ -38,9 +37,13 @@ class Thread(models.Model):
 
     def hide(self):
         self.is_visible = False
+        for post in self.post_set.all():
+            post.hide()
 
     def show(self):
         self.is_visible = True
+        for post in self.post_set.all():
+            post.show()
 
 
 class Post(models.Model):
@@ -49,7 +52,7 @@ class Post(models.Model):
     # That is, they can't be read by the people except the author himself.
     thread = models.ForeignKey(
         Thread, on_delete=models.SET_NULL, null=True)
-    content = models.TextField(blank=False, max_length=MAX_LEN_FOR_POST_CONTENT,)
+    content = models.TextField(blank=False, max_length=MAX_LEN_FOR_CONTENT, )
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
@@ -60,18 +63,22 @@ class Post(models.Model):
 
     def hide(self):
         self.is_visible = False
+        for comment in self.comments.all():
+            comment.hide()
 
     def show(self):
         self.is_visible = True
+        for comment in self.comments.all():
+            comment.show()
 
 
 # Inherit Post to support comments of comments.
 class Comment(Post):
     # Like Post, the comment won't be truly deleted if the post is deleted.
+    # Note: relate_name is set, please use post.comments.all() rather than post.comment_set.all()
     post = models.ForeignKey(
-        Post, on_delete=models.SET_NULL, null=True
+        Post, on_delete=models.SET_NULL, null=True, related_name='comments'
     )
-    content = models.TextField(blank=False, max_length=MAX_LEN_FOR_COMMENT_CONTENT)
 
 
 @receiver(pre_delete, sender=Thread)
