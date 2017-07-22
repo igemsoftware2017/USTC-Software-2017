@@ -1,0 +1,14 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Welcome to Biohub",
+            "title": "Home"
+        },
+        {
+            "location": "/#welcome-to-biohub",
+            "text": "",
+            "title": "Welcome to Biohub"
+        }
+    ]
+}
