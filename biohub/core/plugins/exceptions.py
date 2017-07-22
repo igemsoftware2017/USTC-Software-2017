@@ -1,3 +1,7 @@
+class RemovalError(Exception):
+    pass
+
+
 class InstallationError(Exception):
 
     def __init__(self, original_exception):

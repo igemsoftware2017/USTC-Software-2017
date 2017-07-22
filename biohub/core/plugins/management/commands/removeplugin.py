@@ -1,5 +1,6 @@
+from biohub.core.plugins import manager as plugins_manager
+
 from ._base import PluginCommand
-from biohub.core import conf
 
 
 class Command(PluginCommand):
@@ -10,9 +11,4 @@ class Command(PluginCommand):
 
         plugin_name = self.handle_plugin_name(plugin)
 
-        try:
-            conf.settings.BIOHUB_PLUGINS.remove(plugin_name)
-        except ValueError:
-            pass
-
-        conf.manager.dump()
+        plugins_manager.remove([plugin_name], update_config=True)

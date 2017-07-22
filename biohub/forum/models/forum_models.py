@@ -3,9 +3,18 @@ from django.conf import settings
 from django.dispatch import receiver
 from django.db.models.signals import pre_delete
 
+from .bio_models import Part
+
 MAX_LEN_FOR_POST_CONTENT = 1000
 MAX_LEN_FOR_COMMENT_CONTENT = 300
 MAX_LEN_FOR_THREAD_TITLE = 100
+
+
+class Studio(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(
+        blank=True, default='', max_length=1000,)
+    user = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
 
 class Thread(models.Model):
@@ -20,6 +29,9 @@ class Thread(models.Model):
     # is_visible: defines whether the thread is visible to the public.
     is_visible = models.BooleanField(default=True)
     is_sticky = models.BooleanField(default=False)
+    # choose one from the following two.
+    part = models.ForeignKey(Part, on_delete=models.CASCADE,)
+    studio = models.ForeignKey(Studio, on_delete=models.CASCADE,)
 
     def hide(self):
         self.is_visible = False

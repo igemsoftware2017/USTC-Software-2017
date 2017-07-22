@@ -7,16 +7,89 @@ import tempfile
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
 
+from biohub.utils.collections import unique
+
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
 
-manager = None
-
 mapping = {
-    'DEFAULT_DATABASE': 'DATABASE',
-    'BIOHUB_PLUGINS': 'PLUGINS',
-    'TIMEZONE': 'TIMEZONE'
+    'DEFAULT_DATABASE': ('DATABASE', dict),
+    'BIOHUB_PLUGINS': ('PLUGINS', list),
+    'TIMEZONE': ('TIMEZONE', 'UTC'),
 }
+
+valid_settings_keys = tuple(mapping.values())
+
+
+class Settings(object):
+    """
+    The core settings class, which can validate, store, serialize/deserialze
+    biohub relevant configuration items.
+    """
+
+    def _validate(self, key, value):
+        """
+        A proxy function for validation, which will find `validate_<key>`
+        method in self and feed `value` to it if the method exists. The
+        validation methods should return the validated value.
+        """
+
+        validate_func = getattr(
+            self, 'validate_%s' % key.lower(), None)
+        if validate_func is not None:
+            value = validate_func(value)
+
+        return value
+
+    def _set_settings_values(self, source):
+        """
+        Validate and store configuration items specified by `source` (a dict).
+        """
+
+        for dest_name, (org_name, default_value) in mapping.items():
+
+            value = source.get(org_name, None)
+
+            if value is None:
+                value = default_value() if callable(default_value) \
+                    else default_value
+
+            value = self._validate(org_name, value)
+
+            setattr(self, dest_name, value)
+
+    def dump_settings_value(self):
+        """
+        Return a dict containing gathered configuration items.
+        """
+
+        result = {}
+
+        for dest_name, (org_name, _) in mapping.items():
+
+            value = getattr(self, dest_name)
+
+            value = self._validate(org_name, value)
+
+            result[org_name] = value
+
+        return result
+
+    def validate_biohub_plugins(self, value):
+        """
+        BIOHUB_PLUGINS should not contains duplicated items.
+        """
+        return unique(value)
+
+    def __delattr__(self, name):
+        """
+        Configuration items should be protected.
+        """
+        if name in valid_settings_keys:
+            raise KeyError(
+                "Can't delete a configuration item.")
+
+        super(Settings, self).__delattr__(name)
 
 
 class LazySettings(LazyObject):
@@ -31,19 +104,6 @@ class LazySettings(LazyObject):
         Returns a boolean indicating whether the settings is loaded.
         """
         return self._wrapped is not empty
-
-    def __init__(self, *args, **kwargs):
-        super(LazySettings, self).__init__(*args, **kwargs)
-
-        class settings:
-
-            DEFAULT_DATABASE = {}
-            BIOHUB_PLUGINS = []
-            TIMEZONE = 'UTC'
-
-        global manager
-
-        manager = SettingsManager(settings)
 
     def _setup(self):
 
@@ -70,6 +130,7 @@ class LazySettings(LazyObject):
         super(LazySettings, self).__setattr__(name, value)
 
     def __delattr__(self, name):
+
         super(LazySettings, self).__delattr__(name)
         self.__dict__.pop(name, None)
 
@@ -79,22 +140,31 @@ class SettingsManager(object):
     def __init__(self, settings_object):
 
         self._settings_object = settings_object
-
-        # resolve config_file_path
-        if CONFIG_ENVIRON in os.environ:
-            config_file_path = os.environ[CONFIG_ENVIRON]
-
-            if not os.path.isfile(config_file_path):
-                raise ImproperlyConfigured(
-                    "Config file '%s' does not exist or is not a file."
-                    % config_file_path)
-
-            self._file_lock = filelock.FileLock(LOCK_FILE_PATH)
-        else:
-            config_file_path = None
-
-        self.config_file_path = config_file_path
+        self._file_lock = filelock.FileLock(LOCK_FILE_PATH)
         self._store_settings = []
+
+    def _resolve_config_path(self, config_path=None):
+        """
+        Resolves the path of config file.
+
+        If `config_path` is not None, it will be used. Otherwise
+        `os.environ['CONFIG_ENVIRON']` will be used. If both of them are None,
+        no config file is specified.
+
+        The path to be used will have existence test before returned.
+        """
+
+        if config_path is None:
+            config_path = os.environ.get(CONFIG_ENVIRON, None)
+
+        if config_path is not None and not os.path.isfile(config_path):
+            raise ImproperlyConfigured(
+                "Config file '%s' does not exist or is not a file."
+                % config_path)
+
+        self.config_file_path = config_path
+
+        return config_path
 
     def store_settings(self):
         """
@@ -128,7 +198,7 @@ class SettingsManager(object):
         The function is thread-safe.
         """
 
-        path = path or self.config_file_path
+        path = self._resolve_config_path(path)
 
         if path is None:
             return
@@ -141,17 +211,9 @@ class SettingsManager(object):
                 return
 
             with open(path, 'r') as fp:
-                fp.seek(0)
                 source = json.load(fp)
 
-            self._load_config_from_dict(source)
-
-    def _load_config_from_dict(self, source):
-
-        for name, conf_name in mapping.items():
-            setattr(self._settings_object, name,
-                    source.get(conf_name,
-                               getattr(self._settings_object, name)))
+                self._settings_object._set_settings_values(source)
 
     def dump(self, path=None):
         """
@@ -160,22 +222,20 @@ class SettingsManager(object):
         The function is thread-safe.
         """
 
-        path = path or self.config_file_path
+        path = self._resolve_config_path(path)
 
         if path is None:
             return
 
         with self._file_lock:
             with open(path, 'w') as fp:
-                json.dump(self._dump_config(), fp, indent=4)
-
-    def _dump_config(self):
-        return dict(
-            (value, getattr(self._settings_object, key))
-            for key, value in mapping.items())
+                json.dump(
+                    self._settings_object.dump_settings_value(),
+                    fp, indent=4)
 
 
 settings = LazySettings()
+manager = SettingsManager(Settings())
 
 load_config = manager.load
 dump_config = manager.dump

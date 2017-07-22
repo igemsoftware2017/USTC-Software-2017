@@ -1,7 +1,35 @@
 import importlib
 import importlib.util
 
+from django.utils.module_loading import module_has_submodule
+
 module_from_path = importlib.import_module
+
+
+def autodiscover_modules(*args, force_reload=True):
+    """
+    An enhanced version of `django.utils.module_loading.autodiscover_modules`,
+    which can force target modules to be reloaded.
+    """
+
+    from django.apps import apps
+    import sys
+
+    for app_config in apps.get_app_configs():
+        for module_to_search in args:
+            mod_name = '%s.%s' % (app_config.name, module_to_search)
+
+            if force_reload:
+                try:
+                    del sys.modules[mod_name]
+                except KeyError:
+                    pass
+
+            try:
+                importlib.import_module(mod_name)
+            except Exception:
+                if module_has_submodule(app_config.module, module_to_search):
+                    raise
 
 
 def object_from_path(value):

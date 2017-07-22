@@ -1,6 +1,8 @@
 import sys
 import subprocess
 import threading
+import logging
+import importlib
 from collections import OrderedDict, namedtuple
 
 from django.core.management import call_command
@@ -8,11 +10,13 @@ from django.conf import settings
 from django.apps import apps
 
 from biohub.utils import module as module_util
+from biohub.utils.collections import unique
 from biohub.core.conf import settings as biohub_settings, dump_config
 
 from .config import PluginConfig
 from . import exceptions
 
+logger = logging.getLogger('biohub.plugins')
 
 REQUIRED_PROPERTIES = ('title', 'author', 'description',)
 
@@ -53,11 +57,37 @@ class PluginManager(object):
 
     @property
     def installing(self):
+        """
+        Returns a bool indicating whether plugin list is mutating.
+        """
         return self._install_lock.locked
 
     @property
     def migrating(self):
+        """
+        Returns a bool indicating whether there are any plugins migrating their
+        models.
+        """
         return self._db_lock.locked
+
+    @property
+    def available_plugins(self):
+        """
+        An alias to biohub_settings.BIOHUB_PLUGINS
+        """
+
+        if not hasattr(self, '_available_plugins'):
+            self._available_plugins = biohub_settings.BIOHUB_PLUGINS
+
+        return self._available_plugins
+
+    @property
+    def apps_to_populate(self):
+        """
+        Returns the names of apps to be populated.
+        """
+
+        return unique(settings.INSTALLED_APPS + self.available_plugins)
 
     def populate_plugins(self, plugin_names):
         """
@@ -69,6 +99,9 @@ class PluginManager(object):
                 self._populate_plugin(app_config.name, app_config)
 
     def _populate_plugin(self, plugin_name, plugin_config):
+        """
+        Populate a single plugin.
+        """
 
         self.plugins[plugin_name] = plugin_config
 
@@ -82,7 +115,7 @@ class PluginManager(object):
         Filter and wipe out existing plugins.
         """
         plugin_names = [plugin for plugin in plugin_names
-                        if plugin not in settings.INSTALLED_APPS]
+                        if plugin not in self.available_plugins]
 
         for name in plugin_names:
 
@@ -101,17 +134,84 @@ class PluginManager(object):
 
         return plugin_names
 
-    def _invalidate_urlconf(self, plugin_names):
+    def _invalidate_urlconf(self):
         """
-        Django uses LRU Cache Strategy to cache up resolvers.
-        The cache content can be cleared by calling `.cache_clear()`.
+        To invalidate url patterns after plugin list mutated.
+
+        The function will do the following things:
+
+         + invalidate resolver's LRU cache (use `.cache_clear` provided by
+            `lru_cache`)
+         + reload main urlconf module and biohub url patterns registration
+            module
+         + reload `urls.py` in each app, using a force-reload version of
+            `autodiscover_module`
+         + override default resolver's `urlconf_module` and `url_patterns`
+            attributes, which are cached property and must be explicitly
+            assigned
         """
         from django.urls.resolvers import get_resolver
+        import biohub.core.routes
+        import biohub.main.urls
 
         try:
             get_resolver.cache_clear()
+
+            importlib.reload(biohub.core.routes)
+            main_urls = importlib.reload(biohub.main.urls)
+            module_util.autodiscover_modules('urls')
+
+            resolver = get_resolver()
+            resolver.urlconf_module = main_urls
+            resolver.url_patterns = getattr(
+                main_urls, "urlpatterns", main_urls)
+
         except Exception as e:
             raise exceptions.URLConfError(e)
+
+    def remove(self, plugin_names,
+               update_config=False,
+               invalidate_urlconf=True):
+        """
+        Remove a list of plugins specified by `plugin_names`.
+        """
+
+        with self._install_lock:
+
+            removed = []
+
+            for plugin_name in plugin_names:
+                try:
+                    self.available_plugins.remove(plugin_name)
+                    removed.append(plugin_name)
+                except ValueError:
+                    pass
+
+            # halt if no plugins to be REALLY removed
+            if not removed:
+                return removed
+
+            if apps.ready:
+                apps.app_configs = OrderedDict()
+                apps.apps_ready = apps.models_ready = apps.ready = False
+
+                try:
+                    apps.clear_cache()
+                    apps.populate(self.apps_to_populate)
+                except Exception as e:
+                    raise exceptions.RemovalError(e)
+
+            if invalidate_urlconf:
+                self._invalidate_urlconf()
+
+            # update plugin infos
+            for plugin_name in removed:
+                self.plugin_infos.pop(plugin_name, 0)
+
+            if update_config:
+                dump_config()
+
+        return removed
 
     def install(self, plugin_names,
                 update_config=False,
@@ -148,13 +248,13 @@ class PluginManager(object):
 
             try:
                 apps.clear_cache()
-                apps.populate(list(settings.INSTALLED_APPS) + plugin_names)
+                apps.populate(self.apps_to_populate + plugin_names)
             except Exception as e:
                 raise exceptions.InstallationError(e)
 
             # Invalidate URLConf
             if invalidate_urlconf:
-                self._invalidate_urlconf(plugin_names)
+                self._invalidate_urlconf()
 
             # Migrate database
             if migrate_database:
@@ -162,7 +262,8 @@ class PluginManager(object):
 
             self.populate_plugins(plugin_names)
 
-            biohub_settings.BIOHUB_PLUGINS.extend(plugin_names)
+            self.available_plugins.extend(plugin_names)
+
             if update_config:
                 dump_config()
 
@@ -195,7 +296,8 @@ class PluginManager(object):
                         plugin, new_process,
                         no_input, no_output,
                         verbosity, test)
-
+            except exceptions.DatabaseError as e:
+                raise e
             except Exception as e:
                 raise exceptions.DatabaseError(e)
 
@@ -219,6 +321,10 @@ class PluginManager(object):
             stdout, stderr = p.communicate()
             sys.stdout.write(stdout.decode('utf-8'))
             sys.stderr.write(stderr.decode('utf-8'))
+
+            if p.returncode != 0:
+                raise exceptions.DatabaseError(
+                    'Migration processreturns non-zero exit code.')
         else:
             call_command(
                 'migrateplugin', plugin_name,
