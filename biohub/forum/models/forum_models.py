@@ -13,7 +13,7 @@ class Studio(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(
         blank=True, default='', max_length=1000,)
-    user = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
 
 class Thread(models.Model):
@@ -37,11 +37,13 @@ class Thread(models.Model):
 
     def hide(self):
         self.is_visible = False
+        self.save()
         for post in self.post_set.all():
             post.hide()
 
     def show(self):
         self.is_visible = True
+        self.save()
         for post in self.post_set.all():
             post.show()
 
@@ -63,11 +65,13 @@ class Post(models.Model):
 
     def hide(self):
         self.is_visible = False
+        self.save()
         for comment in self.comments.all():
             comment.hide()
 
     def show(self):
         self.is_visible = True
+        self.save()
         for comment in self.comments.all():
             comment.show()
 
@@ -89,5 +93,5 @@ def hide_attached_posts(instance, **kwargs):
 
 @receiver(pre_delete, sender=Post)
 def hide_attached_comments(instance, **kwargs):
-    for comment in instance.comment_set.all():
+    for comment in instance.comments.all():
         comment.hide()
