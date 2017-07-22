@@ -1,0 +1,19 @@
+cat > config.json << EOF
+{
+    "DATABASE": {
+        "NAME": "biohub_new",
+        "USER": "root",
+        "PASSWORD": "",
+        "HOST": "localhost",
+        "PORT": "",
+        "TEST": {
+            "NAME": "test_biohub_new",
+            "CHARSET": null,
+            "COLLATION": null,
+            "MIRROR": null
+        }
+    },
+    "PLUGINS": [],
+    "TIMEZONE": "UTC"
+}
+EOF

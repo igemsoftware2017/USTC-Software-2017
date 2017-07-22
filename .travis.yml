@@ -1,0 +1,13 @@
+language: python
+python:
+  - "3.6"
+install: "pip install -r requirements/dev.txt"
+before_install:
+  - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
+script: "biohub/manage.py test"
+services:
+  - mysql
+before_script:
+  - bash .travis-install
+notifications:
+  email: false
