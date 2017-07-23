@@ -85,6 +85,16 @@ class ThreadModelTests(TestCase):
         self.assertIs(Post.objects.get(pk=post2.id).is_visible, False)
         self.assertIs(Comment.objects.get(pk=comment2.id).is_visible, False)
 
+    def test_getting_posts_directly_attaching_to_thread(self):
+        thread = create_new_thread(self.user, self.studio)
+        post = create_new_post(thread, self.user)
+        comment = create_new_comment(thread, post, self.user)
+        thread.get_post_set_by(pk=post.id)
+        thread.get_post_set_filter(pk=post.id)
+        self.assertEqual(thread.get_post_set_all().count(), 1)
+        self.assertEqual(thread.get_post_set_all()[0].id, post.id)
+
+
 
 class PostModelTests(TestCase):
     def setUp(self):
