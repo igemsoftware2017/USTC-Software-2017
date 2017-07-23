@@ -46,6 +46,18 @@ class Thread(models.Model):
         for post in self.post_set.all():
             post.show()
 
+    # Warning: Because all comments are also posts,
+    # please use the methods below to get posts directly attached to the thread.
+    # When using t.post_set.all/filter/get, you will also get the comments.
+    def get_post_set_all(self):
+        return self.post_set.filter(is_comment=False)
+
+    def get_post_set_filter(self, *args, **kwargs):
+        return self.post_set.filter(is_comment=False, *args, **kwargs)
+
+    def get_post_set_by(self, *args, **kwargs):
+        return self.post_set.get(is_comment=False, *args, **kwargs)
+
 
 class Post(models.Model):
     # when the thread is deleted, the posts attached to it won't be deleted.
@@ -61,6 +73,13 @@ class Post(models.Model):
     up_vote_num = models.IntegerField(default=0)
     down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
+    # No need to explicitly specify is_comment. It will be added automaticallly.
+    is_comment = models.BooleanField()
+
+    def __init__(self, *args, **kwargs):
+        if 'is_comment' not in kwargs:
+            kwargs['is_comment'] = False
+        super(Post, self).__init__(*args, **kwargs)
 
     def hide(self):
         self.is_visible = False
@@ -82,3 +101,6 @@ class Comment(Post):
     reply_to = models.ForeignKey(
         Post, on_delete=models.SET_NULL, null=True, related_name='comments'
     )
+
+    def __init__(self, *args, **kwargs):
+        super(Comment, self).__init__(is_comment=True, *args, **kwargs)
