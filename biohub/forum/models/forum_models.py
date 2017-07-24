@@ -8,10 +8,17 @@ MAX_LEN_FOR_THREAD_TITLE = 100
 
 
 class Studio(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(
         blank=True, default='', max_length=1000,)
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    # Warning: a user should either be added to users or saved as an administrator.
+    # Don't add it to both.
+    # Note: the founder of the studio should be the administrator.
+    # Warning: creating a studio, an administrator should also be saved.
+    # Or the studio will be treated as an empty studio and will be deleted.
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='studios_from_user')
+    administrator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                      null=True, related_name='studios_from_admin')
 
 
 class Thread(models.Model):
@@ -28,8 +35,6 @@ class Thread(models.Model):
     is_sticky = models.BooleanField(default=False)
     # choose one from the following two.
     # Though the two field's default value are both None, one of them must be provided values.
-    # TODO: add check in serializers to make sure one of them (and only one of them) has values. \
-    # Or, can we check in models?
     # Deleting a studio or the bio-part, the threads won't be truly deleted. But they will hide.
     part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, default=None)
     studio = models.ForeignKey(Studio, on_delete=models.SET_NULL, null=True, default=None)

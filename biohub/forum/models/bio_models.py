@@ -28,14 +28,16 @@ class Part(models.Model):
     # a gene part has two strand, so use two fields to record the sequence.
     sequence_a = models.TextField()
     sequence_b = models.TextField()
-    document = models.OneToOneField(Article, on_delete=models.SET_NULL)
-    lab_record = models.OneToOneField(Article, on_delete=models.SET_NULL)
+    document = models.OneToOneField(Article, on_delete=models.SET_NULL,
+                                    null=True, related_name='part_from_doc')
+    lab_record = models.OneToOneField(Article, on_delete=models.SET_NULL,
+                                      null=True, related_name='part_from_record')
 
 
 class ModificationRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    part = models.ForeignKey(Part, on_delete=models.SET_NULL)
+    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True)
     message = models.TextField(max_length=100)
     # whether the request is granted
     granted = models.BooleanField(default=False)
