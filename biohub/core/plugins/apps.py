@@ -7,6 +7,6 @@ class PluginsConfig(AppConfig):
     name = 'biohub.core.plugins'
 
     def ready(self):
-        from .registry import manager
+        from biohub.core.plugins import plugins
 
-        manager.populate_plugins()
+        plugins.populate_plugins()

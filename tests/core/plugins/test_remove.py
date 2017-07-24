@@ -1,18 +1,10 @@
 from ._base import PluginTestCase
 
-from biohub.core.conf import manager as settings_manager
-
 
 class Test(PluginTestCase):
 
-    def setUp(self):
-        settings_manager.store_settings()
-
-    def tearDown(self):
-        settings_manager.restore_settings()
-
     def test_remove(self):
-        from biohub.core.plugins import install, remove, manager
+        from biohub.core.plugins import install, remove, plugins
         from django.apps import apps
 
         name = 'tests.core.plugins.my_plugin'
@@ -24,7 +16,7 @@ class Test(PluginTestCase):
                     new_process=True))
 
         self.assertIn(name, self.current_settings['PLUGINS'])
-        self.assertIn(name, manager.plugin_infos)
+        self.assertIn(name, plugins.plugin_infos)
         self.assertTrue(apps.is_installed(name))
 
         # Phase 2
@@ -34,7 +26,7 @@ class Test(PluginTestCase):
         self.assertNotIn(name, self.current_settings['PLUGINS'])
 
         self.assertEqual(resp.status_code, 404)
-        self.assertNotIn(name, manager.plugin_infos)
+        self.assertNotIn(name, plugins.plugin_infos)
         self.assertFalse(apps.is_installed(name))
 
         # Phase 3
@@ -49,4 +41,4 @@ class Test(PluginTestCase):
         remove([name], update_config=True)
 
         self.assertNotIn(name, self.current_settings['PLUGINS'])
-        self.assertNotIn(name, manager.plugin_infos)
+        self.assertNotIn(name, plugins.plugin_infos)

@@ -13,8 +13,7 @@ from django.apps.config import AppConfig
 
 from biohub.utils import module as module_util, path as path_util
 from biohub.utils.collections import unique
-from biohub.core.conf import settings as biohub_settings, dump_config,\
-    manager as settings_manager
+from biohub.core.conf import settings as biohub_settings, dump_config
 
 from .config import PluginConfig
 from . import exceptions
@@ -74,7 +73,7 @@ class PluginManager(object):
                 ac.name for ac in apps.app_configs.values()]
 
             if self._config:
-                settings_manager.store_settings()
+                biohub_settings.store_settings()
 
         def release(self):
             apps.apps_ready = apps.models_ready = apps.ready = False
@@ -82,20 +81,20 @@ class PluginManager(object):
             self._manager.populate_plugins()
 
             if self._config:
-                settings_manager.restore_settings()
+                biohub_settings.restore_settings()
 
         def __exit__(self, exc_type, exc, traceback):
             if self._test or exc is not None:
                 self.release()
             elif self._config:
-                settings_manager.restore_settings(write=False)
+                biohub_settings.restore_settings(write=False)
 
     def protect(self, test=False, config=False):
 
         return self._Protect(self, test, config)
 
     def __init__(self):
-        self.plugins = OrderedDict()
+        self.plugin_configs = OrderedDict()
         self.plugin_infos = OrderedDict()
         self._install_lock = threading.Lock()
         self._db_lock = threading.Lock()
@@ -120,11 +119,7 @@ class PluginManager(object):
         """
         An alias to biohub_settings.BIOHUB_PLUGINS
         """
-
-        if not hasattr(self, '_available_plugins'):
-            self._available_plugins = biohub_settings.BIOHUB_PLUGINS
-
-        return self._available_plugins
+        return biohub_settings.BIOHUB_PLUGINS
 
     @property
     def installed_apps(self):
@@ -209,7 +204,7 @@ class PluginManager(object):
         Update plugins storage after new plugins installed.
         """
         self.plugin_infos = OrderedDict()
-        self.plugins = OrderedDict()
+        self.plugin_configs = OrderedDict()
         self.available_plugins.clear()
 
         for app_config in apps.app_configs.values():
@@ -224,7 +219,7 @@ class PluginManager(object):
         """
 
         plugin_name = plugin_config.name
-        self.plugins[plugin_name] = plugin_config
+        self.plugin_configs[plugin_name] = plugin_config
 
         properties = (getattr(plugin_config, pname)
                       for pname in REQUIRED_PROPERTIES)
