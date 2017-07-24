@@ -29,6 +29,7 @@ class Biobrick(models.Model):
     works = models.CharField(max_length=10, null=False)
     favorite = models.IntegerField(null=True, default=0)
     specified_u_list = models.TextField(null=True, blank=True)
+    deep_u_list = models.TextField(null=True, blank=True)
     deep_count = models.IntegerField(null=True, blank=True)
     ps_string = models.TextField(null=True, blank=True)
     scars = models.CharField(max_length=20, null=True, default='10')
