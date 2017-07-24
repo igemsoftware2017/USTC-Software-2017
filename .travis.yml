@@ -11,3 +11,4 @@ before_script:
   - bash .travis-install
 notifications:
   email: false
+cache: pip
