@@ -1,11 +1,9 @@
-import json
-
-from rest_framework.test import APITestCase
+from ._base import PluginTestCase
 
 from biohub.core.conf import manager as settings_manager
 
 
-class Test(APITestCase):
+class Test(PluginTestCase):
 
     def setUp(self):
         settings_manager.store_settings()
@@ -18,49 +16,37 @@ class Test(APITestCase):
         from django.apps import apps
 
         name = 'tests.core.plugins.my_plugin'
+
+        # Phase 1
         install([name], migrate_database=True, update_config=True,
                 migrate_options=dict(
                     test=True,
                     new_process=True))
 
-        with open(settings_manager.config_file_path, 'r') as fp:
-            data = json.load(fp)
-
-            self.assertIn(name, data['PLUGINS'])
-
+        self.assertIn(name, self.current_settings['PLUGINS'])
         self.assertIn(name, manager.plugin_infos)
         self.assertTrue(apps.is_installed(name))
 
+        # Phase 2
         remove([name], update_config=True)
 
         resp = self.client.get('/api/my_plugin/')
+        self.assertNotIn(name, self.current_settings['PLUGINS'])
+
         self.assertEqual(resp.status_code, 404)
-
-        with open(settings_manager.config_file_path, 'r') as fp:
-            data = json.load(fp)
-
-            self.assertNotIn(name, data['PLUGINS'])
-
-        self.assertNotIn(name, manager.plugin_infos)
-
         self.assertNotIn(name, manager.plugin_infos)
         self.assertFalse(apps.is_installed(name))
 
+        # Phase 3
         install([name], migrate_database=True, update_config=True,
                 migrate_options=dict(
                     test=True,
                     new_process=True))
 
-        with open(settings_manager.config_file_path, 'r') as fp:
-            data = json.load(fp)
+        self.assertIn(name, self.current_settings['PLUGINS'])
 
-            self.assertIn(name, data['PLUGINS'])
-
+        # Phase 4
         remove([name], update_config=True)
 
-        with open(settings_manager.config_file_path, 'r') as fp:
-            data = json.load(fp)
-
-            self.assertNotIn(name, data['PLUGINS'])
-
+        self.assertNotIn(name, self.current_settings['PLUGINS'])
         self.assertNotIn(name, manager.plugin_infos)
