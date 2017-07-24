@@ -1,6 +1,6 @@
 from ._base import PluginCommand
 
-from biohub.core.conf import manager as settings_manager
+from biohub.core.conf import dump_config
 
 
 class Command(PluginCommand):
@@ -10,4 +10,4 @@ class Command(PluginCommand):
     def handle(self, plugin, **options):
         super(Command, self).handle(plugin, **options)
 
-        settings_manager.dump()
+        dump_config()

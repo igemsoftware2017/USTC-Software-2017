@@ -1,4 +1,4 @@
-from biohub.core.plugins import manager as plugins_manager
+from biohub.core.plugins import plugins
 
 from ._base import PluginCommand
 
@@ -11,4 +11,4 @@ class Command(PluginCommand):
 
         plugin_name = self.handle_plugin_name(plugin)
 
-        plugins_manager.remove([plugin_name], update_config=True)
+        plugins.remove([plugin_name], update_config=True)

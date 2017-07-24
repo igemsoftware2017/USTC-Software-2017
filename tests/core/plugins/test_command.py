@@ -2,7 +2,7 @@ import shutil
 import filecmp
 from os import path
 
-from django.test import TestCase
+from ._base import PluginTestCase
 from django.core.management import call_command
 
 CWD = path.dirname(__file__)
@@ -17,7 +17,7 @@ def force_remove(path_name):
         pass
 
 
-class Test(TestCase):
+class Test(PluginTestCase):
 
     def setUp(self):
         force_remove(TEST_PATH)
@@ -40,6 +40,20 @@ class Test(TestCase):
         call_command('newplugin', 'tests.core.plugins.test',
                      directory=CWD, verbosity=0)
         self.assertDirsIdentical(TEST_PATH, EXPECT_PATH)
+
+    def test_installplugin(self):
+        call_command('installplugin', 'tests.core.plugins.my_plugin')
+
+        self.assertIn('tests.core.plugins.my_plugin',
+                      self.current_settings['PLUGINS'])
+
+    def test_removeplugin(self):
+        self.test_installplugin()
+
+        call_command('removeplugin', 'tests.core.plugins.my_plugin')
+
+        self.assertNotIn('tests.core.plugins.my_plugin',
+                         self.current_settings['PLUGINS'])
 
     def tearDown(self):
         force_remove(TEST_PATH)

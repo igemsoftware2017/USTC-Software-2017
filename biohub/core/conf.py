@@ -113,6 +113,12 @@ class LazySettings(LazyObject):
     accessed.
     """
 
+    def __init__(self):
+
+        self._manager = SettingsManager(Settings())
+
+        super(LazySettings, self).__init__()
+
     @property
     def configured(self):
         """
@@ -122,32 +128,35 @@ class LazySettings(LazyObject):
 
     def _setup(self):
 
-        self._wrapped = manager._settings_object
-        manager.load()
+        self._wrapped = self._manager._settings_object
+        self._manager.load()
 
     def __getattr__(self, name):
 
         if self._wrapped is empty:
             self._setup()
 
-        val = getattr(self._wrapped, name)
+        val = getattr(self._manager, name, None)
+
+        if val is None:
+            val = getattr(self._wrapped, name)
+
         self.__dict__[name] = val
 
         return val
 
     def __setattr__(self, name, value):
 
-        if name == '_wrapped':
-            self.__dict__.clear()
-        else:
-            self.__dict__.pop(name, None)
+        if name == '_manager':
+            self.__dict__['_manager'] = value
+            return
+
+        self.__dict__.pop(name, None)
 
         super(LazySettings, self).__setattr__(name, value)
 
     def __delattr__(self, name):
-
-        super(LazySettings, self).__delattr__(name)
-        self.__dict__.pop(name, None)
+        raise AttributeError('Not allowed to remove a settings attribute.')
 
 
 class SettingsManager(object):
@@ -184,6 +193,8 @@ class SettingsManager(object):
     def store_settings(self):
         """
         A function for testing, which saves current state of config file.
+
+        Note that the function MUST be balanced by using `restore_settings`.
         """
 
         if self.config_file_path is None:
@@ -193,18 +204,23 @@ class SettingsManager(object):
             with open(self.config_file_path, 'r') as fp:
                 self._store_settings.append(fp.read())
 
-    def restore_settings(self):
+    def restore_settings(self, write=True):
         """
         A function for testing, which restores the state in the last call of
         `store_settings`.
         """
+
+        poped = self._store_settings.pop()
+
+        if not write:
+            return
 
         if self.config_file_path is None:
             return
 
         with self._file_lock:
             with open(self.config_file_path, 'w') as fp:
-                fp.write(self._store_settings.pop())
+                fp.write(poped)
 
     def load(self, path=None):
         """
@@ -250,7 +266,6 @@ class SettingsManager(object):
 
 
 settings = LazySettings()
-manager = SettingsManager(Settings())
 
-load_config = manager.load
-dump_config = manager.dump
+load_config = settings.load
+dump_config = settings.dump
