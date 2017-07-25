@@ -67,7 +67,7 @@ class Feature(models.Model):
     start_pos = models.IntegerField(null=True, blank=True)
     end_pos = models.IntegerField(null=True, blank=True)
     label = models.CharField(max_length=200, null=True, blank=True)
-    part_id = models.IntegerField(null=True, blank=True)
+    part = models.ForeignKey('Biobrick', related_name='features', null=True, blank=True)
     type = models.CharField(max_length=200, null=True, blank=True)
     label2 = models.CharField(max_length=200, null=True, blank=True)
     mark = models.IntegerField(null=True, default=0)
