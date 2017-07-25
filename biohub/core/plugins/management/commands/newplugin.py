@@ -15,6 +15,8 @@ from biohub.utils.path import modpath
 
 class Command(BaseCommand):
 
+    help = "Create a new plugin."
+
     rewrite_template_suffixes = (
         # Allow shipping invalid .py files without byte-compilation.
         ('.py-tpl', '.py'),
@@ -22,82 +24,91 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'name',
-            help='Name of the new plugin.')
-        parser.add_argument(
-            'mod_path',
+            'plugin_name',
             help='Dot-separated python module path referring to the '
-            'plugin. NOTE THAT the path should be globally visible. '
-            '(e.g. `biohub.forum` for the default forum module)')
+            'plugin. NOTE THAT the path should be globally visible and unique.'
+            ' (e.g. `biohub.forum` for the default forum module)')
         parser.add_argument(
             '--directory',
             dest='target',
             help='Optional destination directory (without the plugin name).')
 
-    def validate_name(self, name):
-        if name is None:
-            raise CommandError("you must provide a plugin name.")
+    def _validate_template(self, target):
+        """
+        To ensure that the plugin template directory does exist.
+        """
 
-        if not name.isidentifier():
-            raise CommandError(
-                "%r is not a valid plugin name. Makre sure the name is a"
-                "valid identifier." % name)
-
-    def validate_template(self, target):
         if not path.exists(target):
             raise CommandError(
                 "Plugin template directory missing, reinstall biohub "
                 "or just manually create the plugin.")
 
-    def validate_mod_path(self, name, mod_path):
-        if not mod_path:
-            raise CommandError("you must provide a plugin mod_path.")
+    def _validate_plugin_name(self, plugin_name):
+        """
+        To validate the given `plugin_name`.
+
+        A `plugin_name` is considered valid if:
+
+         + it's not empty.
+         + it does not exist currently.
+
+        Afterwards the attributes `self.plugin_name` and `self.label` will be
+        set.
+        """
+
+        if not plugin_name:
+            raise CommandError("You must provide a plugin_name.")
 
         try:
-            importlib.import_module(mod_path)
+            importlib.import_module(plugin_name)
 
             raise CommandError(
-                "The mod_path %r is conflicted with another module, "
-                "please specify a new one." % mod_path)
+                "The plugin_name %r is conflicted with another module, "
+                "please specify a new one." % plugin_name)
         except ImportError:
             pass
 
-        last_section = mod_path.split('.')[-1]
+        self.label = plugin_name.rsplit('.', 1)[-1]
+        self.plugin_name = plugin_name
 
-        if name != last_section:
-            raise CommandError(
-                "The last section of mod_path should be the same as "
-                "your plugin name. Unexpectedly got '%s' instead of "
-                "'%s'." % (last_section, name))
-
-    def handle(self, name, mod_path, target=None, **options):
-        self.verbosity = options['verbosity']
-
-        self.validate_name(name)
-        self.validate_mod_path(name, mod_path)
+    def _prepare_dest_dir(self, target):
+        """
+        To ensure that the destination directory exists and is prepared.
+        """
 
         if target is None:
-            top_dir = path.join(os.getcwd(), name)
+            top_dir = path.join(os.getcwd(), self.label)
         else:
-            top_dir = path.join(path.abspath(path.expanduser(target)), name)
+            top_dir = path.join(
+                path.abspath(path.expanduser(target)),
+                self.label)
 
         try:
             os.makedirs(top_dir)
         except OSError as e:
             if e.errno == errno.EEXIST:
                 if os.listdir(top_dir):
-                    message = "'%s' already exists." % top_dir
-                    raise CommandError(message)
+                    raise CommandError("'%s' already exists." % top_dir)
             else:
                 raise CommandError(e)
 
-        camel_case_value = ''.join(x for x in name.title() if x != '_')
+        return top_dir
+
+    def _render_plugin_dir(self, top_dir, **options):
+        """
+        Reference: django.core.management.templates:110
+
+        To copy and render the plugin templates to the destination directory
+        specified by `top_dir`.
+        """
+
+        camel_case_value = ''.join(x for x in self.label.title() if x != '_')
 
         context = Context(dict(options, **{
-            'plugin_name': name,
+            'plugin_label': self.label,
             'plugin_directory': top_dir,
-            'camel_case_plugin_name': camel_case_value,
-            'plugin_mod_path': mod_path
+            'camel_case_plugin_label': camel_case_value,
+            'plugin_name': self.plugin_name
         }), autoescape=False)
 
         if not settings.configured:
@@ -105,8 +116,9 @@ class Command(BaseCommand):
             django.setup()
 
         template_dir = path.join(
-            modpath('biohub.core.plugins'), 'plugin_template')
-        self.validate_template(template_dir)
+            modpath('biohub.core.plugins'),
+            'plugin_template')
+        self._validate_template(template_dir)
 
         prefix_length = len(template_dir) + 1
 
@@ -154,3 +166,28 @@ class Command(BaseCommand):
                         "Notice: Couldn't set permission bits on %s. You're "
                         "probably using an uncommon filesystem setup. No "
                         "problem." % new_path, self.style.NOTICE)
+
+        if self.verbosity >= 1:
+            self.stdout.write(
+                "Successfully created a plugin '%s'." % self.plugin_name,
+                self.style.SUCCESS)
+            self.stdout.write(
+                "Notice: Label of the plugin is automatically set to '%s' "
+                "(the last section of '%s'). \nIf you are told that the label "
+                "conflicts with another app during developing, please specify "
+                "a new label by manually add an attribute "
+                "`label = '<your new label>'` to `%sConfig` in file '%s'."
+                % (
+                    self.label,
+                    self.plugin_name,
+                    camel_case_value,
+                    path.join(top_dir, 'apps.py')), self.style.WARNING)
+
+    def handle(self, plugin_name, target=None, **options):
+
+        self.verbosity = options['verbosity']
+
+        self._validate_plugin_name(plugin_name)
+
+        top_dir = self._prepare_dest_dir(target)
+        self._render_plugin_dir(top_dir, **options)

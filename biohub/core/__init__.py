@@ -1,1 +1,1 @@
-default_app_config = 'core.apps.CoreConfig'
+default_app_config = 'biohub.core.apps.CoreConfig'

@@ -1,6 +1,6 @@
 # Biohub-Server
 
-Server scaffold for Biohub (igem 2017).
+[![Build Status](https://travis-ci.org/hsfzxjy/Biohub-Server.svg?branch=master)](https://travis-ci.org/hsfzxjy/Biohub-Server)
 
 **[组内文档](https://github.com/hsfzxjy/Biohub-Server/wiki)**
 

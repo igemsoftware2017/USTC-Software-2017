@@ -1,9 +1,9 @@
 from biohub.core.plugins import PluginConfig
 
 
-class {{ camel_case_plugin_label }}Config(PluginConfig):
+class AnotherPluginConfig(PluginConfig):
 
-    name = '{{ plugin_name }}'
+    name = 'tests.core.plugins.another_plugin'
     title = ''
     author = ''
     description = ''

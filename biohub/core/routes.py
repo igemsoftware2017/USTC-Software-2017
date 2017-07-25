@@ -1,6 +1,6 @@
 """
-By default, Biohub will expose two URL prefixes `^` and `^/api`, where developer
-s can register their own urlpatterns by using `register_api` and
+By default, Biohub will expose two URL prefixes `^` and `^/api`, where
+developers can register their own urlpatterns by using `register_api` and
 `register_default`. This design can prevent plugin authors from directly
 modifying the main urlconf.
 """
