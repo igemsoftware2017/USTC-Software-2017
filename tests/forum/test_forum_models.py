@@ -16,10 +16,10 @@ def create_new_user(**kwargs):
 
 
 def create_new_studio(user, **kwargs):
-    studio = Studio(name=create_random_string(), **kwargs)
+    studio = Studio(name=create_random_string(),administrator=user, **kwargs)
     # save before calling add()!
-    studio.save()
-    studio.users.add(user)
+    # studio.save()
+    # studio.users.add(user)
     studio.save()
     return studio
 
@@ -31,14 +31,14 @@ def create_new_thread(author, studio, **kwargs):
 
 
 def create_new_post(thread, author, **kwargs):
-    post = Post(thread=thread, content=create_random_string(), author=author, **kwargs)
-    post.save()
+    post = Post.objects.create(thread=thread, content=create_random_string(),
+                               author=author, **kwargs)
     return post
 
 
 def create_new_comment(thread, post, author, **kwargs):
-    comment = Comment(thread=thread, content=create_random_string(), author=author, reply_to=post, **kwargs)
-    comment.save()
+    comment = Comment.objects.create(thread=thread, content=create_random_string(),
+                                     author=author, reply_to=post, **kwargs)
     return comment
 
 
@@ -84,6 +84,15 @@ class ThreadModelTests(TestCase):
         self.assertIs(Post.objects.get(pk=post1.id).is_visible, False)
         self.assertIs(Post.objects.get(pk=post2.id).is_visible, False)
         self.assertIs(Comment.objects.get(pk=comment2.id).is_visible, False)
+
+    def test_getting_posts_directly_attaching_to_thread(self):
+        thread = create_new_thread(self.user, self.studio)
+        post = create_new_post(thread, self.user)
+        create_new_comment(thread, post, self.user)
+        thread.get_post_set_by(pk=post.id)
+        thread.get_post_set_filter(pk=post.id)
+        self.assertEqual(thread.get_post_set_all().count(), 1)
+        self.assertEqual(thread.get_post_set_all()[0].id, post.id)
 
 
 class PostModelTests(TestCase):
@@ -184,12 +193,11 @@ class StudioModelTests(TestCase):
         studio1 = create_new_studio(user1)
         user2 = create_new_user()
         studio1.users.add(user2)
-        studio2 = Studio(name=create_random_string())
-        studio2.save()
-        studio2.users.add(user2)
+        studio2 = create_new_studio(user2)
         studio3 = create_new_studio(user2)
-        user1.studio_set.remove(studio1)
-        user2.studio_set.remove(studio1, studio3)
+        user1.studios_from_admin.remove(studio1)
+        user2.studios_from_user.remove(studio1)
+        user2.studios_from_admin.remove(studio3, bulk=False)
         Studio.objects.get(pk=studio2.id)
         self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio1.id)
         self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio3.id)
@@ -199,13 +207,18 @@ class StudioModelTests(TestCase):
         studio = create_new_studio(user1)
         user2 = create_new_user()
         studio.users.add(user2)
-        studio.users.remove(user1, user2)
+        studio.users.remove(user2)
+        studio.administrator = None
+        studio.save()
         self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio.id)
 
     def test_if_all_user_deleted_the_studio_should_be_deleted(self):
         user1 = create_new_user()
+        user2 = create_new_user()
         studio = create_new_studio(user1)
+        studio.users.add(user2)
         user1.delete()
+        user2.delete()
         self.assertRaises(Studio.DoesNotExist, Studio.objects.get, pk=studio.id)
 
     # def test_if_a_user_clear_all_his_studio_and_cause_a_studio_to_have_no_member_that_should_be_deleted(self):
@@ -231,5 +244,5 @@ class StudioModelTests(TestCase):
         user = create_new_user()
         studio = create_new_studio(user)
         studio.delete()
-        self.assertEqual(user.studio_set.count(), 0)
-        self.assertRaises(Studio.DoesNotExist, user.studio_set.get, pk=studio.id)
+        self.assertEqual(user.studios_from_admin.count(), 0)
+        self.assertRaises(Studio.DoesNotExist, user.studios_from_admin.get, pk=studio.id)
