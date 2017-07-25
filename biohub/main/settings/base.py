@@ -137,6 +137,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 30
 }
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgiref.inmemory.ChannelLayer',
+        'ROUTING': 'biohub.core.channel_routing.channels_routing'
+    }
+}
+
 # Extra configurations
 
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
