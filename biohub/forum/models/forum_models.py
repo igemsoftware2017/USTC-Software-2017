@@ -78,7 +78,7 @@ class Post(models.Model):
     up_vote_num = models.IntegerField(default=0)
     down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
-    # No need to explicitly specify is_comment. It will be added automaticallly.
+    # No need to explicitly specify is_comment. It will be added automatically.
     is_comment = models.BooleanField()
 
     def __init__(self, *args, **kwargs):
