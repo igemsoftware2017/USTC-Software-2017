@@ -16,7 +16,7 @@ def create_new_user(**kwargs):
 
 
 def create_new_studio(user, **kwargs):
-    studio = Studio(name=create_random_string(),administrator=user, **kwargs)
+    studio = Studio(name=create_random_string(), administrator=user, **kwargs)
     # save before calling add()!
     # studio.save()
     # studio.users.add(user)

@@ -2,7 +2,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_delete, m2m_changed, post_save
 
 from biohub.accounts.models import User
-from biohub.forum.models import Thread, Post, Studio, Part
+from biohub.forum.models import Thread, Post, Studio, Brick
 
 
 @receiver(pre_delete, sender=Thread)
@@ -18,7 +18,7 @@ def hide_attached_comments(instance, **kwargs):
 
 
 @receiver(pre_delete, sender=Studio)
-@receiver(pre_delete, sender=Part)
+@receiver(pre_delete, sender=Brick)
 def hide_attached_threads(instance, **kwargs):
     for thread in instance.thread_set.all():
         thread.hide()
