@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 
-from .bio_models import Part
+from .bio_models import Brick
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -35,8 +35,8 @@ class Thread(models.Model):
     is_sticky = models.BooleanField(default=False)
     # choose one from the following two.
     # Though the two field's default value are both None, one of them must be provided values.
-    # Deleting a studio or the bio-part, the threads won't be truly deleted. But they will hide.
-    part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, default=None)
+    # Deleting a studio or the bio-brick, the threads won't be truly deleted. But they will hide.
+    brick = models.ForeignKey(Brick, on_delete=models.SET_NULL, null=True, default=None)
     studio = models.ForeignKey(Studio, on_delete=models.SET_NULL, null=True, default=None)
 
     def hide(self):

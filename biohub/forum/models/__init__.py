@@ -1,2 +1,2 @@
 from .forum_models import Thread, Post, Comment, Studio
-from .bio_models import Part, File, Article, ModificationRequest, Device
+from .bio_models import Brick, File, Article, ModificationRequest

@@ -28,8 +28,9 @@ class Brick(models.Model):
     ispart = models.BooleanField(default=True)
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE)
-    followers = models.ManyToManyField(settings.AUTH_USER_MODEL)
+                              on_delete=models.CASCADE, related_name='bricks_from_owner')
+    followers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_from_follower')
     description = models.TextField(blank=True, default='')
     document = models.OneToOneField(Article, on_delete=models.SET_NULL,
                                     null=True, related_name='brick_from_doc')
@@ -41,7 +42,7 @@ class Brick(models.Model):
     sequence_b = models.TextField()
     type = models.CharField(max_length=250)
     internal_part_to = models.ForeignKey(
-        'self', on_delete=models.SET_NULL, related_name='internal_parts')
+        'self', on_delete=models.SET_NULL, null=True, related_name='internal_parts')
     # recursive relation. the brick related must be a Device
 
     # private to Device
@@ -59,4 +60,5 @@ class ModificationRequest(models.Model):
     commit_obj = models.OneToOneField(Article)
     # TODO: add TimeField
     submit_time = models.DateTimeField(auto_now_add=True)
-    accept_time = models.DateTimeField() #set to time when it's granted by the author
+    # set to time when it's granted by the author
+    accept_time = models.DateTimeField()
