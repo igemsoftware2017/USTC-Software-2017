@@ -52,8 +52,11 @@ class Brick(models.Model):
 class ModificationRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    part = models.ForeignKey(Brick, on_delete=models.SET_NULL, null=True)
+    brick = models.ForeignKey(Brick, on_delete=models.SET_NULL, null=True)
     message = models.TextField(max_length=100)
     # whether the request is granted
     granted = models.BooleanField(default=False)
     commit_obj = models.OneToOneField(Article)
+    # TODO: add TimeField
+    submit_time = models.DateTimeField(auto_now_add=True)
+    accept_time = models.DateTimeField() #set to time when it's granted by the author
