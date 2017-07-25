@@ -206,6 +206,8 @@ class PluginManager(object):
         """
         Update plugins storage after new plugins installed.
         """
+        self._invalidate_websocket_handlers()
+
         self.plugin_infos = OrderedDict()
         self.plugin_configs = OrderedDict()
         self.available_plugins.clear()
@@ -252,6 +254,14 @@ class PluginManager(object):
             validate_plugin_config(name, plugin_config_class)
 
         return plugin_names
+
+    def _invalidate_websocket_handlers(self):
+        """
+        To invalidate websocket handlers registration.
+        """
+        from biohub.core.websocket.signals import ws_received
+        ws_received.receivers.clear()
+        module_util.autodiscover_modules('ws_handlers')
 
     def _invalidate_urlconf(self):
         """
