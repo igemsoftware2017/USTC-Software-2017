@@ -16,7 +16,8 @@ class Studio(models.Model):
     # Note: the founder of the studio should be the administrator.
     # Warning: creating a studio, an administrator should also be saved.
     # Or the studio will be treated as an empty studio and will be deleted.
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='studios_from_user')
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='studios_from_user')
     administrator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                       null=True, related_name='studios_from_admin')
 
@@ -25,7 +26,8 @@ class Thread(models.Model):
     title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE)
     content = models.TextField(
         blank=True, default='', max_length=MAX_LEN_FOR_CONTENT)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
@@ -36,8 +38,10 @@ class Thread(models.Model):
     # choose one from the following two.
     # Though the two field's default value are both None, one of them must be provided values.
     # Deleting a studio or the bio-brick, the threads won't be truly deleted. But they will hide.
-    brick = models.ForeignKey(Brick, on_delete=models.SET_NULL, null=True, default=None)
-    studio = models.ForeignKey(Studio, on_delete=models.SET_NULL, null=True, default=None)
+    brick = models.ForeignKey(
+        Brick, on_delete=models.SET_NULL, null=True, default=None)
+    studio = models.ForeignKey(
+        Studio, on_delete=models.SET_NULL, null=True, default=None)
 
     def hide(self):
         self.is_visible = False
@@ -71,7 +75,8 @@ class Post(models.Model):
     thread = models.ForeignKey(
         Thread, on_delete=models.SET_NULL, null=True)
     content = models.TextField(blank=False, max_length=MAX_LEN_FOR_CONTENT, )
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
     pub_time = models.DateField('publish date', auto_now_add=True)
@@ -110,9 +115,11 @@ class Comment(Post):
     def __init__(self, *args, **kwargs):
         super(Comment, self).__init__(is_comment=True, *args, **kwargs)
 
+
 class Invitation(models.Model):
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='invitations_from_sender')
-    receiver = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,related_name='invitations_from_receiver')
-    studio = models.ForeignKey(Studio,on_delete=models.SET_NULL)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitations_from_sender')
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                 null=True, related_name='invitations_from_receiver')
+    studio = models.ForeignKey(Studio, on_delete=models.SET_NULL, null=True)
     agreed = models.BooleanField(default=False)
-    
