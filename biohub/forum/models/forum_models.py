@@ -109,3 +109,10 @@ class Comment(Post):
 
     def __init__(self, *args, **kwargs):
         super(Comment, self).__init__(is_comment=True, *args, **kwargs)
+
+class Invitation(models.Model):
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='invitations_from_sender')
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,related_name='invitations_from_receiver')
+    studio = models.ForeignKey(Studio,on_delete=models.SET_NULL)
+    agreed = models.BooleanField(default=False)
+    
