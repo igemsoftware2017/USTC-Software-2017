@@ -1,9 +1,5 @@
-from biohub.core.plugins import PluginConfig
+from django.apps import AppConfig
 
 
-class BiobrickConfig(PluginConfig):
-
-    name = 'biobrick'
-    title = ''
-    author = ''
-    description = ''
+class BiobrickConfig(AppConfig):
+    name = 'biohub.biobrick'
