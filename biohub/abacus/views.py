@@ -3,35 +3,44 @@ import json
 from django.shortcuts import render
 from rest_framework import viewsets, decorators
 
-from ..abacus import response_tool
+from ..abacus import responses
 
 
 class AbacusView(
         viewsets.GenericViewSet):
 
-    filter_fields = ('tag', 'upload_file')
-
     def list_abacus(self):
-        return response_tool.list_abacus(self.request.user)
+        return responses.list_abacus(self.request.user)
 
     def get_status(self, id):
-        return response_tool.get_status(self.request.user, id)
+        return responses.get_status(self.request.user, id)
 
-    def download_file(self, id):
-        return response_tool.get_download_file(self.request.user, id)
+    def get_download_file(self, id):
+        return responses.get_download_file(self.request.user, id)
 
     def upload_file(self, jsn, files):
-        return response_tool.upload_file(self.request.user, jsn, files)
+        return responses.upload_file(self.request.user, jsn, files)
 
     def delete_file(self, id):
-        return response_tool.delete_file(self.request.user, id)
+        return responses.delete_file(self.request.user, id)
 
     def calculate(self, id):
-        return response_tool.calculate(self.request.user, id)
+        return responses.calculate(self.request.user, id)
+
+    def edit_abacus(self, jsn, files):
+        return responses.edit_abacus(self.request.user, jsn, files)
 
     @decorators.list_route(methods=['GET'])
     def download(self, request):
-        return response_tool.download_service(self.request.user, request['id'])
+        return responses.download_service(self.request.user, request['id'])
+
+    @decorators.list_route()
+    def upload(self, request):
+        return self.upload_file(json.load(request.body), request.FILES.getlist('files'))
+
+    @decorators.list_route()
+    def edit(self, request):
+        return self.edit_abacus(json.load(request.body), request.FILES.getlist('files'))
 
     @decorators.list_route()
     def action(self, request):
@@ -40,8 +49,8 @@ class AbacusView(
         method = jsn['method']
         id = jsn['data']
 
-        if method == "download_file":
-            return self.download_file(id)
+        if method == "get_download_file":
+            return self.get_download_file(id)
         elif method == "get_status":
             return self.get_status(id)
         elif method == "list_abacus":

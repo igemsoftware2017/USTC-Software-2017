@@ -3,9 +3,9 @@ from biohub.core.plugins import PluginConfig
 
 
 class AbacusConfig(PluginConfig):
-    name = 'abacus'
+    name = 'biohub.abacus'
     title = 'ABACUS'
-    author = 'Jay Lan, Jisi Li'
+    author = 'Jay Lan, Jiansi Li'
     description = 'abacus'
 
     app_path = os.getcwd()

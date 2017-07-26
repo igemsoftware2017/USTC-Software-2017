@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+import datetime
+
 
 class Abacus(models.Model):
 
@@ -8,16 +10,14 @@ class Abacus(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='abacus')
 
-    tag = models.TextField(max_length=255)
+    tag = models.TextField(default="", max_length=255)
 
-    # upload_file = models.FileField(upload_to=AbacusConfig.upload_path)
-    # download_file = models.FileField()
-    descriable = models.TextField(max_length=255)
-    create_date = models.TimeField(auto_now_add=True, db_index=True)
+    descriable = models.TextField(default="", max_length=255)
+    create_date = models.DateTimeField(auto_now_add=True, db_index=True)
     shared = models.BooleanField(default=False)
 
-    # -1:error,0-to be start,1-processing,2-done
+    # -1:error,0-to be start,1-uploaded and queuing,2-processing,3-done
     status = models.IntegerField()
 
     class Meta:
-        ordering = {'-create_date', }
+        ordering = ('-create_date', )
