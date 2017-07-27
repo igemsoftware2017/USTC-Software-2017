@@ -93,6 +93,8 @@ class Experience(models.Model):
     rate = models.DecimalField(
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
+    # add records for users mark down who has already rated
+    rate_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
     # is_visible: no need for Experience, for the Part always exists
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)

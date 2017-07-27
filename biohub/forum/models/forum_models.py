@@ -33,6 +33,8 @@ class Post(models.Model):
         'last updated', auto_now=True,)
     pub_time = models.DateField('publish date', auto_now_add=True)
     up_vote_num = models.IntegerField(default=0)
+    # add records for users mark down who has already voted for the post
+    up_vote_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
     # down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
     # No need to explicitly specify is_comment. It will be added automatically.
@@ -55,6 +57,18 @@ class Post(models.Model):
         self.save()
         # for comment in self.comments.all():
         #     comment.show()
+
+    def up_vote(self, user):
+        if user not in self.up_vote_users:
+            self.up_vote_num += 1
+            self.up_vote_users.add(user)
+            self.save()
+
+    def cancel_up_vote(self, user):
+        if user in self.up_vote_users:
+            self.up_vote_users.remove(user)
+            self.up_vote_num -= 1
+            self.save()
 
 
 # # Inherit Post to support comments of comments.
