@@ -1,2 +1,4 @@
-from .forum_models import Thread, Post, Comment, Studio
-from .bio_models import File, Article, ModificationRequest, Brick
+MAX_LEN_FOR_CONTENT = 1000
+MAX_LEN_FOR_THREAD_TITLE = 100
+from .bio_models import File, Article, Brick, Experience
+from .forum_models import Post
