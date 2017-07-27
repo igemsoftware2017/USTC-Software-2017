@@ -1,8 +1,8 @@
-from django.dispatch import receiver
-from django.db.models.signals import pre_delete, m2m_changed, post_save
-
-from biohub.accounts.models import User
-from biohub.forum.models.bio_models import Brick
+# from django.dispatch import receiver
+# from django.db.models.signals import pre_delete, m2m_changed, post_save
+#
+# from biohub.accounts.models import User
+# from biohub.forum.models.bio_models import Brick
 
 # @receiver(pre_delete,sender=Brick)
 # def move_internal_parts_to_extern(instance, **kwargs):

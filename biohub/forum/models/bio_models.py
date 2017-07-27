@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from biohub.forum.models import MAX_LEN_FOR_CONTENT,MAX_LEN_FOR_THREAD_TITLE
+from biohub.forum.models import MAX_LEN_FOR_CONTENT, MAX_LEN_FOR_THREAD_TITLE
 
 
 MAX_LEN_FOR_ARTICLE = 5000
@@ -31,9 +31,9 @@ class Brick(models.Model):
     name = models.CharField(max_length=100)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
-    designer = models.CharField(max_length=100,default='')
-    group_name = models.CharField(max_length=100,default='')
-    part_type = models.CharField(max_length=50,default='')  # eg: Signalling
+    designer = models.CharField(max_length=100, default='')
+    group_name = models.CharField(max_length=100, default='')
+    part_type = models.CharField(max_length=50, default='')  # eg: Signalling
 
     PART_STATUS_CHOICES = (
         ('Released', 'Released'),
@@ -41,7 +41,7 @@ class Brick(models.Model):
         ('Not Released', 'Not Released'),
         ('Discontinued', 'Discontinued')
     )
-    part_status = models.CharField(default='Not Released',max_length=15, choices=PART_STATUS_CHOICES)
+    part_status = models.CharField(default='Not Released', max_length=15, choices=PART_STATUS_CHOICES)
     SAMPLE_STATUS_CHOICE = (
         ('Sample in Stock', 'Sample in Stock'),
         ('It\'s complicated', 'It\'s complicated'),
@@ -49,17 +49,17 @@ class Brick(models.Model):
         ('Informational', 'Informational')
     )
     sample_status = models.CharField(
-        default='Sample in Stock',max_length=20, choices=SAMPLE_STATUS_CHOICE)
+        default='Sample in Stock', max_length=20, choices=SAMPLE_STATUS_CHOICE)
     EXPERIENCE_CHOICE = (
         ('works', 'works'),
         ('issues', 'issues'),
         ('fails', 'fails')
     )
     experience_status = models.CharField(
-        default='works',max_length=8, choices=EXPERIENCE_CHOICE)
+        default='works', max_length=8, choices=EXPERIENCE_CHOICE)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
-    document = models.OneToOneField(Article, null=True,on_delete=models.SET_NULL)
+    document = models.OneToOneField(Article, null=True, on_delete=models.SET_NULL)
     # TODO: analyze gz file, and add Ruler description
 
     followers = models.ManyToManyField(
@@ -98,9 +98,6 @@ class Experience(models.Model):
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)
     # is_sticky = models.BooleanField(default=False)
-    # choose one from the following two.
-    # Though the two field's default value are both None, one of them must be provided values.
-    # Deleting a studio or the bio-brick, the threads won't be truly deleted. But they will hide.
     brick = models.ForeignKey(
         Brick, on_delete=models.CASCADE, null=True, default=None)
 
@@ -119,14 +116,14 @@ class Experience(models.Model):
     # Warning: Because all comments are also posts,
     # please use the methods below to get posts directly attached to the thread.
     # When using t.post_set.all/filter/get, you will also get the comments.
-    def get_post_set_all(self):
-        return self.post_set.filter(is_comment=False)
-
-    def get_post_set_filter(self, *args, **kwargs):
-        return self.post_set.filter(is_comment=False, *args, **kwargs)
-
-    def get_post_set_by(self, *args, **kwargs):
-        return self.post_set.get(is_comment=False, *args, **kwargs)
+    # def get_post_set_all(self):
+    #     return self.post_set.filter(is_comment=False)
+    #
+    # def get_post_set_filter(self, *args, **kwargs):
+    #     return self.post_set.filter(is_comment=False, *args, **kwargs)
+    #
+    # def get_post_set_by(self, *args, **kwargs):
+    #     return self.post_set.get(is_comment=False, *args, **kwargs)
 
 
 # class ModificationRequest(models.Model):
@@ -137,7 +134,7 @@ class Experience(models.Model):
 #     # whether the request is granted
 #     granted = models.BooleanField(default=False)
 #     commit_obj = models.OneToOneField(Article)
-#     # TODO: add TimeField
+#     #
 #     submit_time = models.DateTimeField(auto_now_add=True)
 #     # set to time when it's granted by the author
 #     accept_time = models.DateTimeField()

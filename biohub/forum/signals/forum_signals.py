@@ -1,8 +1,6 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_delete, m2m_changed, post_save
-
-from biohub.accounts.models import User
-from biohub.forum.models import Post, Brick, Experience
+from django.db.models.signals import pre_delete
+from biohub.forum.models import Post, Experience
 
 
 @receiver(pre_delete, sender=Experience)
@@ -11,10 +9,10 @@ def hide_attached_posts(instance, **kwargs):
         post.hide()
 
 
-@receiver(pre_delete, sender=Post)
-def hide_attached_comments(instance, **kwargs):
-    for comment in instance.comments.all():
-        comment.hide()
+# @receiver(pre_delete, sender=Post)
+# def hide_attached_comments(instance, **kwargs):
+#     for comment in instance.comments.all():
+#         comment.hide()
 
 
 # @receiver(pre_delete, sender=Studio)
