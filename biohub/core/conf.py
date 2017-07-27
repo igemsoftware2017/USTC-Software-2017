@@ -3,11 +3,14 @@ import os.path
 import json
 import filelock
 import tempfile
+import logging
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
 
 from biohub.utils.collections import unique
+
+logger = logging.getLogger('biohub.conf')
 
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
@@ -16,6 +19,8 @@ mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
+    'UPLOAD_DIR': ('UPLOAD_DIR', tempfile.gettempdir),
+    'REDIS_URI': ('REDIS_URI', '')
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -95,6 +100,14 @@ class Settings(object):
         BIOHUB_PLUGINS should not contains duplicated items.
         """
         return unique(value)
+
+    def validate_upload_dir(self, value):
+        if value.startswith(tempfile.gettempdir()):
+            logger.warn(
+                'Your UPLOAD_DIR was under the temporary directory, all '
+                'files will be erased once system reboots.')
+
+        return os.path.abspath(value)
 
     def __delattr__(self, name):
         """
