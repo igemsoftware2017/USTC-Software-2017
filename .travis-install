@@ -14,6 +14,8 @@ cat > config.json << EOF
         }
     },
     "PLUGINS": [],
-    "TIMEZONE": "UTC"
+    "TIMEZONE": "UTC",
+    "UPLOAD_DIR": "/tmp/biohub",
+    "REDIS_URI": "redis://localhost:6379"
 }
 EOF
