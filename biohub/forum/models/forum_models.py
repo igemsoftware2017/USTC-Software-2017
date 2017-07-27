@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 
-from biohub.forum.models import Experience
-from biohub.forum.models import MAX_LEN_FOR_CONTENT, MAX_LEN_FOR_THREAD_TITLE
+from .bio_models import Experience
+
+MAX_LEN_FOR_CONTENT = 1000
 
 # class Studio(models.Model):
 #     name = models.CharField(max_length=100, unique=True)

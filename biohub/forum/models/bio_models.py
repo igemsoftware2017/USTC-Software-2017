@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
-from biohub.forum.models import MAX_LEN_FOR_CONTENT, MAX_LEN_FOR_THREAD_TITLE
 
-
+MAX_LEN_FOR_CONTENT = 1000
+MAX_LEN_FOR_THREAD_TITLE = 100
 MAX_LEN_FOR_ARTICLE = 5000
 
 
@@ -10,7 +10,7 @@ class File(models.Model):
     """
     Files consists of photos and other files
     """
-    filepointer = models.FileField(upload_to='upload')
+    file_pointer = models.FileField(upload_to='upload')
     description = models.TextField(max_length=100)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL)
     # 'users' field is a must.
@@ -27,7 +27,7 @@ class Article(models.Model):
 
 
 class Brick(models.Model):
-    ispart = models.BooleanField(default=True)
+    is_part = models.BooleanField(default=True)
     name = models.CharField(max_length=100)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
@@ -63,10 +63,9 @@ class Brick(models.Model):
     # TODO: analyze gz file, and add Ruler description
 
     followers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_from_follower',
-        null=True)
+        settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
     # eg: "True,False,False,True,True,True"
-    assembly_compat = models.CharField(max_length=40, default='')
+    assembly_compatibility = models.CharField(max_length=40, default='')
     parameters = models.TextField(default='')
     categories = models.TextField(default='')
     # private to Part:
