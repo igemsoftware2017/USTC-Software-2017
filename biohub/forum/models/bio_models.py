@@ -31,9 +31,9 @@ class Brick(models.Model):
     name = models.CharField(max_length=100)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
-    designer = models.CharField(max_length=100)
-    group_name = models.CharField(max_length=100)
-    part_type = models.CharField(max_length=50)  # eg: Signalling
+    designer = models.CharField(max_length=100,default='')
+    group_name = models.CharField(max_length=100,default='')
+    part_type = models.CharField(max_length=50,default='')  # eg: Signalling
 
     PART_STATUS_CHOICES = (
         ('Released', 'Released'),
@@ -41,7 +41,7 @@ class Brick(models.Model):
         ('Not Released', 'Not Released'),
         ('Discontinued', 'Discontinued')
     )
-    part_status = models.CharField(max_length=15, choices=PART_STATUS_CHOICES)
+    part_status = models.CharField(default='Not Released',max_length=15, choices=PART_STATUS_CHOICES)
     SAMPLE_STATUS_CHOICE = (
         ('Sample in Stock', 'Sample in Stock'),
         ('It\'s complicated', 'It\'s complicated'),
@@ -49,14 +49,14 @@ class Brick(models.Model):
         ('Informational', 'Informational')
     )
     sample_status = models.CharField(
-        max_length=20, choices=SAMPLE_STATUS_CHOICE)
+        default='Sample in Stock',max_length=20, choices=SAMPLE_STATUS_CHOICE)
     EXPERIENCE_CHOICE = (
         ('works', 'works'),
         ('issues', 'issues'),
         ('fails', 'fails')
     )
     experience_status = models.CharField(
-        max_length=8, choices=EXPERIENCE_CHOICE)
+        default='works',max_length=8, choices=EXPERIENCE_CHOICE)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(Article, null=True,on_delete=models.SET_NULL)
@@ -66,13 +66,13 @@ class Brick(models.Model):
         settings.AUTH_USER_MODEL, related_name='bricks_from_follower',
         null=True)
     # eg: "True,False,False,True,True,True"
-    assembly_compat = models.CharField(max_length=40)
-    parameters = models.TextField()
-    categories = models.TextField()
+    assembly_compat = models.CharField(max_length=40, default='')
+    parameters = models.TextField(default='')
+    categories = models.TextField(default='')
     # private to Part:
     # a gene part has two strand, so use two fields to record the sequence.
-    sequence_a = models.TextField()
-    sequence_b = models.TextField()
+    sequence_a = models.TextField(default='')
+    sequence_b = models.TextField(default='')
     used_by = models.TextField(blank=True, default='')
     # recursive relation. the brick related must be a Device
 
