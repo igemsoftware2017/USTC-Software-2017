@@ -4,9 +4,10 @@ python:
 install: "pip install -r requirements/dev.txt"
 before_install:
   - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
-script: "biohub/manage.py test"
+script: "DJANGO_SETTINGS_MODULE=tests.settings biohub/manage.py test"
 services:
   - mysql
+  - redis-server
 before_script:
   - bash .travis-install
 notifications:

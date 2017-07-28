@@ -8,3 +8,6 @@ numpy==1.13.1
 scipy==0.19.1
 biopython==1.70
 filelock==2.0.11
+asgi-redis==1.4.2
+cryptography==2.0.2
+django-redis==4.8.0

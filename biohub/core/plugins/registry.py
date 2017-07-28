@@ -8,7 +8,7 @@ from collections import OrderedDict, namedtuple, Counter
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.conf import settings as django_settings
-from django.apps import apps
+from django.apps import registry as apps_registry
 from django.apps.config import AppConfig
 
 from biohub.utils import module as module_util, path as path_util
@@ -60,22 +60,23 @@ class PluginManager(object):
         """
 
         def __init__(self, manager, test=False, config=False):
-            apps.check_apps_ready()
             self._test = test
             self._manager = manager
             self._config = config
+            self._apps = manager._apps
 
         def __enter__(self):
             self.acquire()
 
         def acquire(self):
             self._store_app_configs = [
-                ac.name for ac in apps.app_configs.values()]
+                ac.name for ac in self._apps.app_configs.values()]
 
             if self._config:
                 biohub_settings.store_settings()
 
         def release(self):
+            apps = self._apps
             apps.apps_ready = apps.models_ready = apps.ready = False
             self._manager._populate_apps(self._store_app_configs)
             self._manager.populate_plugins()
@@ -93,11 +94,12 @@ class PluginManager(object):
 
         return self._Protect(self, test, config)
 
-    def __init__(self):
+    def __init__(self, apps):
         self.plugin_configs = OrderedDict()
         self.plugin_infos = OrderedDict()
         self._install_lock = threading.Lock()
         self._db_lock = threading.Lock()
+        self._apps = apps
 
     @property
     def installing(self):
@@ -123,7 +125,7 @@ class PluginManager(object):
 
     @property
     def installed_apps(self):
-        return [ac.name for ac in apps.app_configs.values()]
+        return [ac.name for ac in self._apps.app_configs.values()]
 
     @property
     def apps_to_populate(self):
@@ -152,6 +154,7 @@ class PluginManager(object):
         """
         A function to more efficiently manipulate django app list.
         """
+        apps = self._apps
 
         missing = set(self.installed_apps) - set(apps_list)
         new = set(apps_list) - set(self.installed_apps)
@@ -203,11 +206,13 @@ class PluginManager(object):
         """
         Update plugins storage after new plugins installed.
         """
+        self._invalidate_websocket_handlers()
+
         self.plugin_infos = OrderedDict()
         self.plugin_configs = OrderedDict()
         self.available_plugins.clear()
 
-        for app_config in apps.app_configs.values():
+        for app_config in self._apps.app_configs.values():
 
             if isinstance(app_config, PluginConfig):
                 self._populate_plugin(app_config)
@@ -249,6 +254,14 @@ class PluginManager(object):
             validate_plugin_config(name, plugin_config_class)
 
         return plugin_names
+
+    def _invalidate_websocket_handlers(self):
+        """
+        To invalidate websocket handlers registration.
+        """
+        from biohub.core.websocket.signals import ws_received
+        ws_received.receivers.clear()
+        module_util.autodiscover_modules('ws_handlers')
 
     def _invalidate_urlconf(self):
         """
@@ -338,7 +351,7 @@ class PluginManager(object):
         with self._install_lock, self.protect(config=update_config):
 
             # Update django apps list.
-            if not apps.ready:
+            if not self._apps.ready:
                 raise exceptions.InstallationError(
                     "Django app registry isn't ready yet.")
 
@@ -424,4 +437,4 @@ class PluginManager(object):
                 test=test)
 
 
-manager = PluginManager()
+manager = PluginManager(apps_registry.apps)
