@@ -89,7 +89,7 @@ class Experience(models.Model):
     content = models.TextField(
         blank=True, default='', max_length=MAX_LEN_FOR_CONTENT)
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='experience_set')
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
@@ -98,7 +98,7 @@ class Experience(models.Model):
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
     # add records for users mark down who has already rated
-    rate_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    rate_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='experience_rated_set')
     # is_visible: no need for Experience, for the Part always exists
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)

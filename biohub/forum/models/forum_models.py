@@ -28,13 +28,13 @@ class Post(models.Model):
         Experience, on_delete=models.SET_NULL, null=True)
     content = models.TextField(blank=False, max_length=MAX_LEN_FOR_CONTENT, )
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='post_set')
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
     pub_time = models.DateField('publish date', auto_now_add=True)
     up_vote_num = models.IntegerField(default=0)
     # add records for users mark down who has already voted for the post
-    up_vote_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    up_vote_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='post_voted_set')
     # down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
     # No need to explicitly specify is_comment. It will be added automatically.
@@ -59,6 +59,8 @@ class Post(models.Model):
         #     comment.show()
 
     def up_vote(self, user):
+        if user.id == self.author.id:
+            return
         if user not in self.up_vote_users:
             self.up_vote_num += 1
             self.up_vote_users.add(user)
