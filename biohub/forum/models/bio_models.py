@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import validate_comma_separated_integer_list
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -34,7 +35,8 @@ class Brick(models.Model):
     designer = models.CharField(max_length=100, default='')
     group_name = models.CharField(max_length=100, default='')
     part_type = models.CharField(max_length=50, default='')  # eg: Signalling
-
+    nickname = models.CharField(max_length=50, default='')  # eg: f1 ori
+    
     PART_STATUS_CHOICES = (
         ('Released', 'Released'),
         ('Released HQ', 'Released HQ'),
@@ -61,6 +63,8 @@ class Brick(models.Model):
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(Article, null=True, on_delete=models.SET_NULL)
     # TODO: analyze gz file, and add Ruler description
+    dna_position = models.CharField(max_length=15,validators=[validate_comma_separated_integer_list])
+
 
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
