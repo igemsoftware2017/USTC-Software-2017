@@ -1,5 +1,6 @@
 /* This module was wrote by Chris Drake
-   and modified by E-Neo <e-neo@qq.com> */
+   and modified by E-Neo <e-neo@qq.com>
+   and modified by mlzeng <zengmingliang1998@gmail.com>*/
 
 /* Copyright (c) 2012, Chris Drake
 All rights reserved.
@@ -45,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **     espresso
 */
 
-#include <python2.7/Python.h>
+#include <Python.h>
 
 #include "espresso.h"
 
@@ -104,7 +105,7 @@ _pycov2esprcov(
         index = 0;
         for (i = 0; i < ninputs; i++) {
             pylong = PySequence_GetItem(pyins, i);
-            if (!PyInt_Check(pylong)) {
+            if (!PyLong_Check(pylong)) {
                 PyErr_SetString(PyExc_TypeError, "expected input to be an int");
                 Py_DECREF(pylong);
                 Py_DECREF(pyins);
@@ -113,7 +114,7 @@ _pycov2esprcov(
                 goto error;
             }
 
-            val = PyInt_AsLong(pylong);
+            val = PyLong_AsLong(pylong);
             maxval = (1 << CUBE.part_size[i]) - 1;
             if (val < 0 || val > maxval) {
                 PyErr_Format(PyExc_ValueError, "expected input in range [0, %d], got: %d", maxval, val);
@@ -148,7 +149,7 @@ _pycov2esprcov(
         savef = saved = saver = 0;
         for (i = 0; i < noutputs; i++, index++) {
             pylong = PySequence_GetItem(pyouts, i);
-            if (!PyInt_Check(pylong)) {
+            if (!PyLong_Check(pylong)) {
                 PyErr_SetString(PyExc_TypeError, "expected output to be an int");
                 Py_DECREF(pylong);
                 Py_DECREF(pyouts);
@@ -156,7 +157,7 @@ _pycov2esprcov(
                 Py_DECREF(pyrows);
                 goto error;
             }
-            val = PyInt_AsLong(pylong);
+            val = PyLong_AsLong(pylong);
             switch (val) {
             /* on */
             case 1:
@@ -231,7 +232,7 @@ _esprcov2pycov(int ninputs, int noutputs, set_family_t *F)
         if (pyins == NULL)
             goto decref_pyset;
         for (i = 0; i < ninputs; i++) {
-            pylong = PyInt_FromLong((long) GETINPUT(p, i));
+            pylong = PyLong_FromLong((long) GETINPUT(p, i));
             if (PyTuple_SetItem(pyins, i, pylong) < 0) {
                 Py_DECREF(pylong);
                 Py_DECREF(pyins);
@@ -245,7 +246,7 @@ _esprcov2pycov(int ninputs, int noutputs, set_family_t *F)
             goto decref_pyset;
         }
         for (i = 0; i < noutputs; i++) {
-            pylong = PyInt_FromLong((long) GETOUTPUT(p, i));
+            pylong = PyLong_FromLong((long) GETOUTPUT(p, i));
             if (PyTuple_SetItem(pyouts, i, pylong) < 0) {
                 Py_DECREF(pylong);
                 goto decref_pyins_pyouts;
@@ -523,22 +524,22 @@ static PyMethodDef _module_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-//static PyModuleDef _module = {
-//    PyModuleDef_HEAD_INIT,
-//
-//    "espresso",         /* m_name */
-//    _module_docstring,  /* m_doc */
-//    -1,                 /* m_size */
-//    _module_methods,    /* m_methods */
-//};
+static PyModuleDef _module = {
+    PyModuleDef_HEAD_INIT,
+
+    "espresso",         /* m_name */
+    _module_docstring,  /* m_doc */
+    -1,                 /* m_size */
+    _module_methods,    /* m_methods */
+};
 
 PyMODINIT_FUNC
-initespresso(void)
+PyInit_espresso(void)
 {
     PyObject *pymodule;
 
     /* Create module */
-    pymodule = Py_InitModule("espresso", _module_methods);
+    pymodule = PyModule_Create(&_module);
     if (pymodule == NULL)
         goto error;
 
@@ -566,6 +567,6 @@ initespresso(void)
     /* Success! */
 
 error:
-    return;
+    return pymodule;
 }
 
