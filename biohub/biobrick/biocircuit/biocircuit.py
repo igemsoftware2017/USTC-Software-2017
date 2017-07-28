@@ -1,4 +1,5 @@
-"""Functions to create circuit and calculate scores.
+"""
+Functions to create circuit and calculate scores.
 
 There are 4 most useful functions: string2expr(), create_circuit(),
 circuit_score(), api_circuit()
@@ -14,7 +15,6 @@ Create some biocircuits and calculate their scores
 >>> api_for_front = api_circuit(circuit, scores)
 """
 __author__ = 'E-Neo <e-neo@qq.com>'
-
 
 from math import log
 
@@ -62,7 +62,7 @@ def string2expr(string):
     cover = set(cover)
     result = list(qm.espresso(ninput, 1, cover))
     result = [i[0] for i in result]
-    result = [''.join(['X' if i == 3 else str(i-1) for i in j]) for j in result]
+    result = [''.join(['X' if i == 3 else str(i - 1) for i in j]) for j in result]
     return result
 
 
@@ -154,7 +154,7 @@ def create_circuit(expr):
     not_list = get_gate_not(expr)
     node_num = get_node_num(expr)
     for i in not_list:
-        edges.append(('v%d' % i, 'not%d' %i))
+        edges.append(('v%d' % i, 'not%d' % i))
     or_input = []
     andx = 0
     for i in expr:
@@ -209,7 +209,7 @@ def calc_score(l_gate, d_gate):
         elif i[0] == 'O':
             tmp = d_gate['or'][i]
         para = tuple(map(sum, zip(para, tmp)))
-    score = 2**(para[0]-1) + 2**(para[1]-1) + para[2] + para[3]
+    score = 2 ** (para[0] - 1) + 2 ** (para[1] - 1) + para[2] + para[3]
     return score
 
 

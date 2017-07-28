@@ -1,6 +1,5 @@
 __author__ = 'E-Neo <e-neo@qq.com>'
 
-
 import simplejson
 
 
@@ -22,12 +21,12 @@ def get_d_gate(lizhi_json):
     g_not = {}
     g_or = {}
     for i in lizhi:
-        print 'map:'
+        print('map:')
         for j in i['map']:
-            print j
+            print(j)
         for j in i:
             if j != 'map':
-                print '%s: %s' % (j, i[j])
+                print('%s: %s' % (j, i[j]))
         para = [0, 0, 0, 0]
         for j in i['map']:
             if j['type'] == 'inh':
