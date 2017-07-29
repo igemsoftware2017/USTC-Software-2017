@@ -36,14 +36,15 @@ class Brick(models.Model):
     group_name = models.CharField(max_length=100, default='')
     part_type = models.CharField(max_length=50, default='')  # eg: Signalling
     nickname = models.CharField(max_length=50, default='')  # eg: f1 ori
-    
+
     PART_STATUS_CHOICES = (
         ('Released', 'Released'),
         ('Released HQ', 'Released HQ'),
         ('Not Released', 'Not Released'),
         ('Discontinued', 'Discontinued')
     )
-    part_status = models.CharField(default='Not Released', max_length=15, choices=PART_STATUS_CHOICES)
+    part_status = models.CharField(
+        default='Not Released', max_length=15, choices=PART_STATUS_CHOICES)
     SAMPLE_STATUS_CHOICE = (
         ('Sample in Stock', 'Sample in Stock'),
         ('It\'s complicated', 'It\'s complicated'),
@@ -61,10 +62,11 @@ class Brick(models.Model):
         default='works', max_length=8, choices=EXPERIENCE_CHOICE)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
-    document = models.OneToOneField(Article, null=True, on_delete=models.SET_NULL)
+    document = models.OneToOneField(
+        Article, null=True, on_delete=models.SET_NULL)
     # TODO: analyze gz file, and add Ruler description
-    dna_position = models.CharField(max_length=15,validators=[validate_comma_separated_integer_list])
-
+    dna_position = models.CharField(max_length=15, validators=[
+                                    validate_comma_separated_integer_list])
 
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
@@ -98,13 +100,17 @@ class Experience(models.Model):
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
     # add records for users mark down who has already rated
-    rate_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='experience_rated_set')
+    rate_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='experience_rated_set')
     # is_visible: no need for Experience, for the Part always exists
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)
     # is_sticky = models.BooleanField(default=False)
     brick = models.ForeignKey(
         Brick, on_delete=models.CASCADE, null=True, default=None)
+
+    def __unicode__(self):
+        return '%s' % (self.title)
 
     # def hide(self):
     #     self.is_visible = False
@@ -129,6 +135,15 @@ class Experience(models.Model):
     #
     # def get_post_set_by(self, *args, **kwargs):
     #     return self.post_set.get(is_comment=False, *args, **kwargs)
+
+
+class SeqFeature(models.Model):
+    brick = models.ForeignKey(
+        Brick, on_delete=models.CASCADE, related_name='seqFeatures')
+    feature_type = models.CharField(max_length=15, default='')
+    start_loc = models.PositiveIntegerField(default=0)
+    end_loc = models.PositiveIntegerField(default=0)
+    name = models.CharField(max_length=15, default='')
 
 
 # class ModificationRequest(models.Model):
