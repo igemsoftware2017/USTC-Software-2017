@@ -7,20 +7,29 @@ modifying the main urlconf.
 
 from django.conf.urls import include, url
 
+from biohub.utils.registry.base import ListRegistryBase
 
-class UrlProxy(object):
+
+class UrlPatternsRegistry(ListRegistryBase):
+
+    submodules_to_populate = ('urls',)
 
     def __init__(self, prefix, name=None):
         self.__prefix = prefix
-        self.__urls = []
         self.__name = name
+
+        super(UrlPatternsRegistry, self).__init__()
 
     def register(self, prefix, urls, namespace=None):
         """
         Register a list of urlpatterns with given prefix and namespace.
         """
-        self.__urls.append(
-            url(prefix, include((urls, namespace))))
+        super(UrlPatternsRegistry, self).register([
+            url(
+                prefix,
+                include((urls, namespace))
+            )
+        ])
 
     @property
     def name(self):
@@ -28,25 +37,22 @@ class UrlProxy(object):
 
     @property
     def urls(self):
-        return self.__urls
+        return self.storage_list
 
     @property
     def prefix(self):
         return self.__prefix
 
-    def cache_clear(self):
-        self.__urls.clear()
 
+api_url_patterns = UrlPatternsRegistry(r'^api/', 'api')
+default_url_patterns = UrlPatternsRegistry(r'^', 'default')
 
-APIUrlProxy = UrlProxy(r'^api/', 'api')
-DefaultUrlProxy = UrlProxy(r'^', 'default')
-
-register_api = APIUrlProxy.register
-register_default = DefaultUrlProxy.register
+register_api = api_url_patterns.register
+register_default = default_url_patterns.register
 
 urlpatterns = []
 
-for proxy in (APIUrlProxy, DefaultUrlProxy):
+for proxy in (api_url_patterns, default_url_patterns):
     urlpatterns.append(
         url(proxy.prefix, include(proxy.urls, namespace=proxy.name)))
 
@@ -55,5 +61,7 @@ def cache_clear():
     """
     To clear the stored url patterns, used for invalidating.
     """
-    for proxy in (APIUrlProxy, DefaultUrlProxy):
-        proxy.cache_clear()
+    for proxy in (api_url_patterns, default_url_patterns):
+        proxy.cache_clear(populate=False)
+
+    UrlPatternsRegistry.populate_submodules()

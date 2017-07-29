@@ -278,8 +278,8 @@ class PluginManager(object):
 
          + invalidate resolver's LRU cache (use `.cache_clear` provided by
             `lru_cache`)
-         + reload main urlconf module and biohub url patterns registration
-            module
+         + reload main urlconf module and clear cache in biohub url patterns
+            registration module
          + reload `urls.py` in each app, using a force-reload version of
             `autodiscover_module`
          + override default resolver's `urlconf_module` and `url_patterns`
@@ -292,15 +292,12 @@ class PluginManager(object):
 
         try:
             get_resolver.cache_clear()
-
             biohub.core.routes.cache_clear()
             main_urls = importlib.reload(biohub.main.urls)
-            module_util.autodiscover_modules('urls')
 
             resolver = get_resolver()
             resolver.urlconf_module = main_urls
-            resolver.url_patterns = getattr(
-                main_urls, "urlpatterns")
+            resolver.url_patterns = getattr(main_urls, "urlpatterns")
 
         except Exception as e:
             raise exceptions.URLConfError(e)
