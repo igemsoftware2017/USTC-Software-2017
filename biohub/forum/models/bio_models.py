@@ -1,21 +1,11 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import validate_comma_separated_integer_list
+from biohub.core.files.models import File
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
 MAX_LEN_FOR_ARTICLE = 5000
-
-
-class File(models.Model):
-    """
-    Files consists of photos and other files
-    """
-    file_pointer = models.FileField(upload_to='upload')
-    description = models.TextField(max_length=100)
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL)
-    # 'users' field is a must.
-    # Because files may be included to users' media repository, or may not(set to NULL)
 
 
 class Article(models.Model):
@@ -95,7 +85,7 @@ class Experience(models.Model):
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
-    pub_time = models.DateField('publish date', auto_now_add=True)
+    pub_time = models.DateTimeField('publish time', auto_now_add=True)
     rate = models.DecimalField(
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
@@ -109,8 +99,22 @@ class Experience(models.Model):
     brick = models.ForeignKey(
         Brick, on_delete=models.CASCADE, null=True, default=None)
 
+    class Meta:
+        ordering = ['pub_time']
+
     def __unicode__(self):
-        return '%s' % (self.title)
+        return '%s' % self.title
+
+    def rate(self, rate, user):
+        if user.id == self.author.id:
+            return False
+        if user not in self.rate_users.all():
+            self.rate = (self.rate * self.rate_num + rate) / (self.rate_num + 1)
+            self.rate_num += 1
+            self.rate_users.add(user)
+            self.save()
+            return True
+        return False
 
     # def hide(self):
     #     self.is_visible = False

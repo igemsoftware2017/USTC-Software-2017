@@ -31,7 +31,7 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='post_set')
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
-    pub_time = models.DateField('publish date', auto_now_add=True)
+    pub_time = models.DateTimeField('publish time', auto_now_add=True)
     up_vote_num = models.IntegerField(default=0)
     # add records for users mark down who has already voted for the post
     up_vote_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='post_voted_set')
@@ -69,6 +69,7 @@ class Post(models.Model):
             self.up_vote_users.add(user)
             self.save()
             return True
+        return False
 
     def cancel_up_vote(self, user):
         if user in self.up_vote_users.all():
