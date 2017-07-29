@@ -41,6 +41,9 @@ class Post(models.Model):
     # There's only one level of replies
     # is_comment = models.BooleanField()
 
+    class Meta:
+        ordering = ['pub_time']
+
     # def __init__(self, *args, **kwargs):
     #     if 'is_comment' not in kwargs:
     #         kwargs['is_comment'] = False
@@ -60,17 +63,20 @@ class Post(models.Model):
 
     def up_vote(self, user):
         if user.id == self.author.id:
-            return
-        if user not in self.up_vote_users:
+            return False
+        if user not in self.up_vote_users.all():
             self.up_vote_num += 1
             self.up_vote_users.add(user)
             self.save()
+            return True
 
     def cancel_up_vote(self, user):
-        if user in self.up_vote_users:
+        if user in self.up_vote_users.all():
             self.up_vote_users.remove(user)
             self.up_vote_num -= 1
             self.save()
+            return True
+        return False
 
 
 # # Inherit Post to support comments of comments.
