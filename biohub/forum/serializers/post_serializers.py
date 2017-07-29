@@ -7,13 +7,26 @@ from biohub.accounts.serializers import UserSerializer
 
 @bind_model(Post)
 class PostSerializer(ModelSerializer):
-    author = UserSerializer(fields=('id', 'username'))
+    author = UserSerializer(fields=('id', 'username'), read_only=True)
     experience_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Experience.objects.all())
-    up_vote_num = serializers.IntegerField(required=False, default=0)
+    # experience_url = serializers.HyperlinkedRelatedField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ('id', 'experience_id', 'experience_url',
+        fields = ('id', 'experience_id',
                   'content', 'up_vote_num', 'update_time',
                   'pub_time', 'author')
-        read_only_fields = ('id', 'update_time', 'pub_time', 'author', 'experience_url')
+        read_only_fields = ('id', 'update_time', 'pub_time', 'up_vote_num')
+        # TODO: after finishing experience serializers, add experience_url as read only.
+
+    def create(self, validated_data):
+        experience = validated_data.pop('experience_id')
+        post = Post.objects.create(experience=experience, **validated_data)
+        return post
+
+    def update(self, instance, validated_data):
+        if 'experience_id' in validated_data:
+            validated_data.pop('experience_id')
+        instance.content = validated_data.get('content', instance.content)
+        instance.save()
+        return instance

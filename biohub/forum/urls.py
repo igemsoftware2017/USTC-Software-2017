@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from biohub.forum.views import PostViewSet
 
 router = DefaultRouter()
-router.register(r'^posts', PostViewSet, base_name='post')
+router.register(r'posts', PostViewSet, base_name='post')
 
-register_api('', [
+register_api(r'^forum/', [
 
 ] + router.urls, 'posts')
