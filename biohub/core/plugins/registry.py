@@ -206,7 +206,7 @@ class PluginManager(object):
         """
         Update plugins storage after new plugins installed.
         """
-        self._invalidate_websocket_handlers()
+        self._invalidate_components()
 
         self.plugin_infos = OrderedDict()
         self.plugin_configs = OrderedDict()
@@ -255,6 +255,13 @@ class PluginManager(object):
 
         return plugin_names
 
+    def _invalidate_components(self):
+        """
+        Reloads essential modules or variables in each plugin.
+        """
+        self._invalidate_urlconf()
+        self._invalidate_websocket_handlers()
+
     def _invalidate_websocket_handlers(self):
         """
         To invalidate websocket handlers registration.
@@ -293,7 +300,7 @@ class PluginManager(object):
             resolver = get_resolver()
             resolver.urlconf_module = main_urls
             resolver.url_patterns = getattr(
-                main_urls, "urlpatterns", main_urls)
+                main_urls, "urlpatterns")
 
         except Exception as e:
             raise exceptions.URLConfError(e)
@@ -315,9 +322,6 @@ class PluginManager(object):
 
             self._remove_apps(removed)
 
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
-
             self.populate_plugins()
 
             if update_config:
@@ -327,7 +331,6 @@ class PluginManager(object):
 
     def install(self, plugin_names,
                 update_config=False,
-                invalidate_urlconf=True,
                 migrate_database=False, migrate_options=None):
         """
         Install a list of plugins specified by `plugin_names`.
@@ -356,10 +359,6 @@ class PluginManager(object):
                     "Django app registry isn't ready yet.")
 
             self._add_apps(plugin_names)
-
-            # Invalidate URLConf
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
 
             # Migrate database
             if migrate_database:

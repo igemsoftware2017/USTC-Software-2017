@@ -1,11 +1,13 @@
 from rest_framework.test import APITestCase
 from django.urls import reverse
+from django.test import override_settings
 
 from biohub.accounts.models import User
 
 from ._utils import open_sample
 
 
+@override_settings(DEBUG=True)
 class Test(APITestCase):
 
     def test_upload_fail(self):

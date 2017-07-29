@@ -1,14 +1,20 @@
 from rest_framework.test import APITestCase
-from django.test import modify_settings
+from unittest import skipIf
+from django.test import modify_settings, override_settings
+from django.conf import settings
 
 from biohub.core.files.clean_unused import clean_unused
 from biohub.accounts.models import User
 from ._utils import open_sample
 
 
+@skipIf(
+    'tests.core.files.cleanunused_tests' not in settings.INSTALLED_APPS,
+    '')
 @modify_settings(INSTALLED_APPS={
     'append': 'tests.core.files.cleanunused_tests'
 })
+@override_settings(DEBUG=True)
 class Test(APITestCase):
 
     def test_cleanunused(self):
