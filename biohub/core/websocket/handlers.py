@@ -7,6 +7,7 @@ class register_handler(object):
     """
     A decorator for websocket handler registration.
     """
+
     def __init__(self, handler_name, uid=None):
         self._handler_name = handler_name
         self._uid = uid
