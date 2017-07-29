@@ -293,7 +293,7 @@ class PluginManager(object):
         try:
             get_resolver.cache_clear()
 
-            importlib.reload(biohub.core.routes)
+            biohub.core.routes.cache_clear()
             main_urls = importlib.reload(biohub.main.urls)
             module_util.autodiscover_modules('urls')
 
