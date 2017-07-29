@@ -3,13 +3,15 @@ import subprocess
 import threading
 import logging
 import importlib
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, Counter
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
-from django.conf import settings
-from django.apps import apps
+from django.conf import settings as django_settings
+from django.apps import registry as apps_registry
+from django.apps.config import AppConfig
 
-from biohub.utils import module as module_util
+from biohub.utils import module as module_util, path as path_util
 from biohub.utils.collections import unique
 from biohub.core.conf import settings as biohub_settings, dump_config
 
@@ -21,6 +23,8 @@ logger = logging.getLogger('biohub.plugins')
 REQUIRED_PROPERTIES = ('title', 'author', 'description',)
 
 PluginInfo = namedtuple('PluginInfo', REQUIRED_PROPERTIES)
+
+manage_py_file_path = path_util.join(django_settings.BIOHUB_DIR, 'manage.py')
 
 
 def validate_plugin_config(plugin_name, config_class):
@@ -49,11 +53,53 @@ def validate_plugin_config(plugin_name, config_class):
 
 class PluginManager(object):
 
-    def __init__(self):
-        self.plugins = OrderedDict()
+    class _Protect:
+        """
+        A context manager to protect plugins installation state while
+        installing / removing plugins.
+        """
+
+        def __init__(self, manager, test=False, config=False):
+            self._test = test
+            self._manager = manager
+            self._config = config
+            self._apps = manager._apps
+
+        def __enter__(self):
+            self.acquire()
+
+        def acquire(self):
+            self._store_app_configs = [
+                ac.name for ac in self._apps.app_configs.values()]
+
+            if self._config:
+                biohub_settings.store_settings()
+
+        def release(self):
+            apps = self._apps
+            apps.apps_ready = apps.models_ready = apps.ready = False
+            self._manager._populate_apps(self._store_app_configs)
+            self._manager.populate_plugins()
+
+            if self._config:
+                biohub_settings.restore_settings()
+
+        def __exit__(self, exc_type, exc, traceback):
+            if self._test or exc is not None:
+                self.release()
+            elif self._config:
+                biohub_settings.restore_settings(write=False)
+
+    def protect(self, test=False, config=False):
+
+        return self._Protect(self, test, config)
+
+    def __init__(self, apps):
+        self.plugin_configs = OrderedDict()
         self.plugin_infos = OrderedDict()
         self._install_lock = threading.Lock()
         self._db_lock = threading.Lock()
+        self._apps = apps
 
     @property
     def installing(self):
@@ -75,11 +121,11 @@ class PluginManager(object):
         """
         An alias to biohub_settings.BIOHUB_PLUGINS
         """
+        return biohub_settings.BIOHUB_PLUGINS
 
-        if not hasattr(self, '_available_plugins'):
-            self._available_plugins = biohub_settings.BIOHUB_PLUGINS
-
-        return self._available_plugins
+    @property
+    def installed_apps(self):
+        return [ac.name for ac in self._apps.app_configs.values()]
 
     @property
     def apps_to_populate(self):
@@ -87,23 +133,98 @@ class PluginManager(object):
         Returns the names of apps to be populated.
         """
 
-        return unique(settings.INSTALLED_APPS + self.available_plugins)
+        return unique(django_settings.INSTALLED_APPS + self.available_plugins)
 
-    def populate_plugins(self, plugin_names):
+    def _remove_apps(self, to_remove):
+        """
+        A shortcut for `_populate_apps`.
+        """
+        to_remove = set(to_remove)
+
+        return self._populate_apps([
+            x for x in self.installed_apps if x not in to_remove])
+
+    def _add_apps(self, to_add):
+        """
+        A shortcut for `_populate_apps`.
+        """
+        return self._populate_apps(unique(self.installed_apps + to_add))
+
+    def _populate_apps(self, apps_list):
+        """
+        A function to more efficiently manipulate django app list.
+        """
+        apps = self._apps
+
+        missing = set(self.installed_apps) - set(apps_list)
+        new = set(apps_list) - set(self.installed_apps)
+
+        apps.apps_ready = apps.models_ready = apps.ready = False
+
+        with apps._lock:
+
+            for entry in apps_list + list(self.installed_apps):
+
+                if isinstance(entry, AppConfig):
+                    app_config = entry
+                else:
+                    app_config = AppConfig.create(entry)
+
+                label = app_config.label
+
+                if entry in missing and label in apps.app_configs:
+                    del apps.app_configs[label]
+                elif entry in new and label not in apps.app_configs:
+                    apps.app_configs[label] = app_config
+                    app_config.apps = apps
+
+            counts = Counter(
+                app_config.name for app_config in apps.app_configs.values())
+            duplicates = [
+                name for name, count in counts.most_common() if count > 1]
+            if duplicates:
+                raise ImproperlyConfigured(
+                    "Application names aren't unique, "
+                    "duplicates: %s" % ", ".join(duplicates))
+
+            apps.apps_ready = True
+
+            for app_config in apps.app_configs.values():
+                app_config.import_models()
+
+            apps.clear_cache()
+
+            apps.models_ready = True
+
+            for app_config in apps.get_app_configs():
+                if app_config.name in new:
+                    app_config.ready()
+
+            apps.ready = True
+
+    def populate_plugins(self):
         """
         Update plugins storage after new plugins installed.
         """
-        for app_config in apps.app_configs.values():
+        self._invalidate_components()
 
-            if app_config.name in plugin_names:
-                self._populate_plugin(app_config.name, app_config)
+        self.plugin_infos = OrderedDict()
+        self.plugin_configs = OrderedDict()
+        self.available_plugins.clear()
 
-    def _populate_plugin(self, plugin_name, plugin_config):
+        for app_config in self._apps.app_configs.values():
+
+            if isinstance(app_config, PluginConfig):
+                self._populate_plugin(app_config)
+                self.available_plugins.append(app_config.name)
+
+    def _populate_plugin(self, plugin_config):
         """
         Populate a single plugin.
         """
 
-        self.plugins[plugin_name] = plugin_config
+        plugin_name = plugin_config.name
+        self.plugin_configs[plugin_name] = plugin_config
 
         properties = (getattr(plugin_config, pname)
                       for pname in REQUIRED_PROPERTIES)
@@ -134,6 +255,21 @@ class PluginManager(object):
 
         return plugin_names
 
+    def _invalidate_components(self):
+        """
+        Reloads essential modules or variables in each plugin.
+        """
+        self._invalidate_urlconf()
+        self._invalidate_websocket_handlers()
+
+    def _invalidate_websocket_handlers(self):
+        """
+        To invalidate websocket handlers registration.
+        """
+        from biohub.core.websocket.signals import ws_received
+        ws_received.receivers.clear()
+        module_util.autodiscover_modules('ws_handlers')
+
     def _invalidate_urlconf(self):
         """
         To invalidate url patterns after plugin list mutated.
@@ -157,14 +293,14 @@ class PluginManager(object):
         try:
             get_resolver.cache_clear()
 
-            importlib.reload(biohub.core.routes)
+            biohub.core.routes.cache_clear()
             main_urls = importlib.reload(biohub.main.urls)
             module_util.autodiscover_modules('urls')
 
             resolver = get_resolver()
             resolver.urlconf_module = main_urls
             resolver.url_patterns = getattr(
-                main_urls, "urlpatterns", main_urls)
+                main_urls, "urlpatterns")
 
         except Exception as e:
             raise exceptions.URLConfError(e)
@@ -176,37 +312,17 @@ class PluginManager(object):
         Remove a list of plugins specified by `plugin_names`.
         """
 
-        with self._install_lock:
+        with self._install_lock, self.protect(config=update_config):
 
-            removed = []
-
-            for plugin_name in plugin_names:
-                try:
-                    self.available_plugins.remove(plugin_name)
-                    removed.append(plugin_name)
-                except ValueError:
-                    pass
+            removed = list(set(plugin_names) & set(self.installed_apps))
 
             # halt if no plugins to be REALLY removed
             if not removed:
                 return removed
 
-            if apps.ready:
-                apps.app_configs = OrderedDict()
-                apps.apps_ready = apps.models_ready = apps.ready = False
+            self._remove_apps(removed)
 
-                try:
-                    apps.clear_cache()
-                    apps.populate(self.apps_to_populate)
-                except Exception as e:
-                    raise exceptions.RemovalError(e)
-
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
-
-            # update plugin infos
-            for plugin_name in removed:
-                self.plugin_infos.pop(plugin_name, 0)
+            self.populate_plugins()
 
             if update_config:
                 dump_config()
@@ -215,7 +331,6 @@ class PluginManager(object):
 
     def install(self, plugin_names,
                 update_config=False,
-                invalidate_urlconf=True,
                 migrate_database=False, migrate_options=None):
         """
         Install a list of plugins specified by `plugin_names`.
@@ -233,36 +348,23 @@ class PluginManager(object):
 
         plugin_names = self._validate_plugins(plugin_names)
 
-        with self._install_lock:
+        if not plugin_names:
+            return plugin_names
 
-            if not plugin_names:
-                return plugin_names
+        with self._install_lock, self.protect(config=update_config):
 
             # Update django apps list.
-            if not apps.ready:
+            if not self._apps.ready:
                 raise exceptions.InstallationError(
                     "Django app registry isn't ready yet.")
 
-            apps.app_configs = OrderedDict()
-            apps.apps_ready = apps.models_ready = apps.ready = False
-
-            try:
-                apps.clear_cache()
-                apps.populate(self.apps_to_populate + plugin_names)
-            except Exception as e:
-                raise exceptions.InstallationError(e)
-
-            # Invalidate URLConf
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
+            self._add_apps(plugin_names)
 
             # Migrate database
             if migrate_database:
                 self.prepare_database(plugin_names, **(migrate_options or {}))
 
-            self.populate_plugins(plugin_names)
-
-            self.available_plugins.extend(plugin_names)
+            self.populate_plugins()
 
             if update_config:
                 dump_config()
@@ -306,7 +408,7 @@ class PluginManager(object):
                         verbosity=0, test=False):
         if new_process:
             args = filter(bool, [
-                'manage.py',
+                manage_py_file_path,
                 'migrateplugin',
                 plugin_name,
                 '--verbosity=%s' % verbosity,
@@ -334,4 +436,4 @@ class PluginManager(object):
                 test=test)
 
 
-manager = PluginManager()
+manager = PluginManager(apps_registry.apps)

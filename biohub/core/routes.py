@@ -34,6 +34,9 @@ class UrlProxy(object):
     def prefix(self):
         return self.__prefix
 
+    def cache_clear(self):
+        self.__urls.clear()
+
 
 APIUrlProxy = UrlProxy(r'^api/', 'api')
 DefaultUrlProxy = UrlProxy(r'^', 'default')
@@ -46,3 +49,11 @@ urlpatterns = []
 for proxy in (APIUrlProxy, DefaultUrlProxy):
     urlpatterns.append(
         url(proxy.prefix, include(proxy.urls, namespace=proxy.name)))
+
+
+def cache_clear():
+    """
+    To clear the stored url patterns, used for invalidating.
+    """
+    for proxy in (APIUrlProxy, DefaultUrlProxy):
+        proxy.cache_clear()

@@ -1,6 +1,6 @@
-from ._base import PluginCommand, CommandError
+from ._base import PluginCommand
 
-from biohub.core.conf import manager as settings_manager
+from biohub.core.conf import dump_config
 
 
 class Command(PluginCommand):
@@ -8,10 +8,6 @@ class Command(PluginCommand):
     help = "Add a new plugin to configuration file."
 
     def handle(self, plugin, **options):
+        super(Command, self).handle(plugin, **options)
 
-        try:
-            super(Command, self).handle(plugin, **options)
-        except CommandError:
-            pass
-
-        settings_manager.dump()
+        dump_config()

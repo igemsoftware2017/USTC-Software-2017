@@ -1,6 +1,6 @@
 # Biohub-Server
 
-Server scaffold for Biohub (igem 2017).
+master : [![Build Status](https://travis-ci.org/hsfzxjy/Biohub-Server.svg?branch=master)](https://travis-ci.org/hsfzxjy/Biohub-Server)
 
 **[组内文档](https://github.com/hsfzxjy/Biohub-Server/wiki)**
 
@@ -13,6 +13,7 @@ Server scaffold for Biohub (igem 2017).
  + Python >= 3.5.0
  + MySQL 及对应的 dev 包
  + Windows 下需要 C/C++ 编译环境（如 MinGW）
+ + Redis
 
 #### virtualenv
 
@@ -32,7 +33,7 @@ trusted-host=https://pypi.douban.com/simple
 
 #### manage.py
 
-`~/biohub/manage.py` 为开发时高频命令，**建议将其符号链接至全局可见的位置**（`pyvenv` 下为 `<env_dir>/bin/` 目录，`virtualenvwrapper` 下为 `$VIRTUAL_ENV/bin/` 目录）。
+`~/biohub/manage.py` 为开发时高频命令，**建议将其 Symlink 至全局可见的位置**（`pyvenv` 下为 `<env_dir>/bin/` 目录，`virtualenvwrapper` 下为 `$VIRTUAL_ENV/bin/` 目录）。
 
 #### 安装开发时依赖
 
@@ -43,6 +44,8 @@ pip install -r requirements/dev.txt
 ### 关于编码规范
 
 为减少不必要的麻烦，本次开发需遵守 [PEP 8](http://legacy.python.org/dev/peps/pep-0008/) 规范。执行 `manage.py codestyle` 可对整个项目进行规范检查。
+
+**代码中不得出现中文**。
 
 为保证被提交的代码都是符合规范的，**要求将以下内容加入 `<project_dir>/.git/hooks/pre-commit` 中**：
 
@@ -97,30 +100,7 @@ fi
 
 ### 关于 config.json
 
-鉴于开发过程中各成员的系统配置（如数据库密码等）难以保持一致，我将配置中需要个性化的部分单独抽出来做成一个接口，以方便开发。此接口日后也可能成为产品逻辑的一部分，使用户无需深入项目中修改 `settings` 文件即可完成配置工作。截至目前，此处只暴露了数据库接口。
-
-默认内容如下：
-
-```json
-{
-    "DATABASE": {
-        "NAME": "",
-        "USER": "",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": "",
-        "TEST": {
-            "NAME": ""
-        }
-    }
-}
-```
-
-此文件已加入 `.gitignore`，请勿将其提交出来。默认在项目的根目录下寻找此文件，你也可以通过设置环境变量 `BIOHUB_CONFIG_PATH` 指定文件的位置：
-
-```bash
-BIOHUB_CONFIG_PATH=other/path/config.json manage.py runserver
-```
+详见 [Wiki 文档](https://github.com/hsfzxjy/Biohub-Server/wiki#configjson-%E5%AD%97%E6%AE%B5%E9%87%8A%E4%B9%89)
 
 ### 关于测试
 

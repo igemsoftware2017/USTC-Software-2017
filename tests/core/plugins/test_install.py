@@ -1,36 +1,25 @@
-import json
-
-from rest_framework.test import APITestCase
-
-from biohub.core.conf import manager as settings_manager
+from ._base import PluginTestCase
 
 
-class Test(APITestCase):
-
-    def setUp(self):
-        settings_manager.store_settings()
-
-    def tearDown(self):
-        settings_manager.restore_settings()
+class Test(PluginTestCase):
 
     def test_install(self):
-        from biohub.core.plugins import install, manager, remove
+        from biohub.core.plugins import install, plugins
 
         name = 'tests.core.plugins.my_plugin'
+
+        # Phase 1
         install([name], migrate_database=True, update_config=True,
                 migrate_options=dict(
                     test=True,
                     new_process=True))
 
-        with open(settings_manager.config_file_path, 'r') as fp:
-            data = json.load(fp)
-
-            self.assertIn(name, data['PLUGINS'])
-
+        self.assertIn(name, self.current_settings['PLUGINS'])
         self.assertEqual(
-            manager.plugin_infos[name],
+            plugins.plugin_infos[name],
             ('My Plugin', 'hsfzxjy', 'This is my plugin.'))
 
+        # Phase 2
         install(['tests.core.plugins.another_plugin'],
                 migrate_database=True, update_config=True,
                 migrate_options=dict(
@@ -39,8 +28,5 @@ class Test(APITestCase):
 
         resp = self.client.get('/api/another_plugin/')
         self.assertEqual(resp.data, [])
-
         resp = self.client.get('/api/my_plugin/')
         self.assertEqual(resp.data, [])
-
-        remove(['tests.core.plugins.another_plugin', name])
