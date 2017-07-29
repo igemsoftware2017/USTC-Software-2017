@@ -106,7 +106,7 @@ class PluginManager(object):
         """
         Returns a bool indicating whether plugin list is mutating.
         """
-        return self._install_lock.locked
+        return self._install_lock.locked()
 
     @property
     def migrating(self):
@@ -114,7 +114,7 @@ class PluginManager(object):
         Returns a bool indicating whether there are any plugins migrating their
         models.
         """
-        return self._db_lock.locked
+        return self._db_lock.locked()
 
     @property
     def available_plugins(self):
