@@ -17,7 +17,7 @@ class Test(WSTestCase):
 
         from biohub.core.websocket import register_handler, unregister_handler
         _ = register_handler('test')(lambda m: m.reply(m.data))  # noqa
-        unregister_handler(_)
+        unregister_handler('test')
 
         data = {
             'handler': 'test',
@@ -28,7 +28,7 @@ class Test(WSTestCase):
         self.assertIsNone(self.client1.receive())
 
     def test_signal(self):
-        from biohub.core.websocket import register_handler
+        from biohub.core.websocket import register_handler, unregister_handler
         _ = register_handler('test')(lambda m: m.reply(m.data))  # noqa
 
         data = {
@@ -40,7 +40,7 @@ class Test(WSTestCase):
         self.assertEqual(self.client1.receive(), data)
         self.assertIsNone(self.client2.receive())
 
-        del _
+        unregister_handler('test')
         self.client1.send_content(data)
         self.assertIsNone(self.client1.receive())
 

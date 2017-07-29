@@ -266,9 +266,8 @@ class PluginManager(object):
         """
         To invalidate websocket handlers registration.
         """
-        from biohub.core.websocket.signals import ws_received
-        ws_received.receivers.clear()
-        module_util.autodiscover_modules('ws_handlers')
+        from biohub.core.websocket.registry import cache_clear
+        cache_clear()
 
     def _invalidate_urlconf(self):
         """

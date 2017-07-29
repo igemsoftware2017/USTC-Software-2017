@@ -1,7 +1,6 @@
 from channels.generic.websockets import JsonWebsocketConsumer
-from . import signals
-from .message import MessageWrapper
-from .parsers import WebSocketDataDecodeError
+
+from .registry import websocket_handlers
 
 
 class MainConsumer(JsonWebsocketConsumer):
@@ -21,17 +20,21 @@ class MainConsumer(JsonWebsocketConsumer):
         """
         Rejects if user is not authenticated.
         """
+
+        accept = self.message.user.is_authenticated()
+
         self.message.reply_channel.send({
-            "accept": self.message.user.is_authenticated()
+            "accept": accept
         })
+
+        if accept:
+            websocket_handlers.dispatch(self, {
+                'handler': '__connect__',
+                'data': ''
+            })
 
     def receive(self, content, **kwargs):
         """
         Dispatches incoming content to corresponding handlers.
         """
-        try:
-            message = MessageWrapper(self, content)
-        except WebSocketDataDecodeError as e:
-            self.send(dict(handler='__error__', data=str(e)))
-        else:
-            signals.ws_received.send(self.__class__, message=message)
+        websocket_handlers.dispatch(self)

@@ -1,4 +1,6 @@
-from . import parsers
+import json
+
+from . import parsers, tool
 
 
 class MessageWrapper(object):
@@ -6,10 +8,22 @@ class MessageWrapper(object):
     To provide a more easy-use interface for websocket handler writers.
     """
 
-    def __init__(self, consumer, content):
-        self.handler_name, self.data = parsers.decode(content)
+    def __init__(self, consumer, content=None):
+        if content is None:
+            content = json.loads(consumer.message.content['text'])
+
+        try:
+            self.handler_name, self.data = parsers.decode(content)
+        except parsers.WebsocketDataDecodeError as e:
+            self.handler_name, self.data = '__error__', str(e)
+
         self.user = consumer.message.user
         self.__consumer = consumer
+        self.__broadcaster = tool.Broadcaster(self.handler_name)
+
+    @property
+    def packed_data(self):
+        return parsers.encode(self.handler_name, self.data)
 
     def reply(self, data):
         """
@@ -27,21 +41,8 @@ class MessageWrapper(object):
 
         self.__consumer.group_send(group_name, wrapped)
 
-    def broadcast(self, data):
-        """
-        To make a global broadcast.
-        """
-        self.group_send('broadcast', data)
+    def __getattribute__(self, name):
+        if name in tool.BROADCAST_FUNCTION_NAMES:
+            return getattr(self.__broadcaster, name)
 
-    def broadcast_user(self, user, data):
-        """
-        To broadcast to a specified user.
-        """
-        self.group_send('user_%s' % user.id, data)
-
-    def broadcast_users(self, users, data):
-        """
-        To broadcast to a group a users.
-        """
-        for user in users:
-            self.broadcast_user(user, data)
+        return object.__getattribute__(self, name)
