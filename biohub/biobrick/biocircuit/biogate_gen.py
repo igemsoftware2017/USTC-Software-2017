@@ -48,7 +48,7 @@ def get_d_gate(lizhi_json):
     return d_gate_d
 
 
-fp = open('../../../doc/devices/gates_lizhi.json', 'r')
+fp = open('gates_lizhi.json', 'r')
 s_lizhi = fp.read()
 fp.close()
 d_gate = get_d_gate(s_lizhi)

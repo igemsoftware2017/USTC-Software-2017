@@ -20,7 +20,7 @@ mapping = {
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
     'UPLOAD_DIR': ('UPLOAD_DIR',
-                   lambda: os.path.join(tempfile.gettempdir, 'biohub')),
+                   lambda: os.path.join(tempfile.gettempdir(), 'biohub')),
     'REDIS_URI': ('REDIS_URI', '')
 }
 

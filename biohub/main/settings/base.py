@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'biohub.core.files',
     'biohub.core.plugins',
 
+    'haystack',
     'biohub.biobrick',
 ]
 
@@ -178,7 +179,20 @@ if biohub_settings.REDIS_URI:
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
     SESSION_CACHE_ALIAS = "default"
 else:
+
+    import warnings
+
+    warnings.warn('No redis configuration. ')
+
     CHANNEL_LAYERS['default']['BACKEND'] = 'asgiref.inmemory.ChannelLayer'
     del CHANNEL_LAYERS['default']['CONFIG']
 
 del biohub_settings
+
+# tmp
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    },
+}

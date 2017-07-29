@@ -1,43 +1,52 @@
-from django.db.models import Q
+# from django.db.models import Q
+
 from rest_framework import viewsets
+from rest_framework.decorators import list_route
+from rest_framework.response import Response
+from haystack.query import SearchQuerySet, EmptySearchQuerySet
 
 from .models import Biobrick
 from .serializers import BiobrickSerializer
 
 # Create your views here.
 
+order_choices = ['part_name', '-uses']
+list_default_order = 'part_name'
+
 
 class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
-    # The viewset for bbk, to list, search and retrieve.
     queryset = Biobrick.objects.all()
     serializer_class = BiobrickSerializer
 
     def filter_queryset(self, queryset):
-        # Return a queryset according to the request params
-        querydict = self.request.query_params
+        order = self.request.query_params.get('order')
+        order = order if order in order_choices else list_default_order
+        return queryset.order_by(order)
 
-        name = querydict.get('name')
-        if name:
-            queryset = queryset.filter(part_name__icontains=name)
+    @list_route()
+    def search(self, request):
+        # url: biobrick/search
+        # name: biobrick-search
+        querydict = request.query_params
+        queryset = None
 
-        sequence = querydict.get('sequence')
-        if sequence:
-            queryset = queryset.filter(sequence__icontains=sequence)
+        if querydict.get('q') is not None:
+            queryset = queryset if queryset is not None else SearchQuerySet().all()
+            queryset = queryset.auto_query(querydict['q'])
 
-        desc = querydict.get('desc', '')
-        and_list = querydict.get('and', '').split(' ')
-        desc += ''.join(' +' + s for s in and_list if s is not '')
-        or_list = querydict.get('or', '').split(' ')
-        desc += ''.join(' ' + s for s in or_list if s is not '')
-        not_list = querydict.get('not', '').split(' ')
-        desc += ''.join(' -' + s for s in not_list if s is not '')
-        if desc is not '':
-            queryset = queryset.filter(
-                Q(short_desc__search=desc) | Q(description__search=desc))
+        if querydict.get('part_name') is not None:
+            queryset = queryset if queryset is not None else SearchQuerySet().all()
+            queryset = queryset.filter(part_name__contains=querydict['part_name'])
 
-        order = querydict.get('order')
-        order_choices = ['part_name', '-uses']
-        order = order if order in order_choices else 'part_name'
-        queryset = queryset.order_by(order)
+        if querydict.get('sequence') is not None:
+            queryset = queryset if queryset is not None else SearchQuerySet().all()
+            queryset = queryset.filter(sequence__contains=querydict['sequence'])
 
-        return queryset
+        queryset = queryset if queryset is not None else EmptySearchQuerySet()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

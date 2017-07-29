@@ -19,7 +19,7 @@ __author__ = 'E-Neo <e-neo@qq.com>'
 from math import log
 
 import networkx as nx
-import BioBLESS.biocircuit.espresso as qm
+from . import espresso as qm
 
 
 def string2expr(string):
