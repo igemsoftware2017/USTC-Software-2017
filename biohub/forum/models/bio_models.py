@@ -24,7 +24,7 @@ class Article(models.Model):
 
 class Brick(models.Model):
     is_part = models.BooleanField(default=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
     designer = models.CharField(max_length=100, default='')
