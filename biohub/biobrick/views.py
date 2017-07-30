@@ -42,6 +42,9 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset if queryset is not None else SearchQuerySet().all()
             queryset = queryset.filter(sequence__contains=querydict['sequence'])
 
+        if queryset is not None and querydict.get('order') in order_choices:
+            queryset = queryset.order_by(querydict['order'])
+
         queryset = queryset if queryset is not None else EmptySearchQuerySet()
 
         page = self.paginate_queryset(queryset)
