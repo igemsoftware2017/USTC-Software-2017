@@ -16,6 +16,10 @@ class Article(models.Model):
     """
     text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
     files = models.ManyToManyField(File)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, default=None
+    )
 
 
 class Brick(models.Model):
@@ -79,8 +83,9 @@ class Brick(models.Model):
 
 class Experience(models.Model):
     title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE)
-    content = models.TextField(
-        blank=True, default='', max_length=MAX_LEN_FOR_CONTENT)
+    # experience can be uploaded by users, so use Article to support markdown.
+    content = models.OneToOneField(
+        Article, null=True, on_delete=models.SET_NULL, default=None)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='experience_set',
         null=True, default=None
@@ -93,8 +98,8 @@ class Experience(models.Model):
         'last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
-    pub_time = models.DateField('publish time', default=date.today())
-    rate = models.DecimalField(
+    pub_time = models.DateField('publish time', default=date.today)
+    rate_score = models.DecimalField(
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
     # add records for users mark down who has already rated
@@ -117,7 +122,7 @@ class Experience(models.Model):
         if user.id == self.author.id:
             return False
         if user not in self.rate_users.all():
-            self.rate = (self.rate * self.rate_num + rate) / (self.rate_num + 1)
+            self.rate_score = (self.rate_score * self.rate_num + rate) / (self.rate_num + 1)
             self.rate_num += 1
             self.rate_users.add(user)
             self.save()
