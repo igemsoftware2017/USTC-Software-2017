@@ -11,3 +11,4 @@ filelock==2.0.11
 asgi-redis==1.4.2
 cryptography==2.0.2
 django-redis==4.8.0
+requests==2.18.2

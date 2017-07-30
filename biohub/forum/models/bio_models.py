@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from datetime import date
 from django.core.validators import validate_comma_separated_integer_list
 from biohub.core.files.models import File
 
@@ -53,10 +54,9 @@ class Brick(models.Model):
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(
-        Article, null=True, on_delete=models.SET_NULL)
-    # TODO: analyze gz file, and add Ruler description
+        Article, null=True, on_delete=models.SET_NULL, default=None)
     dna_position = models.CharField(max_length=15, validators=[
-                                    validate_comma_separated_integer_list])
+                                    validate_comma_separated_integer_list], default='')
 
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
@@ -74,6 +74,7 @@ class Brick(models.Model):
     # private to Device
     # format: "BBa_K808013,BBa_K648028"
     sub_parts = models.TextField(blank=True, default='')
+    update_time = models.DateTimeField('last updated', auto_now=True)
 
 
 class Experience(models.Model):
@@ -81,11 +82,18 @@ class Experience(models.Model):
     content = models.TextField(
         blank=True, default='', max_length=MAX_LEN_FOR_CONTENT)
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='experience_set')
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='experience_set',
+        null=True, default=None
+    )
+    # If the experience was uploaded by a user, the field author_name will be the username,
+    # If the experience was fetched from the iGEM website,
+    # the author_name should be set according to the data fetched.
+    author_name = models.CharField(max_length=100, blank=True, default='')
     update_time = models.DateTimeField(
         'last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
-    pub_time = models.DateTimeField('publish time', auto_now_add=True)
+    # Also the pub_time can be set manually.
+    pub_time = models.DateField('publish time', default=date.today())
     rate = models.DecimalField(
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     rate_num = models.IntegerField(default=0)
@@ -100,7 +108,7 @@ class Experience(models.Model):
         Brick, on_delete=models.CASCADE, null=True, default=None)
 
     class Meta:
-        ordering = ['pub_time']
+        ordering = ('pub_time', 'id')
 
     def __unicode__(self):
         return '%s' % self.title
