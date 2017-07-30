@@ -1,0 +1,10 @@
+在这里记录一下大概的依赖和调整,要改的东西以后再改
+
+haystack:
+python包: django-haystack
+biohub/main/settings/base.py里加入了对haystack的支持
+搜索前python biohub/manage.py update_index
+
+backend: elasticsearch
+python包: elasricsearch
+需要安装elasticsearch 1.x or 2.x (5.x not supported),可以按照官网的方式安装

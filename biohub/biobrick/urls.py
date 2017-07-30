@@ -1,5 +1,4 @@
 from rest_framework.routers import DefaultRouter
-# from django.conf.urls import url, include
 
 from biohub.core.routes import register_api
 
