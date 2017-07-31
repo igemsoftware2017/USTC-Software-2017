@@ -1,4 +1,7 @@
-import requests, re, json, logging
+import requests
+import re
+import json
+import logging
 from bs4 import BeautifulSoup
 from biohub.forum.models import Brick, Experience, SeqFeature
 from biohub.utils.htm2text import html2text
@@ -94,9 +97,9 @@ class BrickSpider:
             h = html2text.HTML2Text()
             h.body_width = 1000  # must not break one line into multiple lines
             markdown = h.handle(str(soup2))
-            article = Article(text=markdown,files=None)
+            article = Article(text=markdown, files=None)
             article.save()
-            brick.document=article
+            brick.document = article
         except Exception as e:
             self.logger.error('Error during parsing contents.')
             self.logger.error(e)
@@ -112,6 +115,7 @@ class ExperienceSpider:
     """
     Before using the spider, the brick witch the experience is attached to should exist in database.
     """
+
     def fill_from_page(self, brick_name, experience=None):
         if experience is None:
             experience = Experience(title='Part: ' + brick_name + ': Experience',
@@ -125,6 +129,7 @@ class SeqFeatureSpider:
     """
     Before using the spider, the brick witch the seq_feature is attached to should exist in database.
     """
+
     def fill_from_page(self, brick_name, seq_feature=None):
         if seq_feature is None:
             seq_feature = SeqFeature(brick=Brick.objects.get(name=brick_name))

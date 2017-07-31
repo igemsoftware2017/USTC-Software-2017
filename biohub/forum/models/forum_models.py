@@ -34,7 +34,8 @@ class Post(models.Model):
     pub_time = models.DateTimeField('publish time', auto_now_add=True)
     up_vote_num = models.IntegerField(default=0)
     # add records for users mark down who has already voted for the post
-    up_vote_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='post_voted_set')
+    up_vote_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='post_voted_set')
     # down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
     # No need to explicitly specify is_comment. It will be added automatically.
