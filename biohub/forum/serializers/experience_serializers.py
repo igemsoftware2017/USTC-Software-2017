@@ -32,11 +32,13 @@ class ExperienceSerializer(ModelSerializer):
         # Because the data validation will be accomplished by the Experience serializer.
         content = content_serializer.create(content_data)
         experience = Experience.objects.create(brick=brick, content=content,
+                                               author_name=validated_data['author'].username,
                                                **validated_data)
         return experience
 
     def update(self, instance, validated_data):
         instance.brick = validated_data.get('brick_id', instance.brick)
+        instance.author_name = validated_data['author_name']
         if 'content_data'in validated_data:
             content_data = validated_data.pop('content_data')
             content_serializer = ArticleSerializer(instance.content, data=content_data)

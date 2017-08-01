@@ -37,17 +37,21 @@ class ExperienceViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         experience = self.get_object()
-        now = timezone.now()
-        if now - experience.update_time > self.UPDATE_DELTA:
-            if self.spider.fill_from_page(experience.brick.name, experience=experience) is not True:
-                return Response('Unable to update data of this brick!',
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # experience.author is None means it is from iGEM website,
+        # rather than uploaded by a user
+        if experience.author is None:
+            now = timezone.now()
+            if now - experience.update_time > self.UPDATE_DELTA:
+                if self.spider.fill_from_page(experience.brick.name, experience=experience) is not True:
+                    return Response('Unable to update data of this brick!',
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = ExperienceSerializer(experience, context={
             'request': request
         })
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
+        # ?short=true will return only fields of (id, title, author_name)
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
@@ -57,3 +61,6 @@ class ExperienceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(author_name=self.request.user.username)

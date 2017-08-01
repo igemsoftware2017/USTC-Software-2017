@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Brick, Article
+# from time import sleep
 
 
 class ExperienceRestfulAPITest(TestCase):
@@ -136,3 +137,11 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['rate_score'], '3.5')
+
+        # def test_auto_updating_experience_from_igem(self):
+        #     """
+        #     To run this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1).
+        #     Same reason as it is in test_restful_bricks.py
+        #     """
+        #     # TODO: tests need to be added.
+        #
