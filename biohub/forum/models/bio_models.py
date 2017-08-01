@@ -162,6 +162,7 @@ class SeqFeature(models.Model):
     start_loc = models.PositiveIntegerField(default=0)
     end_loc = models.PositiveIntegerField(default=0)
     name = models.CharField(max_length=15, default='')
+    reserve = models.BooleanField(default=False)
 
 
 # class ModificationRequest(models.Model):
