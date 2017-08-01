@@ -3,7 +3,7 @@ import re
 import json
 import logging
 from bs4 import BeautifulSoup
-from biohub.forum.models import Brick, Experience, SeqFeature
+from biohub.forum.models import Brick, Experience, SeqFeature, Article
 from biohub.utils.htm2text import html2text
 
 
@@ -55,10 +55,10 @@ class BrickSpider:
             seqFeature_data = re.search(
                 'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
             seqFeatureList = re.findall(
-                '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\'', seqFeature_data)
+                '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
             for each in seqFeatureList:
                 brick.seqFeatures.create(feature_type=each[0], start_loc=int(
-                    each[1]), end_loc=int(each[2]), name=each[3])
+                    each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
             sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\)', raw_bioinfo) and re.search(
                 'subParts.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
             if(sub_parts_data):
@@ -68,6 +68,31 @@ class BrickSpider:
             else:
                 brick.sub_parts = None  # for stand-alone bricks
             soup = BeautifulSoup(raw_html, "lxml")
+            div = soup.find(id='part_status_wrapper')
+            # fetch release status
+            div2=div.find_all('div')[0]
+            brick.part_status=div2.text
+            # fetch sample status
+            div2 = div.find_all('div')[1]
+            brick.sample_status=div2.text
+            # fetch experience status
+            div2 = div.find_all('div')[2]
+            brick.experience_status=div2.text
+            # fetch use number
+            div2 = div.find_all('div')[3]
+            if(re.search('(\d+)\s*',div2.text)):
+                brick.use_num = int(re.search('(\d+)\s*',div2.text))
+            else:
+                brick.use_num = 0
+            # fetch twin num(if exists)
+            div2 = div.find_all('div')[4]
+            if(re.search('(\d+)\s*Twins.*?',div2.text)):
+                twin_num = int(re.search('(\d+)\s*Twins.*?',div2.text).group(1))
+            else:
+                twin_num = 0
+            # fetch assembly compatibility
+            div = soup.find(class_='compatibility_div')
+            assembly_compatibility = [('box_green' in item['class']) for item in div.ul.find_all('li')]
             # fetch parameters
             parameters = []
             div = soup.find(id='parameters')
@@ -86,13 +111,15 @@ class BrickSpider:
             for each in scriptset:
                 each.extract()
             html_document = soup.find('div', id='mw-content-text')
-            if(panel=soup.find(id='sequencePaneDiv')):
+            panel=soup.find(id='sequencePaneDiv')
+            if(panel):
                 panel.extract()
-            if(compat=soup.find(class_='compatibility_div')):
+            compat=soup.find(class_='compatibility_div')
+            if(compat):
                 compat.parent.extract()
             # restore images by supplementing URLs
             newdoc = re.sub('=\"/(.*?\")', '=\"' +
-                            base_site + r'\1', str(soup))
+                            BrickSpider.base_site + r'\1', str(soup))
             soup2 = BeautifulSoup(newdoc, "lxml")
             h = html2text.HTML2Text()
             h.body_width = 1000  # must not break one line into multiple lines
