@@ -1,4 +1,4 @@
-from biohub.forum.models import Post, Experience
+from biohub.forum.models import Post, Experience, Article, Brick
 from biohub.accounts.models import User
 from django.test import TestCase
 import random
@@ -14,11 +14,21 @@ def create_new_user(**kwargs):
     user.save()
     return user
 
+def create_new_article(**kwargs):
+    article = Article.objects.create(text=create_random_string(), **kwargs)
+    return article
+
 
 def create_new_experience(author, **kwargs):
-    thread = Experience(title='this is a title', author=author, **kwargs)
-    thread.save()
-    return thread
+    experience = Experience(title='this is a title', author=author,
+                        content=create_new_article(), **kwargs)
+    experience.save()
+    return experience
+
+
+def create_new_brick(**kwargs):
+    brick = Brick(name=create_random_string(), document=create_new_article(),
+                  **kwargs)
 
 
 def create_new_post(experience, author, **kwargs):
@@ -36,8 +46,10 @@ def create_new_post(experience, author, **kwargs):
 class ExperienceSignalTests(TestCase):
     def setUp(self):
         self.user = create_new_user()
+        self.experience = create_new_experience(author=self.user)
+        self.experience2 = create_new_experience(author=self.user)
 
-    def test_delete_a_experience_those_posts__should_hide(self):
+    def test_delete_a_experience_those_posts_should_hide(self):
         experience = create_new_experience(author=self.user)
         post1 = create_new_post(experience=experience, author=self.user)
         post2 = create_new_post(experience, self.user)
@@ -78,6 +90,27 @@ class ExperienceSignalTests(TestCase):
     #     thread.get_post_set_filter(pk=post.id)
     #     self.assertEqual(thread.get_post_set_all().count(), 1)
     #     self.assertEqual(thread.get_post_set_all()[0].id, post.id)
+
+    def delete_experience_the_article_should_be_deleted(self):
+        article_id = self.experience.content.id
+        Article.objects.get(pk=article_id)
+        self.experience.delete()
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id
+        })
+
+    def delete_queryset_all_the_articles_attached_should_be_deleted(self):
+        article_id = self.experience.content.id
+        Article.objects.get(pk=article_id)
+        article_id2 = self.experience2.content.id
+        Article.objects.get(pk=article_id2)
+        Brick.objects.all().delete()
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id
+        })
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id2
+        })
 
 
 # class PostModelTests(TestCase):
@@ -162,3 +195,30 @@ class ExperienceSignalTests(TestCase):
 #         Comment.objects.filter(up_vote_num=10).delete()
 #         self.assertIs(Comment.objects.get(pk=comment11.id).is_visible, False)
 #         self.assertIs(Comment.objects.get(pk=comment21.id).is_visible, False)
+
+
+class BrickSignalTests(TestCase):
+    def setUp(self):
+        self.brick = create_new_brick()
+        self.brick2 = create_new_brick()
+
+    def delete_brick_the_article_should_be_deleted(self):
+        article_id = self.brick.document.id
+        Article.objects.get(pk=article_id)
+        self.brick.delete()
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id
+        })
+
+    def delete_queryset_all_the_articles_attached_should_be_deleted(self):
+        article_id = self.brick.document.id
+        Article.objects.get(pk=article_id)
+        article_id2 = self.brick2.document.id
+        Article.objects.get(pk=article_id2)
+        Brick.objects.all().delete()
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id
+        })
+        self.assertRaises(Article.DoesNotExist, Article.objects.get, {
+            'pk': article_id2
+        })
