@@ -32,29 +32,29 @@ class Brick(models.Model):
     part_type = models.CharField(max_length=50, default='')  # eg: Signalling
     nickname = models.CharField(max_length=50, default='')  # eg: f1 ori
 
-    PART_STATUS_CHOICES = (
-        ('Released', 'Released'),
-        ('Released HQ', 'Released HQ'),
-        ('Not Released', 'Not Released'),
-        ('Discontinued', 'Discontinued')
-    )
+    # PART_STATUS_CHOICES = (
+    #     ('Released', 'Released'),
+    #     ('Released HQ', 'Released HQ'),
+    #     ('Not Released', 'Not Released'),
+    #     ('Discontinued', 'Discontinued')
+    # )
     part_status = models.CharField(
-        default='Not Released', max_length=15, choices=PART_STATUS_CHOICES)
-    SAMPLE_STATUS_CHOICE = (
-        ('Sample in Stock', 'Sample in Stock'),
-        ('It\'s complicated', 'It\'s complicated'),
-        ('Not in Stock', 'Not in Stock'),
-        ('Informational', 'Informational')
-    )
+        default='Not Released', max_length=20)
+    # SAMPLE_STATUS_CHOICE = (
+    #     ('Sample in Stock', 'Sample in Stock'),
+    #     ('It\'s complicated', 'It\'s complicated'),
+    #     ('Not in Stock', 'Not in Stock'),
+    #     ('Informational', 'Informational')
+    # )
     sample_status = models.CharField(
-        default='Sample in Stock', max_length=20, choices=SAMPLE_STATUS_CHOICE)
-    EXPERIENCE_CHOICE = (
-        ('works', 'works'),
-        ('issues', 'issues'),
-        ('fails', 'fails')
-    )
+        default='Sample in Stock', max_length=20)
+    # EXPERIENCE_CHOICE = (
+    #     ('works', 'works'),
+    #     ('issues', 'issues'),
+    #     ('fails', 'fails')
+    # )
     experience_status = models.CharField(
-        default='works', max_length=8, choices=EXPERIENCE_CHOICE)
+        default='works', max_length=20)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(
@@ -122,7 +122,8 @@ class Experience(models.Model):
         if user.id == self.author.id:
             return False
         if user not in self.rate_users.all():
-            self.rate_score = (self.rate_score * self.rate_num + rate) / (self.rate_num + 1)
+            self.rate_score = (self.rate_score *
+                               self.rate_num + rate) / (self.rate_num + 1)
             self.rate_num += 1
             self.rate_users.add(user)
             self.save()
