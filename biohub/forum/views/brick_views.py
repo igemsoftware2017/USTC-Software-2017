@@ -60,7 +60,9 @@ class BrickViewSet(mixins.ListModelMixin,
             if self.spider.fill_from_page(brick.name, brick=brick) is not True:
                 return Response('Unable to update data of this brick!',
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        serializer = BrickSerializer(brick)
+        serializer = BrickSerializer(brick, context={
+            'request': request
+        })
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
