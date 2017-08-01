@@ -10,14 +10,14 @@ import json
 
 class ArticleRestfulAPITest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="abc")
-        self.user.set_password("123456000+")
-        self.user.save()
+        user = User.objects.create(username='abc')
+        user.set_password('123456000+')
+        user.save()
         with open(os.path.join(tempfile.gettempdir(), 'for_test.txt'), "w") as f:
             pass
         with open(os.path.join(tempfile.gettempdir(), 'for_test.txt'), "r") as f:
             self.file = File.objects.create_from_file(f)
-        self.article = Article.objects.create(text="124651321", author=self.user)
+        self.article = Article.objects.create(text="124651321")
         self.article.files.add(self.file)
         self.client = APIClient()
 
@@ -30,28 +30,28 @@ class ArticleRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/articles/')
         self.assertEqual(response.status_code, 404)
 
-    def test_change_text(self):
+    def test_unable_to__change_text(self):
         response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
             'text': 'jjjjjjjjjjj'
         })
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 405)
         self.assertIs(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
             'text': 'jjjjjjjjjjj'
         })
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/articles/%d/' % self.article.id)
-        self.assertEqual(json.loads(response.content)['text'], 'jjjjjjjjjjj')
-        user_other = User.objects.create(username="ddd")
-        user_other.set_password("123456000+")
-        user_other.save()
-        self.article = Article.objects.create(text="124651321", author=user_other)
-        response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
-            'text': 'jjjjjjjjjjj'
-        })
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 405)
+        # response = self.client.get('/api/forum/articles/%d/' % self.article.id)
+        # self.assertEqual(json.loads(response.content)['text'], 'jjjjjjjjjjj')
+        # user_other = User.objects.create(username="ddd")
+        # user_other.set_password("123456000+")
+        # user_other.save()
+        # self.article = Article.objects.create(text="124651321")
+        # response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
+        #     'text': 'jjjjjjjjjjj'
+        # })
+        # self.assertEqual(response.status_code, 405)
 
-    def test_change_files(self):
+    def test_unable_to_change_files(self):
         with open(os.path.join(tempfile.gettempdir(), 'for_test2.txt'), "w") as f:
             pass
         with open(os.path.join(tempfile.gettempdir(), 'for_test2.txt'), "r") as f:
@@ -61,6 +61,6 @@ class ArticleRestfulAPITest(TestCase):
             'text': 'jjjjjjjjjjj',
             'file_ids': [file.id]
         })
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.article.files.count(), 1)
-        self.article.files.get(pk=file.id)
+        self.assertEqual(response.status_code, 405)
+        # self.assertEqual(self.article.files.count(), 1)
+        # self.article.files.get(pk=file.id)

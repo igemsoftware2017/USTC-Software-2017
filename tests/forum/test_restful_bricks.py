@@ -12,7 +12,7 @@ class BrickRestfulAPITest(TestCase):
         self.user = User.objects.create(username="abc")
         self.user.set_password("123456000+")
         self.user.save()
-        self.document =  Article.objects.create(text='aaa', author=self.user)
+        self.document =  Article.objects.create(text='aaa')
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
 

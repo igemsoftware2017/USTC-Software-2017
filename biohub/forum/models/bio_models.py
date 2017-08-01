@@ -16,10 +16,6 @@ class Article(models.Model):
     """
     text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
     files = models.ManyToManyField(File)
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        null=True, default=None
-    )
 
 
 class Brick(models.Model):
