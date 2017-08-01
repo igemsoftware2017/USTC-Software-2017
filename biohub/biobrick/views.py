@@ -1,4 +1,4 @@
-# from django.db.models import Q
+from django.core.urlresolvers import reverse_lazy
 
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
@@ -42,8 +42,13 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset if queryset is not None else SearchQuerySet().all()
             queryset = queryset.filter(sequence__contains=querydict['sequence'])
 
-        if queryset is not None and querydict.get('order') in order_choices:
+        if (queryset is not None) and (querydict.get('order') in order_choices):
             queryset = queryset.order_by(querydict['order'])
+
+        if ('highlight' in querydict) and (queryset is not None):
+            queryset = queryset.highlight(
+                pre_tags=['<class="highlight">'], post_tags=['</class>']
+            )
 
         queryset = queryset if queryset is not None else EmptySearchQuerySet()
 
@@ -53,3 +58,12 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def get_serializer_context(self):
+        context = super(BiobrickViewSet, self).get_serializer_context()
+        if (self.request.path == reverse_lazy('api:biobrick:biobrick-search')):
+            q = self.request.query_params['q']
+            suggestion = EmptySearchQuerySet().spelling_suggestion(q)
+            if suggestion != q:
+                context['suggestion'] = suggestion
+        return context

@@ -8,10 +8,13 @@ from .models import Biobrick
 @bind_model(Biobrick)
 class BiobrickSerializer(ModelSerializer):
     urlset = serializers.SerializerMethodField()
+    highlighted = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
 
     class Meta:
         model = Biobrick
-        fields = ('part_name', 'sequence', 'short_desc', 'description', 'urlset')
+        fields = ('part_name', 'sequence', 'short_desc', 'description', 'urlset', 'highlighted')
         read_only_fields = ['__all__']
 
     def get_urlset(self, obj):
