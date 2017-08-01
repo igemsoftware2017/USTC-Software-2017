@@ -3,6 +3,7 @@ from django.conf import settings
 from datetime import date
 from django.core.validators import validate_comma_separated_integer_list
 from biohub.core.files.models import File
+import decimal
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -119,7 +120,7 @@ class Experience(models.Model):
             return False
         if user not in self.rate_users.all():
             self.rate_score = (self.rate_score *
-                               self.rate_num + rate) / (self.rate_num + 1)
+                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
             self.rate_num += 1
             self.rate_users.add(user)
             self.save()
