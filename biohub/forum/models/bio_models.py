@@ -12,7 +12,7 @@ MAX_LEN_FOR_ARTICLE = 5000
 
 class Article(models.Model):
     """
-    Each article serves as one of the following: a lab record, a document or a commit object.
+    Each article serves as one of the following: a lab experience, or a document.
     The article has no 'name' field, for the name can be specified in text(using markdown)
     """
     text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
