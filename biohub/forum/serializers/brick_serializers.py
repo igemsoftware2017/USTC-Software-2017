@@ -13,8 +13,8 @@ class BrickSerializer(ModelSerializer):
     class Meta:
         model = Brick
         exclude = ('update_time',)
-        read_only_fields = ('id', 'name', 'is_part', 'designer', 'group_name', 'part_type',
+        read_only_fields = ('id', 'name', 'designer', 'group_name', 'part_type',
                             'nickname', 'part_status', 'sample_status', 'experience_status',
-                            'use_num', 'twin_num', 'document', 'dna_position', 'followers',
+                            'use_num', 'twin_num', 'document',  'followers',
                             'assembly_compatibility', 'parameters', 'categories',
-                            'sequence_a', 'sequence_b', 'used_by', 'sub_parts')
+                            'sequence_a', 'sequence_b', 'sub_parts')
