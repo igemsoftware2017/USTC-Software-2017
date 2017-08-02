@@ -13,11 +13,31 @@ class Test(WSTestCase):
     def tearDown(self):
         self._protect.release()
 
+    def test_connected(self):
+        from biohub.core.websocket import register_connected, unregister_handler  # noqa
+
+        _ = register_connected(lambda m: m.reply(m.user.id))  # noqa
+        __ = register_connected(lambda m: m.reply('hi'))  # noqa
+
+        client = self.new_client(self.user1)
+        client.connect()
+
+        self.assertEqual(client.receive()['data'], self.user1.id)
+        self.assertEqual(client.receive()['data'], 'hi')
+
+        unregister_handler(_)
+        unregister_handler(__)
+
+        client = self.new_client(self.user1)
+        client.connect()
+
+        self.assertIsNone(client.receive())
+
     def test_unregister(self):
 
         from biohub.core.websocket import register_handler, unregister_handler
         _ = register_handler('test')(lambda m: m.reply(m.data))  # noqa
-        unregister_handler('test')
+        unregister_handler(_)
 
         data = {
             'handler': 'test',
@@ -40,7 +60,7 @@ class Test(WSTestCase):
         self.assertEqual(self.client1.receive(), data)
         self.assertIsNone(self.client2.receive())
 
-        unregister_handler('test')
+        unregister_handler(_)
         self.client1.send_content(data)
         self.assertIsNone(self.client1.receive())
 
