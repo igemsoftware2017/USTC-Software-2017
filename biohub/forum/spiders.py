@@ -49,16 +49,19 @@ class BrickSpider:
                 if(char == 'g'):
                     sequence_b += 'c'
             brick.sequence_b = sequence_b
-            dna_position = re.search(
-                'new Array\(.*?\'dna\',(\d+,\d+).*?\)', raw_bioinfo).group(1)
+            # dna_position = re.search(
+            #     'new Array\(.*?\'dna\',(\d+,\d+).*?\)', raw_bioinfo).group(1)
             # add char field with the suitable validator eg: "23,435" done!
-            seqFeature_data = re.search(
-                'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
-            seqFeatureList = re.findall(
-                '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
-            for each in seqFeatureList:
-                brick.seqFeatures.create(feature_type=each[0], start_loc=int(
-                    each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
+            if(re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
+                seqFeature_data = re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
+                seqFeatureList = re.findall(
+                    '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
+                for each in seqFeatureList:
+                    brick.seqFeatures.create(feature_type=each[0], start_loc=int(
+                        each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
+
             sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\)', raw_bioinfo) and re.search(
                 'subParts.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
             if(sub_parts_data):
@@ -70,51 +73,62 @@ class BrickSpider:
             soup = BeautifulSoup(raw_html, "lxml")
             div = soup.find(id='part_status_wrapper')
             # fetch release status
-            div2=div.find_all('div')[0]
-            brick.part_status=div2.text
+            div2 = div.find_all('div')[0]
+            brick.part_status = div2.text
             # fetch sample status
             div2 = div.find_all('div')[1]
-            brick.sample_status=div2.text
+            brick.sample_status = div2.text
             # fetch experience status
             div2 = div.find_all('div')[2]
-            brick.experience_status=div2.text
+            brick.experience_status = div2.text
             # fetch use number
             div2 = div.find_all('div')[3]
-            if(re.search('(\d+)\s*',div2.text)):
-                brick.use_num = int(re.search('(\d+)\s*',div2.text))
+            if(re.search('(\d+)\s*', div2.text)):
+                brick.use_num = int(re.search('(\d+)\s*', div2.text).group(1))
             else:
                 brick.use_num = 0
             # fetch twin num(if exists)
             div2 = div.find_all('div')[4]
-            if(re.search('(\d+)\s*Twins.*?',div2.text)):
-                twin_num = int(re.search('(\d+)\s*Twins.*?',div2.text).group(1))
+            if(re.search('(\d+)\s*Twins.*?', div2.text)):
+                brick.twin_num = int(
+                    re.search('(\d+)\s*Twins.*?', div2.text).group(1))
             else:
-                twin_num = 0
+                brick.twin_num = 0
             # fetch assembly compatibility
             div = soup.find(class_='compatibility_div')
-            assembly_compatibility = [('box_green' in item['class']) for item in div.ul.find_all('li')]
+            assembly_compatibility = [('box_green' in item['class'])
+                                      for item in div.ul.find_all('li')]
+            brick.assembly_compatibility = json.dumps(assembly_compatibility)
             # fetch parameters
             parameters = []
             div = soup.find(id='parameters')
-            for entry in div.table.find_all('tr'):
-                parameters.append(
-                    [element.text for element in entry.find_all('td')])
-            brick.parameters = json.dumps(parameters)
+            if(div.table.tr.td.text == 'None'):
+                brick.parameters = ''
+            else:
+                print(div.table.tr.td.text)
+                for entry in div.table.find_all('tr'):
+                    parameters.append(
+                        [element.text for element in entry.find_all('td')])
+                brick.parameters = json.dumps(parameters)
+            
             # fetch categories
             div = soup.find(id='categories')
             categories = re.search(
                 '(//.*?)\s*\Z', div.text, re.DOTALL).group(1)
             brick.categories = categories
 
+            soup = soup.find('div', id='mw-content-text')
             # remove scripts, panel, and compatibility infos
             scriptset = soup.find_all(name='script')
             for each in scriptset:
                 each.extract()
-            html_document = soup.find('div', id='mw-content-text')
-            panel=soup.find(id='sequencePaneDiv')
+            panel = soup.find(id='sequencePaneDiv')
             if(panel):
                 panel.extract()
-            compat=soup.find(class_='compatibility_div')
+            panel = soup.find(class_='h3bb',text='Sequence and Features')
+            if(panel):
+                panel.extract()
+            compat = soup.find(class_='compatibility_div')
             if(compat):
                 compat.parent.extract()
             # restore images by supplementing URLs
@@ -124,7 +138,7 @@ class BrickSpider:
             h = html2text.HTML2Text()
             h.body_width = 1000  # must not break one line into multiple lines
             markdown = h.handle(str(soup2))
-            article = Article(text=markdown, files=None)
+            article = Article(text=markdown) #attach no files
             article.save()
             brick.document = article
         except Exception as e:
