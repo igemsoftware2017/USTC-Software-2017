@@ -1,4 +1,4 @@
-from rest_framework import viewsets, decorators, status
+from rest_framework import viewsets, decorators, status, generics
 from rest_framework.response import Response
 from biohub.forum.serializers import PostSerializer
 from biohub.utils.rest import pagination, permissions
@@ -13,11 +13,10 @@ class PostViewSet(viewsets.ModelViewSet):
                           permissions.check_owner('author', ('PATCH', 'PUT', 'DELETE'))]
 
     def get_queryset(self):
-        query_set = Post.objects.all()
         author = self.request.query_params.get('author', None)
         if author is not None:
-            query_set = Post.objects.filter(user=User.objects.get(username=author))
-        return query_set
+            return Post.objects.filter(author=User.objects.get(username=author))
+        return Post.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -33,3 +32,16 @@ class PostViewSet(viewsets.ModelViewSet):
         if self.get_object().cancel_up_vote(User.objects.get(username=request.user)) is True:
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+
+class PostsOfExperiencesListView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    pagination_class = pagination.factory('PageNumberPagination')
+
+    def get_queryset(self):
+        experience = self.kwargs['experience_id']
+        author = self.request.query_params.get('author', None)
+        if author is not None:
+            return Post.objects.filter(experience=experience,
+                                        author=User.objects.get(username=author))
+        return Post.objects.filter(experience=experience)

@@ -145,3 +145,19 @@ class ExperienceRestfulAPITest(TestCase):
         #     """
         #     # TODO: tests need to be added.
         #
+
+    def test_fetch_posts_of_particular_experience(self):
+        response = self.client.get('/api/forum/experiences/%d/posts/' % self.experience.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 2)
+        response = self.client.get('/api/forum/experiences/%d/posts/?author=%s'
+                                   % (self.experience.id, self.user1.username))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['content'], '15210')
+        # test: can not post posts
+        self.client.login(username='abc', password='abc546565132')
+        response = self.client.post('/api/forum/experiences/%d/posts/' % self.experience.id, {})
+        self.assertEqual(response.status_code, 405)
