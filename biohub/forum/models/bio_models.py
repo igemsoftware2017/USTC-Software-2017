@@ -15,11 +15,12 @@ class Article(models.Model):
     The article has no 'name' field, for the name can be specified in text(using markdown)
     """
     text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
-    files = models.ManyToManyField(File)
+    files = models.ManyToManyField(File,default=None)
 
 
 class Brick(models.Model):
-    is_part = models.BooleanField(default=True)
+    #is_part = models.BooleanField(default=True)
+    # no need. can be telled from 'sub_parts'
     name = models.CharField(max_length=100, unique=True)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
@@ -55,8 +56,9 @@ class Brick(models.Model):
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(
         Article, null=True, on_delete=models.SET_NULL, default=None)
-    dna_position = models.CharField(max_length=15, validators=[
-                                    validate_comma_separated_integer_list], default='')
+    # dna position is already included in seqFeatures
+    # dna_position = models.CharField(max_length=15, validators=[
+    #                                 validate_comma_separated_integer_list], default='')
 
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
@@ -68,12 +70,12 @@ class Brick(models.Model):
     # a gene part has two strand, so use two fields to record the sequence.
     sequence_a = models.TextField(default='')
     sequence_b = models.TextField(default='')
-    used_by = models.TextField(blank=True, default='')
+    #used_by = models.TextField(blank=True, default='') # temporarily removed
     # recursive relation. the brick related must be a Device
 
     # private to Device
     # format: "BBa_K808013,BBa_K648028"
-    sub_parts = models.TextField(blank=True, default='')
+    sub_parts = models.TextField(blank=True, default='', null=True)
     update_time = models.DateTimeField('last updated', auto_now=True)
 
 
