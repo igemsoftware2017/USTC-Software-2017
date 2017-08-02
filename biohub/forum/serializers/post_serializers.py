@@ -9,15 +9,15 @@ from biohub.accounts.serializers import UserSerializer
 class PostSerializer(ModelSerializer):
     author = UserSerializer(fields=('id', 'username'), read_only=True)
     experience_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Experience.objects.all())
-    # experience_url = serializers.HyperlinkedRelatedField(read_only=True)
+    experience = serializers.HyperlinkedRelatedField(read_only=True,
+                                                     view_name='api:forum:experience-detail')
 
     class Meta:
         model = Post
-        fields = ('id', 'experience_id',
+        fields = ('id', 'experience_id', 'experience',
                   'content', 'up_vote_num', 'update_time',
                   'pub_time', 'author')
         read_only_fields = ('id', 'update_time', 'pub_time', 'up_vote_num')
-        # TODO: after finishing experience serializers, add experience_url as read only.
 
     def create(self, validated_data):
         experience = validated_data.pop('experience_id')
