@@ -11,6 +11,8 @@ class BrickSerializer(ModelSerializer):
     followers = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
     experience_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
                                                          view_name='api:forum:experience-detail')
+    seqFeatures = serializers.HyperlinkedRelatedField(read_only=True, many=True,
+                                                      view_name='api:forum:seq_feature-detail')
 
     class Meta:
         model = Brick
