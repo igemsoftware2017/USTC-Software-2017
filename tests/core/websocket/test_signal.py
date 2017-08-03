@@ -13,6 +13,16 @@ class Test(WSTestCase):
     def tearDown(self):
         self._protect.release()
 
+    def test_dup_connected(self):
+        from biohub.core.websocket import register_connected, unregister_handler  # noqa
+        func = lambda m: m.reply(m.user.id)  # noqa
+        _ = register_connected(func)  # noqa
+
+        with self.assertRaises(KeyError):
+            __ = register_connected(func)  # noqa
+
+        unregister_handler(_)
+
     def test_connected(self):
         from biohub.core.websocket import register_connected, unregister_handler  # noqa
 
