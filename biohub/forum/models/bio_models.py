@@ -162,6 +162,7 @@ class SeqFeature(models.Model):
     end_loc = models.PositiveIntegerField(default=0)
     name = models.CharField(max_length=15, default='')
     reserve = models.BooleanField(default=False)
+    update_time = models.DateTimeField('last updated', auto_now=True)
 
 
 # class ModificationRequest(models.Model):

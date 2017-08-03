@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, decorators, mixins
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from biohub.utils.rest import pagination
 from ..serializers import BrickSerializer
 from ..models import Brick
@@ -8,6 +9,7 @@ from django.utils import timezone
 import datetime
 import re
 import requests
+import logging
 
 
 class BrickViewSet(mixins.ListModelMixin,
@@ -28,7 +30,13 @@ class BrickViewSet(mixins.ListModelMixin,
 
     def has_brick_in_igem(brick_name):
         url = 'http://parts.igem.org/cgi/xml/part.cgi?part=BBa_' + brick_name
-        raw_data = requests.get(url).text
+        try:
+            raw_data = requests.get(url).text
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error('Unable to visit url:' + url)
+            logger.error(e)
+            raise APIException
         if re.search(r'(?i)<ERROR>Part name not found.*</ERROR>', raw_data) is None \
                 and re.search(r'(?i)<\s*part_list\s*/\s*>', raw_data) is None \
                 and re.search(r'(?i)<\s*part_list\s*>\s*<\s*/\s*part_list\s*>', raw_data) is None:

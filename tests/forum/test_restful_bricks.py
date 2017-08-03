@@ -66,3 +66,9 @@ class BrickRestfulAPITest(TestCase):
             'name': 'haha'
         })
         self.assertEqual(response.status_code, 405)
+
+    # def test_visiting_igem_fails_returns_500(self):
+    #     # Note: Run this test without network and
+    #     # comment test_checking_whether_igem_has_brick test at the same time.
+    #     response = self.client.get('/api/forum/bricks/check_igem/?name=K314110')
+    #     self.assertEqual(response.status_code, 500)
