@@ -33,15 +33,11 @@ class MessageWrapper(object):
 
         self.__consumer.send(wrapped)
 
-    def group_send(self, group_name, data):
-        """
-        A shortcut for group message sending.
-        """
-        wrapped = parsers.encode(self.handler_name, data)
-
-        self.__consumer.group_send(group_name, wrapped)
-
     def __getattribute__(self, name):
+        """
+        To avoid redundancy, message wrapper simply proxies the methods
+        specified in BROADCAT_FUNCTION_NAMES to its broadcaster.
+        """
         if name in tool.BROADCAST_FUNCTION_NAMES:
             return getattr(self.__broadcaster, name)
 

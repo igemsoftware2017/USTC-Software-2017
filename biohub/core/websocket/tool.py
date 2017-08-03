@@ -12,19 +12,25 @@ def get_group(name):
     return Group(name)
 
 
+def group_send(handler_name, group_name, data):
+    """
+    To send message to a specific group.
+    """
+    return get_group(group_name).send(parsers.encode(handler_name, data))
+
+
 def broadcast(handler_name, data):
     """
     To make a global broadcasting.
     """
-    return get_group('broadcast').send(parsers.encode(handler_name, data))
+    return group_send(handler_name, 'broadcast', data)
 
 
 def broadcast_user(handler_name, user, data):
     """
     To broadcast to specified user.
     """
-    return get_group('user_%s' % user.id).send(
-        parsers.encode(handler_name, data))
+    return group_send(handler_name, 'user_%s' % user.id, data)
 
 
 def broadcast_users(handler_name, users, data):
@@ -37,6 +43,11 @@ def broadcast_users(handler_name, users, data):
     ]
 
 
+BROADCAST_FUNCTION_NAMES = (
+    'group_send', 'broadcast', 'broadcast_user', 'broadcast_users'
+)
+
+
 def _method_proxy(name):
 
     target_function = globals()[name]
@@ -46,9 +57,6 @@ def _method_proxy(name):
         return target_function(self.handler_name, *args, **kwargs)
 
     return _proxy
-
-
-BROADCAST_FUNCTION_NAMES = ['broadcast', 'broadcast_user', 'broadcast_users']
 
 
 Broadcaster = type(
