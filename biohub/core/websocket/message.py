@@ -46,3 +46,16 @@ class MessageWrapper(object):
             return getattr(self.__broadcaster, name)
 
         return object.__getattribute__(self, name)
+
+    @contextlib.contextmanager
+    def patch_handler_name(self, handler_name):
+        """
+        A context manager to provide convenience for temporary handler name
+        modification.
+        """
+
+        old = self.handler_name
+
+        self.handler_name = self.__broadcaster.handler_name = handler_name
+        yield
+        self.handler_name = self.__broadcaster.handler_name = old
