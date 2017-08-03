@@ -202,6 +202,21 @@ class PluginManager(object):
 
             apps.ready = True
 
+    def reload_plugins(self):
+        """
+        To accord plugins installed with BIOHUB_PLUGINS.
+
+        This function is usually called after config file renewed.
+        """
+
+        new = set(self.available_plugins) - set(self.plugin_infos)
+        missing = set(self.plugin_infos) - set(self.available_plugins)
+
+        self.remove(missing, populate=False)
+        self.install(new, populate=False)
+
+        self.populate_plugins()
+
     def populate_plugins(self):
         """
         Update plugins storage after new plugins installed.
