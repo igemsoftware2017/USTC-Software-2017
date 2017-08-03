@@ -155,8 +155,6 @@ class LazySettings(LazyObject):
         if val is None:
             val = getattr(self._wrapped, name)
 
-        self.__dict__[name] = val
-
         return val
 
     def __setattr__(self, name, value):
