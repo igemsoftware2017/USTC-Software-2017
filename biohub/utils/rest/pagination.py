@@ -1,4 +1,4 @@
-from rest_framework import pagination
+from rest_framework import pagination, response
 
 __all__ = ['factory']
 
@@ -23,3 +23,17 @@ def factory(base_class_name, **options):
         (base_cls,),
         options
     )
+
+
+def paginate_queryset(queryset, view):
+    """
+    Uses `view`'s `paginate_queryset` method to get a page object and returns
+    a response.
+    """
+    page = view.paginate_queryset(queryset)
+    if page is not None:
+        serializer = view.get_serializer(page, many=True)
+        return view.get_paginated_response(serializer.data)
+
+    serializer = view.get_serializer(queryset, many=True)
+    return response.Response(serializer.data)
