@@ -18,7 +18,7 @@ def register():
     if not hasattr(signal, 'SIGUSR1'):
         warnings.warn(
             "Your system doesn't support SIGUSR1, and thus biohub cannot "
-            "reload itself at runtime.")
+            "reload itself at runtime.", RuntimeWarning)
         return
 
     signal.signal(signal.SIGUSR1, reload_handler)

@@ -4,6 +4,7 @@ import json
 import filelock
 import tempfile
 import logging
+import warnings
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
@@ -104,9 +105,10 @@ class Settings(object):
 
     def validate_upload_dir(self, value):
         if value.startswith(tempfile.gettempdir()):
-            logger.warn(
+            warnings.warn(
                 'Your UPLOAD_DIR was under the temporary directory, all '
-                'files will be erased once system reboots.')
+                'files will be erased once system reboots.',
+                RuntimeWarning)
 
         return os.path.abspath(value)
 
