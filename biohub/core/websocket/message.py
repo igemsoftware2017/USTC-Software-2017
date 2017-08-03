@@ -1,4 +1,5 @@
 import json
+import contextlib
 
 from . import parsers, tool
 
@@ -9,6 +10,8 @@ class MessageWrapper(object):
     """
 
     def __init__(self, consumer, content=None):
+
+        # If no content provided, use what consumer holds
         if content is None:
             content = json.loads(consumer.message.content['text'])
 
@@ -23,6 +26,9 @@ class MessageWrapper(object):
 
     @property
     def packed_data(self):
+        """
+        Returns the original version of incoming data.
+        """
         return parsers.encode(self.handler_name, self.data)
 
     def reply(self, data):

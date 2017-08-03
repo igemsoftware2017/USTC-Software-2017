@@ -10,6 +10,12 @@ class MainConsumer(JsonWebsocketConsumer):
     strict_ordering = False
 
     def connection_groups(self, **kwargs):
+        """
+        Each connection belongs to 2 groups: broadcast and user_<userid>.
+        The first one is for global broadcasting and the second one is for
+        user specific broadcasting.
+        """
+
         groups = ['broadcast']
         if self.message.user.is_authenticated():
             groups.append('user_%s' % self.message.user.id)

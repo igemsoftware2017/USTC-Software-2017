@@ -49,6 +49,10 @@ BROADCAST_FUNCTION_NAMES = (
 
 
 def _method_proxy(name):
+    """
+    Searches a function in the global scope with the given name and wraps it
+    into a Broadcaster instance method.
+    """
 
     target_function = globals()[name]
 
@@ -64,5 +68,6 @@ Broadcaster = type(
     (),
     dict(
         __init__=lambda self, name: setattr(self, 'handler_name', name),
+        __doc__="A helper class to broadcast websocket message.",
         **{name: _method_proxy(name) for name in BROADCAST_FUNCTION_NAMES})
 )
