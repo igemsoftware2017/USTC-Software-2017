@@ -81,7 +81,12 @@ class Brick(models.Model):
 
 
 class Experience(models.Model):
-    title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE)
+    # In fact, a brick's experience consists not only user reviews, 
+    # but also applications of the brick. 
+    # This class only contains user reviews
+
+    # According to iGem's websites, a user review has no title. We can make this optional.
+    title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE,null=True,default='')
     # experience can be uploaded by users, so use Article to support markdown.
     content = models.OneToOneField(
         Article, null=True, on_delete=models.SET_NULL, default=None)
