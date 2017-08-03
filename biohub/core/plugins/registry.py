@@ -236,7 +236,7 @@ class PluginManager(object):
         Filter and wipe out existing plugins.
         """
         plugin_names = [plugin for plugin in plugin_names
-                        if plugin not in self.available_plugins]
+                        if plugin not in self.installed_apps]
 
         for name in plugin_names:
 
