@@ -75,7 +75,7 @@ class Settings(object):
                 value = default_value() if callable(default_value) \
                     else default_value
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             setattr(self, dest_name, value)
 
@@ -90,7 +90,7 @@ class Settings(object):
 
             value = getattr(self, dest_name)
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             result[org_name] = value
 
