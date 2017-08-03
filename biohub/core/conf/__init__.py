@@ -179,6 +179,10 @@ class SettingsManager(object):
         self._file_lock = filelock.FileLock(LOCK_FILE_PATH)
         self._store_settings = []
 
+    @property
+    def locking(self):
+        return self._file_lock.is_locked
+
     def _resolve_config_path(self, config_path=None):
         """
         Resolves the path of config file.
@@ -243,7 +247,7 @@ class SettingsManager(object):
 
         path = self._resolve_config_path(path)
 
-        locking = self._file_lock.is_locked
+        locking = self.locking
 
         with self._file_lock:
 
