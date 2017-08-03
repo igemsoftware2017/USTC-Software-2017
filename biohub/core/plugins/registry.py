@@ -303,6 +303,7 @@ class PluginManager(object):
 
     def remove(self, plugin_names,
                update_config=False,
+               populate=True,
                invalidate_urlconf=True):
         """
         Remove a list of plugins specified by `plugin_names`.
@@ -318,7 +319,8 @@ class PluginManager(object):
 
             self._remove_apps(removed)
 
-            self.populate_plugins()
+            if populate:
+                self.populate_plugins()
 
             if update_config:
                 dump_config()
@@ -327,6 +329,7 @@ class PluginManager(object):
 
     def install(self, plugin_names,
                 update_config=False,
+                populate=True,
                 migrate_database=False, migrate_options=None):
         """
         Install a list of plugins specified by `plugin_names`.
@@ -360,7 +363,8 @@ class PluginManager(object):
             if migrate_database:
                 self.prepare_database(plugin_names, **(migrate_options or {}))
 
-            self.populate_plugins()
+            if populate:
+                self.populate_plugins()
 
             if update_config:
                 dump_config()
