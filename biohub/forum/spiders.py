@@ -21,6 +21,8 @@ class BrickSpider:
             brick = Brick(name=brick_name)
         raw_response = requests.get(
             BrickSpider.base_site + 'Part:BBa_' + brick_name)
+        if(raw_response.status_code==404):
+            raise Exception('The part does not exist on iGEM\'s website')
         raw_html = raw_response.text
         # fill name
         brick.name = brick_name
@@ -167,6 +169,8 @@ class ExperienceSpider:
         #                             brick=Brick.objects.get(name=brick_name))
         raw_response = requests.get(
             ExperienceSpider.base_site + 'Part:BBa_' + brick_name + ':Experience')
+        if(raw_response.status_code==404):
+            raise Exception('The experience does not exist on iGEM\'s website')
         raw_html = raw_response.text
         try:
             soup = BeautifulSoup(raw_html, "lxml")
