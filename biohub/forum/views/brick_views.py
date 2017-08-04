@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, decorators, mixins
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
+from django.db.models.query import QuerySet
 from biohub.utils.rest import pagination
 from ..serializers import BrickSerializer
 from ..models import Brick
@@ -21,6 +22,7 @@ class BrickViewSet(mixins.ListModelMixin,
     spider = BrickSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
+    @staticmethod
     def has_brick_in_database(brick_name):
         try:
             Brick.objects.get(name=brick_name)
@@ -28,6 +30,7 @@ class BrickViewSet(mixins.ListModelMixin,
             return False
         return True
 
+    @staticmethod
     def has_brick_in_igem(brick_name):
         url = 'http://parts.igem.org/cgi/xml/part.cgi?part=BBa_' + brick_name
         try:
@@ -72,34 +75,49 @@ class BrickViewSet(mixins.ListModelMixin,
             'request': request
         })
         return Response(serializer.data)
+
     @decorators.list_route(methods=['GET'])
-    def fetch(self,request):
-        brick_name = requests.query_params.get('name',None)
+    def fetch(self, request):
+        brick_name = request.query_params.get('name', None)
         if(brick_name is None):
             return Response('Must specify brick name')
         else:
-            if(has_brick_in_database(name)):
+            if(BrickViewSet.has_brick_in_database(brick_name)):
                 brick = Brick.objects.get(name=brick_name)
                 serializer = BrickSerializer(brick)
                 return Response(serializer.data)
             else:
                 # fetch brick's information and experiences
                 if(self.spider.fill_from_page(brick_name=brick_name) is not True):
-                    Response('Unable to fetch data of this brick!', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    Response('Unable to fetch data of this brick!',
+                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 brick = Brick.objects.get(name=brick_name)
                 exp_spider = ExperienceSpider()
                 if(exp_spider.fill_from_page(brick_name) is not True):
-                    Response('Unable to fetch experiences of this brick!', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    Response('Unable to fetch experiences of this brick!',
+                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 serializer = BrickSerializer(brick)
                 return Response(serializer.data)
-                
 
+    def get_queryset(self):
+        ''' enable searching via URL parameter: 'name', not including 'BBa_' '''
+        name_beginwith = self.request.query_params.get('name', None)
+        if(name_beginwith):
+            return Brick.objects.filter(name__startswith=name_beginwith).order_by('name')
+        else:
+            # from REST framework's src code:
+            queryset = self.queryset
+            if isinstance(queryset, QuerySet):
+                # Ensure queryset is re-evaluated on each request.
+                queryset = queryset.all()
+            return queryset
 
     def list(self, request, *args, **kwargs):
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
             pagination_class = self.pagination_class
             page = self.paginate_queryset(self.queryset)
-            serializer = BrickSerializer(page, fields=('id', 'name'), many=True)
+            serializer = BrickSerializer(
+                page, fields=('id', 'name'), many=True)
             return self.get_paginated_response(serializer.data)
         return super(BrickViewSet, self).list(request=request, *args, **kwargs)
