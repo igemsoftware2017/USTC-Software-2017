@@ -43,28 +43,3 @@ class TestList(APITestCase):
         self.assertDictContainsSubset({
             'part_name': bbk1.part_name,
         }, resp.data['results'][0])
-
-
-class TestSearch(APITestCase):
-    # To test the search function. Unfortunately I cannot test search
-    # description, as the indexes have to be built directly in mysql
-
-    def setUp(self):
-        Biobrick.objects.create(part_name='name', sequence='sequence')
-        Biobrick.objects.create(part_name='specialname')
-
-    def test_name(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-list'),
-                               {'name': 'special'})
-        self.assertEqual(len(resp.data['results']), 1)
-        self.assertDictContainsSubset({
-            'part_name': 'specialname',
-        }, resp.data['results'][0])
-
-    def test_sequence(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-list'),
-                               {'sequence': 'quence'})
-        self.assertEqual(len(resp.data['results']), 1)
-        self.assertDictContainsSubset({
-            'part_name': 'name',
-        }, resp.data['results'][0])

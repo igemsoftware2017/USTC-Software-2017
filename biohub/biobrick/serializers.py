@@ -14,7 +14,8 @@ class BiobrickSerializer(ModelSerializer):
 
     class Meta:
         model = Biobrick
-        fields = ('part_name', 'sequence', 'short_desc', 'description', 'urlset', 'highlighted')
+        fields = ('part_name', 'sequence', 'short_desc', 'description', 'uses',
+                  'urlset', 'highlighted')
         read_only_fields = ['__all__']
 
     def get_urlset(self, obj):

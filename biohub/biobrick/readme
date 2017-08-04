@@ -8,3 +8,4 @@ biohub/main/settings/base.py里加入了对haystack的支持
 backend: elasticsearch
 python包: elasricsearch
 需要安装elasticsearch 1.x or 2.x (5.x not supported),可以按照官网的方式安装
+需要将elasticsearch运行在127.0.0.1:9200 (默认。也可以以后作为一个暴露的设置
