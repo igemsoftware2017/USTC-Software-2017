@@ -4,7 +4,7 @@ from rest_framework.exceptions import APIException
 from biohub.utils.rest import pagination
 from ..serializers import BrickSerializer
 from ..models import Brick
-from ..spiders import BrickSpider
+from ..spiders import BrickSpider, ExperienceSpider
 from django.utils import timezone
 import datetime
 import re
@@ -72,6 +72,28 @@ class BrickViewSet(mixins.ListModelMixin,
             'request': request
         })
         return Response(serializer.data)
+    @decorators.list_route(methods=['GET'])
+    def fetch(self,request):
+        brick_name = requests.query_params.get('name',None)
+        if(brick_name is None):
+            return Response('Must specify brick name')
+        else:
+            if(has_brick_in_database(name)):
+                brick = Brick.objects.get(name=brick_name)
+                serializer = BrickSerializer(brick)
+                return Response(serializer.data)
+            else:
+                # fetch brick's information and experiences
+                if(self.spider.fill_from_page(brick_name=brick_name) is not True):
+                    Response('Unable to fetch data of this brick!', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                brick = Brick.objects.get(name=brick_name)
+                exp_spider = ExperienceSpider()
+                if(exp_spider.fill_from_page(brick_name) is not True):
+                    Response('Unable to fetch experiences of this brick!', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                serializer = BrickSerializer(brick)
+                return Response(serializer.data)
+                
+
 
     def list(self, request, *args, **kwargs):
         short = self.request.query_params.get('short', None)
