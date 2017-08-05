@@ -17,10 +17,8 @@ class WSTestCase(test.WSTestCase):
         self._old_mapping = websocket_handlers.signal_mapping
         websocket_handlers.signal_mapping = {}
 
-        self.user1 = user1 = User.objects.create_user(
-            username='user1', password='user1')
-        self.user2 = user2 = User.objects.create_user(
-            username='user2', password='user2')
+        self.user1 = user1 = User.objects.create_test_user('user1')
+        self.user2 = user2 = User.objects.create_test_user('user2')
 
         self.client1 = self.new_client(user1)
         self.client2 = self.new_client(user2)

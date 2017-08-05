@@ -20,7 +20,7 @@ class Test(APITestCase):
     def test_cleanunused(self):
         from tests.core.files.cleanunused_tests.models import TestModel
 
-        me = User.objects.create_user(username='me', password='me')
+        me = User.objects.create_test_user('me')
         self.client.force_authenticate(me)
         sample = open_sample('1.txt')
 

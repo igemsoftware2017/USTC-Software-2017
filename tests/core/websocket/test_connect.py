@@ -5,7 +5,7 @@ from biohub.accounts.models import User
 class Test(WSTestCase):
 
     def setUp(self):
-        self.me = User.objects.create_user(username='me', password='me')
+        self.me = User.objects.create_test_user('me')
 
     def test_connect_fail(self):
         with self.assertRaises(AssertionError):

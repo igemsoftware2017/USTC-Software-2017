@@ -5,16 +5,13 @@ from biohub.accounts.models import User
 class Test(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='user1',
-            email='123@123.com',
-            password='12345')
+        self.user = User.objects.create_test_user('user1')
 
     def _post(self, **payload):
         return self.client.post('/api/users/login/', payload)
 
     def test_success(self):
-        resp = self._post(username='user1', password='12345')
+        resp = self._post(username='user1', password=User._test_password)
 
         self.assertEqual(resp.status_code, 200)
         self.assertDictContainsSubset({
