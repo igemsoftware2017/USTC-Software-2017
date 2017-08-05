@@ -36,7 +36,15 @@ class BrickSpiderTests(TestCase):
         self.assertEqual(brick.experience_status, '1 Registry Star')
         self.assertEqual(brick.use_num, 3210)
         self.assertEqual(brick.twin_num, 16)
-
+    def test3(self):
+        ''' subparts test
+        test with page: http://parts.igem.org/Part:BBa_I6084 
+        I just examine the values in debug mode.
+        '''
+        brickspider = spiders.BrickSpider()
+        brickspider.fill_from_page(brick_name='I6084')
+        brick = Brick.objects.get(name='I6084')
+        pass
 
 class ExperienceSpiderTests(TestCase):
     ''' test with some parts on igem websites '''
