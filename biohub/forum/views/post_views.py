@@ -15,8 +15,12 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         author = self.request.query_params.get('author', None)
         if author is not None:
-            return Post.objects.filter(author=User.objects.get(username=author))
-        return Post.objects.all()
+            if self.request.user.username == author:
+                return Post.objects.filter(author=User.objects.get(username=author))
+            else:
+                return Post.objects.filter(author=User.objects.get(username=author),
+                                           is_visible=True)
+        return Post.objects.all().filter(is_visible=True)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

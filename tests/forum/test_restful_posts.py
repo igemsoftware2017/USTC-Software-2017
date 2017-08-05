@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience
+import json
 
 
 class PostRestfulAPITest(TestCase):
@@ -94,3 +95,20 @@ class PostRestfulAPITest(TestCase):
         response = client.get('/api/forum/posts/' + str(other_post.id) + '/')
         post_detail = json.loads(response.content)
         self.assertEqual(post_detail['up_vote_num'], 0)
+
+    def test_listing_posts(self):
+        client = APIClient()
+        self.post1.is_visible = False
+        self.post1.save()
+        response = client.get('/api/forum/posts/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        response = client.get('/api/forum/posts/?author=abc')
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 0)
+        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        response = client.get('/api/forum/posts/?author=abc')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
