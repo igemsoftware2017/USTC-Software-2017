@@ -28,6 +28,11 @@ mapping = {
 valid_settings_keys = tuple(mapping.values())
 
 
+class BiohubSettingsWarning(RuntimeWarning):
+
+    pass
+
+
 class Settings(object):
     """
     The core settings class, which can validate, store, serialize/deserialze
@@ -103,12 +108,21 @@ class Settings(object):
         """
         return unique(value)
 
+    def validate_redis_uri(self, value):
+
+        if not value:
+            warnings.warn(
+                'No redis configuration provided, redis-based services '
+                'will be disabled.', BiohubSettingsWarning)
+
+        return value
+
     def validate_upload_dir(self, value):
         if value.startswith(tempfile.gettempdir()):
             warnings.warn(
-                'Your UPLOAD_DIR was under the temporary directory, all '
+                'Your UPLOAD_DIR is within the temporary directory. All '
                 'files will be erased once system reboots.',
-                RuntimeWarning)
+                BiohubSettingsWarning)
 
         return os.path.abspath(value)
 
