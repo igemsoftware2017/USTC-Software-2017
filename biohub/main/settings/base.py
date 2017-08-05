@@ -13,11 +13,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from biohub.utils import path
 
-import logging
-
-logging.captureWarnings(True)
-
-
 # Essential paths
 BIOHUB_DIR = path.modpath('biohub')
 BIOHUB_MAIN_DIR = path.modpath('biohub.main')

@@ -36,11 +36,6 @@ LOGGING = {
             'level': 'CRITICAL',
             'propagate': False
         },
-        'py.warnings': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': True
-        },
         '': {
             'handlers': ['console'],
             'level': 'DEBUG',
