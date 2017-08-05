@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from biohub.utils.rest.serializers import bind_model,\
@@ -26,6 +27,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+    def validate_password(self, value):
+        validate_password(value)
+
+        return value
 
     class Meta:
         model = User
@@ -73,6 +79,8 @@ class ChangePasswordSerializer(serializers.Serializer):
         if new and new2 and new != new2:
             raise serializers.ValidationError(
                 'New passwords mismatched!')
+
+        validate_password(new)
 
         return data
 

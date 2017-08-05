@@ -23,6 +23,11 @@ class Test(APITestCase):
 
         return self.client.post('/api/users/register/', payload)
 
+    def test_password_fail(self):
+        resp = self._post_register(password='123')
+
+        self.assertIn('password', resp.data)
+
     def test_password_correct_set(self):
         self._post_register()
 

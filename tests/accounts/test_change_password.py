@@ -25,6 +25,13 @@ class Test(APITestCase):
         })
         self.assertIn(b'New', resp.content)
 
+        resp = self.client.post('/api/users/change_password/', {
+            'old': User._test_password,
+            'new1': 'user1',
+            'new2': 'user1'
+        })
+        self.assertIn(b'than', resp.content)
+
         self.client.post('/api/users/change_password/', {
             'old': User._test_password,
             'new1': '123456a',

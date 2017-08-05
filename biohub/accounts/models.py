@@ -99,9 +99,3 @@ class User(AbstractBaseUser):
         To unfollow a specific user.
         """
         target_user.followers.remove(self)
-
-    def save(self, *args, **kwargs):
-        if self._password:
-            validate_password(self._password, self)
-
-        return super(User, self).save(*args, **kwargs)
