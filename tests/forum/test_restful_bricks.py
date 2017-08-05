@@ -1,7 +1,7 @@
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
-from biohub.forum.models import Brick, Article, Experience
+from biohub.forum.models import Brick, Article, Experience, SeqFeature
 import json
 # from time import sleep
 
@@ -12,7 +12,7 @@ class BrickRestfulAPITest(TestCase):
         self.user = User.objects.create(username="abc")
         self.user.set_password("123456000+")
         self.user.save()
-        self.document =  Article.objects.create(text='aaa')
+        self.document = Article.objects.create(text='aaa')
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
 
@@ -76,6 +76,8 @@ class BrickRestfulAPITest(TestCase):
     def test_fetch_experiences_of_particular_brick(self):
         Experience.objects.create(title='ha', brick=self.brick, author=self.user)
         Experience.objects.create(title='emmmm', brick=self.brick)
+        b = Brick.objects.create(name='a')
+        Experience.objects.create(title='e', brick=b)
         response = self.client.get('/api/forum/bricks/%d/experiences/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -97,3 +99,13 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/experiences/' % self.brick.id, {})
         self.assertEqual(response.status_code, 405)
+
+    def test_fetch_seq_features_of_particular_brick(self):
+        SeqFeature.objects.create(brick=self.brick, name='1')
+        SeqFeature.objects.create(brick=self.brick, name='2')
+        b = Brick.objects.create(name='a')
+        SeqFeature.objects.create(brick=b, name='1')
+        response = self.client.get('/api/forum/bricks/%d/seq_features/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 2)

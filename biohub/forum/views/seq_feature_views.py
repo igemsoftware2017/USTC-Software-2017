@@ -1,9 +1,10 @@
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, status, mixins, generics
 from rest_framework.response import Response
 from ..serializers import SeqFeatureSerializer
 from ..models import SeqFeature
 from ..spiders import SeqFeatureSpider
 from django.utils import timezone
+from biohub.utils.rest import pagination
 import datetime
 
 
@@ -25,3 +26,12 @@ class SeqFeatureViewSet(mixins.RetrieveModelMixin,
             'request': request
         })
         return Response(serializer.data)
+
+
+class SeqFeaturesOfBricksListView(generics.ListAPIView):
+    serializer_class = SeqFeatureSerializer
+    pagination_class = pagination.factory('PageNumberPagination')
+
+    def get_queryset(self):
+        brick = self.kwargs['brick_id']
+        return SeqFeature.objects.filter(brick=brick).order_by('id')

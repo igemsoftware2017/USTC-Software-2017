@@ -5,6 +5,7 @@ from biohub.forum.views import PostViewSet, ArticleViewSet, BrickViewSet,\
     ExperienceViewSet, SeqFeatureViewSet
 from biohub.forum.views.post_views import PostsOfExperiencesListView
 from biohub.forum.views.experience_views import ExperiencesOfBricksListView
+from biohub.forum.views.seq_feature_views import SeqFeaturesOfBricksListView
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, base_name='post')
@@ -16,4 +17,5 @@ router.register(r'seq_features', SeqFeatureViewSet, base_name='seq_feature')
 register_api(r'^forum/', [
     url(r'^experiences/(?P<experience_id>\d+)/posts/$', PostsOfExperiencesListView.as_view()),
     url(r'^bricks/(?P<brick_id>\d+)/experiences/$', ExperiencesOfBricksListView.as_view()),
+    url(r'^bricks/(?P<brick_id>\d+)/seq_features/$', SeqFeaturesOfBricksListView.as_view()),
 ] + router.urls, 'forum')
