@@ -3,7 +3,6 @@ from django.utils.functional import cached_property
 from django.core.validators import MaxLengthValidator
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.contrib.auth.password_validation import validate_password
 
 from biohub.accounts.validators import UsernameValidator
 

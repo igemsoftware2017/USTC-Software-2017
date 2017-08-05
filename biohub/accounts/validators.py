@@ -1,5 +1,4 @@
 import re
-import string
 
 from django.core import validators
 from django.core.exceptions import ValidationError
@@ -20,10 +19,8 @@ class UsernameValidator(validators.RegexValidator):
 class PasswordValidator(object):
 
     def validate(self, password, user=None):
-        digits_and_letters = frozenset(string.digits + string.ascii_letters)
-
-        is_valid = set(password) & digits_and_letters
-        is_valid = is_valid and re.search(r'^\w{6,20}$', password)
+        is_valid = re.search(r'^\w{6,20}$', password) \
+            and re.search(r'\d', password) and re.search(r'[a-zA-Z]', password)
 
         if not is_valid:
             raise ValidationError(
