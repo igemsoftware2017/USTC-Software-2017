@@ -7,7 +7,6 @@ CALCULATE_QUEUE = []
 THREAD_POOL = []
 
 def calculate(id):
-    # print(id, a, b)
     id = int(id)
     if id in CALCULATE_QUEUE:
         return
@@ -26,6 +25,11 @@ def threads(id):
     sleep(10)
     abacus.status = Abacus.FINISHED
 
+    for t in THREAD_POOL:
+        if t.getName() == str(id):
+            THREAD_POOL.remove(t)
+            break
+
 def manager():
     while True:
         sleep(1)
@@ -33,11 +37,10 @@ def manager():
             id = CALCULATE_QUEUE.pop(0)
             print('id - > ', id, str(id))
             thread = threading.Thread(target=threads, args=(str(id), ))
+            thread.setName(str(id))
             thread.setDaemon(True)
             thread.start()
             THREAD_POOL.append(thread)
-
-        print('wathing...')
 
 MAIN_THREAD = threading.Thread(target=manager)
 MAIN_THREAD.setDaemon(True)
