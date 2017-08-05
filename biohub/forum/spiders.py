@@ -21,11 +21,14 @@ class BrickSpider:
             brick = Brick(name=brick_name)
         raw_response = requests.get(
             BrickSpider.base_site + 'Part:BBa_' + brick_name)
+        if(raw_response.status_code==404):
+            raise Exception('The part does not exist on iGEM\'s website')
         raw_html = raw_response.text
         # fill name
         brick.name = brick_name
         # fetch Designer
         try:
+            # brick.save()
             brick.designer = re.search(
                 'Designed by:\s*(.*?)\s*&nbsp', raw_html).group(1)
             brick.group_name = re.search(
@@ -52,15 +55,6 @@ class BrickSpider:
             # dna_position = re.search(
             #     'new Array\(.*?\'dna\',(\d+,\d+).*?\)', raw_bioinfo).group(1)
             # add char field with the suitable validator eg: "23,435" done!
-            if(re.search(
-                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
-                seqFeature_data = re.search(
-                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
-                seqFeatureList = re.findall(
-                    '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
-                for each in seqFeatureList:
-                    brick.seqFeatures.create(feature_type=each[0], start_loc=int(
-                        each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
 
             sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\)', raw_bioinfo) and re.search(
                 'subParts.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
@@ -110,7 +104,7 @@ class BrickSpider:
                     parameters.append(
                         [element.text for element in entry.find_all('td')])
                 brick.parameters = json.dumps(parameters)
-            
+
             # fetch categories
             div = soup.find(id='categories')
             categories = re.search(
@@ -125,7 +119,7 @@ class BrickSpider:
             panel = soup.find(id='sequencePaneDiv')
             if(panel):
                 panel.extract()
-            panel = soup.find(class_='h3bb',text='Sequence and Features')
+            panel = soup.find(class_='h3bb', text='Sequence and Features')
             if(panel):
                 panel.extract()
             compat = soup.find(class_='compatibility_div')
@@ -138,9 +132,19 @@ class BrickSpider:
             h = html2text.HTML2Text()
             h.body_width = 1000  # must not break one line into multiple lines
             markdown = h.handle(str(soup2))
-            article = Article(text=markdown) #attach no files
-            article.save()
+            article = Article.objects.create(text=markdown)  # attach no files
             brick.document = article
+            brick.save()
+        # this must be executed after the brick has been saved
+            if(re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
+                seqFeature_data = re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
+                seqFeatureList = re.findall(
+                    '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
+                for each in seqFeatureList:
+                    brick.seqFeatures.create(feature_type=each[0], start_loc=int(
+                        each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
         except Exception as e:
             self.logger.error('Error during parsing contents.')
             self.logger.error(e)
@@ -148,7 +152,6 @@ class BrickSpider:
             # If errors occur during parsing contents,
             # logging and quiting rather than saving false data may be better
 
-        brick.save()
         return True
 
 
@@ -156,13 +159,55 @@ class ExperienceSpider:
     """
     Before using the spider, the brick witch the experience is attached to should exist in database.
     """
+    base_site = 'http://parts.igem.org/'
+    logger = logging.getLogger(__name__)
 
-    def fill_from_page(self, brick_name, experience=None):
-        if experience is None:
-            experience = Experience(title='Part: ' + brick_name + ': Experience',
-                                    brick=Brick.objects.get(name=brick_name))
+    def fill_from_page(self, brick_name):
+        brick = Brick.objects.get(name=brick_name)
+        # if experience is None:
+        #     experience = Experience(title='Part: ' + brick_name + ': Experience',
+        #                             brick=Brick.objects.get(name=brick_name))
+        raw_response = requests.get(
+            ExperienceSpider.base_site + 'Part:BBa_' + brick_name + ':Experience')
+        if(raw_response.status_code==404):
+            raise Exception('The experience does not exist on iGEM\'s website')
+        raw_html = raw_response.text
+        try:
+            soup = BeautifulSoup(raw_html, "lxml")
+            soup = soup.find('div', id='mw-content-text')
+            for rubbish in soup.find_all('p', text=re.compile('UNIQ')):
+                rubbish.extract()
+            # determine the structure of user reviews (there are 2 types)
+            beginning = soup.find(id='User_Reviews').parent
+            if(beginning.find_next_siblings('table')):
+                # the first type
+                for entry in beginning.find_next_siblings('table'):
+                    author_name = entry.tr.find_all('td')[0].p.text
+                    author_name = re.search(
+                        '\s*(.*?)\s*$', author_name, re.DOTALL).group(1)
+                    experience = brick.experience_set.get_or_create(
+                        author_name=author_name, defaults={'title': None, 'brick': brick})[0]
+                    content_html = entry.tr.find_all('td')[1]
+                    # change images' URLs to absolute ones
+                    restored_content = re.sub('=\"/(.*?\")', '=\"' +
+                                              ExperienceSpider.base_site + r'\1', str(content_html))
+                    h = html2text.HTML2Text()
+                    h.body_width = 1000
+                    markdown = h.handle(restored_content)
+                    if(experience.content is None):
+                        article = Article.objects.create(text=markdown)
+                        experience.content = article
+                    else:
+                        experience.content.text = markdown
+                        experience.content.save()
+                    experience.save()
 
-        experience.save()
+            else:
+                pass
+        except Exception as e:
+            self.logger.error("Error during parsing contents.")
+            self.logger.error(e)
+            return False
         return True
 
 
