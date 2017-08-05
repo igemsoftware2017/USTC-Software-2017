@@ -68,13 +68,18 @@ class BrickViewSet(mixins.ListModelMixin,
         brick = self.get_object()
         now = timezone.now()
         if now - brick.update_time > self.UPDATE_DELTA:
-            if self.spider.fill_from_page(brick.name, brick=brick) is not True:
-                return Response('Unable to update data of this brick!',
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        serializer = BrickSerializer(brick, context={
-            'request': request
-        })
-        return Response(serializer.data)
+            try:
+                self.spider.fill_from_page(brick_name=brick.name,brick=brick)
+            except Exception as e:
+                if(e.args == 'The part does not exist on iGEM\'s website'):
+                    return Response('Unable to fetch data of this brick! ' + str(e), status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response('Unable to fetch data of this brick! ' + str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                serializer = BrickSerializer(brick, context={
+                    'request': request
+                })
+                return Response(serializer.data)
 
     @decorators.list_route(methods=['GET'])
     def fetch(self, request):
@@ -84,20 +89,31 @@ class BrickViewSet(mixins.ListModelMixin,
         else:
             if(BrickViewSet.has_brick_in_database(brick_name)):
                 brick = Brick.objects.get(name=brick_name)
-                serializer = BrickSerializer(brick)
+                serializer = BrickSerializer(
+                    brick, context={'request': request})
                 return Response(serializer.data)
             else:
                 # fetch brick's information and experiences
-                if(self.spider.fill_from_page(brick_name=brick_name) is not True):
-                    Response('Unable to fetch data of this brick!',
-                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                brick = Brick.objects.get(name=brick_name)
-                exp_spider = ExperienceSpider()
-                if(exp_spider.fill_from_page(brick_name) is not True):
-                    Response('Unable to fetch experiences of this brick!',
-                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                serializer = BrickSerializer(brick)
-                return Response(serializer.data)
+                try:
+                    self.spider.fill_from_page(brick_name=brick_name)
+                except Exception as e:
+                    if(e.args[0] == 'The part does not exist on iGEM\'s website'):
+                        return Response('Unable to fetch data of this brick! ' + str(e), status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        return Response('Unable to fetch data of this brick! ' + str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                else:
+                    exp_spider = ExperienceSpider()
+                    try:
+                        exp_spider.fill_from_page(brick_name)
+                    except Exception as e:
+                        return Response('Unable to fetch experiences of this brick! '+str(e),
+                                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    else:
+                        brick = Brick.objects.get(name=brick_name)
+                        serializer = BrickSerializer(
+                            brick, context={'request': request})
+                        return Response(serializer.data)
 
     def get_queryset(self):
         ''' enable searching via URL parameter: 'name', not including 'BBa_' '''
@@ -116,7 +132,7 @@ class BrickViewSet(mixins.ListModelMixin,
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
             pagination_class = self.pagination_class
-            page = self.paginate_queryset(self.queryset)
+            page = self.paginate_queryset(self.get_queryset())
             serializer = BrickSerializer(
                 page, fields=('id', 'name'), many=True)
             return self.get_paginated_response(serializer.data)
