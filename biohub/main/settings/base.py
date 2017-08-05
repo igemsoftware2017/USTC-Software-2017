@@ -164,6 +164,9 @@ INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS[:]
 TIME_ZONE = biohub_settings.TIMEZONE
 MEDIA_ROOT = biohub_settings.UPLOAD_DIR
 
+if biohub_settings.SECRET_KEY:
+    SECRET_KEY = SECRET_KEY
+
 if biohub_settings.REDIS_URI:
     CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
         biohub_settings.REDIS_URI)

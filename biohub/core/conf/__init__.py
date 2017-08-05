@@ -24,7 +24,8 @@ mapping = {
     'TIMEZONE': ('TIMEZONE', 'UTC'),
     'UPLOAD_DIR': ('UPLOAD_DIR',
                    lambda: os.path.join(tempfile.gettempdir, 'biohub')),
-    'REDIS_URI': ('REDIS_URI', '')
+    'REDIS_URI': ('REDIS_URI', ''),
+    'SECRET_KEY': ('SECRET_KEY', '')
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -116,6 +117,15 @@ class Settings(object):
             warnings.warn(
                 'No redis configuration provided, redis-based services '
                 'will be disabled.', BiohubSettingsWarning)
+
+        return value
+
+    def validate_secret_key(self, value):
+
+        if not value:
+            warnings.warn(
+                'No secret key provided, default value used instead.',
+                BiohubSettingsWarning)
 
         return value
 
