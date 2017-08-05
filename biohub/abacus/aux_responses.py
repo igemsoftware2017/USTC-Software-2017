@@ -1,24 +1,15 @@
 import os
+
 from django.http import HttpResponse, Http404
 
-from .models import Abacus
 from .util import get_file_path
-from .aux_calculate import CALCULATE_QUEUE
+from ..abacus import aux_calculate
 
-def calculate_service(user, id):
-    CALCULATE_QUEUE.append(id)
 
-def download_file_service(user, id):
-    abacus = Abacus.objects.filter(id=id)
+def calculate_service(id):
+    aux_calculate.calculate(id)
 
-    if len(abacus) == 0:
-        return HttpResponse("No such abacus was found!")
-
-    abacus = abacus[0]
-
-    if user.id != abacus.user.id and not abacus.shared:
-        return HttpResponse("Access denied!")
-
+def download_file_service(id):
     filepath_ = get_file_path(id)
 
     if filepath_ is None:

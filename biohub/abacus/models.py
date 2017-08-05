@@ -1,10 +1,15 @@
 from django.db import models
 from django.conf import settings
 
-import datetime
-
 
 class Abacus(models.Model):
+
+    ERROR = -1
+    TO_BE_START = 0
+    UPLOADED = 1
+    QUEUING = 2
+    PROCESSING = 3
+    FINISHED = 4
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -16,8 +21,17 @@ class Abacus(models.Model):
     create_date = models.DateTimeField(auto_now_add=True, db_index=True)
     shared = models.BooleanField(default=False)
 
-    # -1:error,0-to be start,1-uploaded and queuing,2-processing,3-done
     status = models.IntegerField()
+
+    @staticmethod
+    def load(id):
+        abacus = Abacus.objects.filter(id=id)
+
+        if len(abacus) == 0:
+            return None
+
+        return abacus[0]
 
     class Meta:
         ordering = ('-create_date', )
+

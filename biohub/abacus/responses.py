@@ -12,6 +12,7 @@ STATE_IN_BLOCK_MSG = "Abacus state is not ready,please wait it finished or ask a
 ACCESS_DENY_MSG = "Access denied!"
 NONE_ABACUS_MSG = "No such abacus was found!"
 
+
 def upload_file(user, jsn, files):
     data = jsn['data']
     ret_data = []
@@ -27,20 +28,21 @@ def upload_file(user, jsn, files):
             abacus.tag = block[0]
             abacus.descriable = block[1]
             abacus.shared = block[2]
-            abacus.status = 0
+            abacus.status = Abacus.TO_BE_START
             abacus.save()
 
             util.save_file(abacus.id, file)
 
-            abacus.status = 1
+            abacus.status = Abacus.UPLOADED
             abacus.save()
 
             if block[3] == True:
-                abacus.status = 2
+                abacus.status = Abacus.QUEUING
                 abacus.save()
-                aux_responses.calculate_service(user, abacus.id)
-        except Exception as e:
+                aux_responses.calculate_service(abacus.id)
+        except Exception:
             buf[3] = WRONG_OCCURRED_MSG
+            continue
 
         buf[1] = abacus.id
         buf[2] = True
@@ -58,19 +60,20 @@ def get_download_file(user, id):
 
         ret_data.append(buf)
 
-        abacus = Abacus.objects.filter(id=i)
+        abacus = Abacus.load(i)
 
-        if len(abacus) == 0:
+        if abacus is None:
             buf[4] = NONE_ABACUS_MSG
             continue
 
-        abacus = abacus[0]
         if user.id != abacus.user.id:
             buf[4] = ACCESS_DENY_MSG
             continue
 
         if util.get_file_path(i) is not None:
             buf[3] = "download/" + str(i)
+        else:
+            buf[3] = None
 
         buf[2] = True
         buf[1] = i
@@ -88,13 +91,12 @@ def get_status(user, id):
 
         ret_data.append(buf)
 
-        abacus = Abacus.objects.filter(id=i)
+        abacus = Abacus.load(i)
 
-        if len(abacus) == 0:
+        if abacus is None:
             buf[4] = NONE_ABACUS_MSG
             continue
 
-        abacus = abacus[0]
         if user.id != abacus.user.id:
             buf[4] = ACCESS_DENY_MSG
             continue
@@ -116,19 +118,18 @@ def delete_file(user, id):
 
         ret_data.append(buf)
 
-        abacus = Abacus.objects.filter(id=i)
+        abacus = Abacus.load(i)
 
-        if len(abacus) == 0:
+        if abacus is None:
             buf[4] = NONE_ABACUS_MSG
             continue
 
-        abacus = abacus[0]
         if user.id != abacus.user.id:
             buf[4] = ACCESS_DENY_MSG
             continue
 
         try:
-            util.delete_file(id)
+            util.delete_file(i)
             abacus.delete()
         except Exception:
             buf[4] = WRONG_OCCURRED_MSG
@@ -148,28 +149,29 @@ def edit_abacus(user, jsn, files):
     loc = 0
     for (file, block) in zip(files, data):
         buf = [loc, -1, False, '']
+        loc = loc + 1
+
         ret_data.append(buf)
 
         try:
-            abacus = Abacus.objects.filter(id=block[0])
-            if len(abacus) == 0:
+            abacus = Abacus.load(block[0])
+
+            if abacus is None:
                 buf[3] = NONE_ABACUS_MSG
                 continue
-
-            abacus = abacus[0]
 
             if user.id != abacus.user.id:
                 buf[3] = ACCESS_DENY_MSG
                 continue
 
             if file is not None:
-                if abacus.status == 2:
+                if abacus.status == Abacus.QUEUING:
                     buf[3] = STATE_IN_BLOCK_MSG
                     continue
                 else:
-                    abacus.status = 0
+                    abacus.status = Abacus.TO_BE_START
                     util.save_file(abacus.id, file)
-                    abacus.status = 1
+                    abacus.status = Abacus.UPLOADED
 
             abacus.tag = block[1]
             abacus.descriable = block[2]
@@ -177,8 +179,8 @@ def edit_abacus(user, jsn, files):
             abacus.save()
 
             if block[4] == True:
-                abacus.status = 2
-                aux_responses.calculate_service(user, abacus.id)
+                abacus.status = Abacus.QUEUING
+                aux_responses.calculate_service(abacus.id)
 
             abacus.save()
         except Exception as e:
@@ -205,7 +207,7 @@ def list_abacus(user):
 
     response_data = {}
     response_data['data'] = ret_data
-    return HttpResponse(json.dumps(response_data, cls=DateTimeJsonEncoder), content_type="application/json")
+    return HttpResponse(json.dumps(response_data, cls=util.DateTimeJsonEncoder), content_type="application/json")
 
 def calculate(user, id):
     ret_data = []
@@ -216,24 +218,23 @@ def calculate(user, id):
 
         ret_data.append(buf)
 
-        abacus = Abacus.objects.filter(id=i)
+        abacus = Abacus.load(i)
 
-        if len(abacus) == 0:
+        if abacus is None:
             buf[4] = NONE_ABACUS_MSG
             continue
 
-        abacus = abacus[0]
         if user.id != abacus.user.id:
             buf[4] = ACCESS_DENY_MSG
             continue
 
-        if abacus.status != 1:
+        if abacus.status == Abacus.QUEUING:
             buf[4] = STATE_IN_BLOCK_MSG
             continue
 
         try:
-            aux_responses.calculate_service(user, i)
-            abacus.status = 2
+            aux_responses.calculate_service(i)
+            abacus.status = Abacus.QUEUING
             abacus.save()
         except Exception:
             buf[4] = WRONG_OCCURRED_MSG
@@ -248,4 +249,12 @@ def calculate(user, id):
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 def download_service(user, id):
-    return aux_responses.download_file_service(user, id)
+    abacus = Abacus.load(id)
+
+    if abacus is None:
+        return HttpResponse(NONE_ABACUS_MSG)
+
+    if user.id != abacus.user.id and not abacus.shared:
+        return HttpResponse(ACCESS_DENY_MSG)
+
+    return aux_responses.download_file_service(id)

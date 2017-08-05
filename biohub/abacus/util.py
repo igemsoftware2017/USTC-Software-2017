@@ -35,7 +35,7 @@ def save_file(id, file):
     copyfileobj_example(file, open(target_path, 'w+'))
 
 def delete_file(id):
-    file_path = os.path.join(UPLOAD_PATH, str(id) + '.zip')
+    file_path = os.path.join(UPLOAD_PATH, str(id) + '.pdb')
     if not os.path.exists(file_path):
         pass
     else:

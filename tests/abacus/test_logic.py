@@ -12,6 +12,10 @@ class AbacusTestCase(APITestCase):
         self.john = User.objects.create_user(username='john', password='password')
         self.lili = User.objects.create_user(username='lili', password='password')
 
+        self.users = [
+            User.objects.create_user(username=x, password=x)
+            for x in map(lambda i: 'user_%s' % i, range(10))]
+
 class TestUpload(AbacusTestCase):
     # def test_upload(self):
     #     data = ['tag', 'describle', True, True]
@@ -98,15 +102,36 @@ class TestUpload(AbacusTestCase):
         data = ['tag', 'describle', True, True]
         file = open("biohub/abacus/storage/download/download.pdb")
 
+        step = -1
+
+        step = step + 1
+        print(step)
+
         jsn = {'data': [data, data, data, ], }
         files = [file, file, file, ]
+
+        step = step + 1
+        print(step)
 
         response = responses.upload_file(self.john, jsn, files)
         print("\nupload -> ", response.content)
 
+        step = step + 1
+        print(step)
+
         response = responses.download_service(self.john, 1)
         print("\ngetDownloadFile -> ", response)
 
+        step = step + 1
+        print(step)
+
+        response = responses.upload_file(self.john, jsn, files)
+        print("\nupload -> ", response.content)
+
+        step = step + 1
+        print(step)
+
+
         from time import sleep
-        while True:
-            sleep(100)
+        sleep(100)
+

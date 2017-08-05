@@ -32,20 +32,24 @@ class AbacusView(
 
     @decorators.list_route(methods=['GET'])
     def download(self, request):
-        return responses.download_service(self.request.user, request['id'])
+        return responses.download_service(self.request.user, request.GET['id'])
 
-    @decorators.list_route()
+    @decorators.list_route(methods=['GET', 'POST'])
     def upload(self, request):
+        print('upload...')
         return self.upload_file(json.load(request.body), request.FILES.getlist('files'))
 
-    @decorators.list_route()
+    @decorators.list_route(methods=['GET', 'POST'])
     def edit(self, request):
         return self.edit_abacus(json.load(request.body), request.FILES.getlist('files'))
 
-    @decorators.list_route()
+    @decorators.list_route(methods=['GET', 'POST'])
     def action(self, request):
         # request.POST.
-        jsn = json.load(request.body)
+        print("\n----------------\n", request.body, request.POST, request.GET, '\n-----------------\n')
+
+        print(str(json.dumps(str(request.POST.dict()))))
+        jsn = json.loads(json.dumps(str(request.POST.dict())))
         method = jsn['method']
         id = jsn['data']
 

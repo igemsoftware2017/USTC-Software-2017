@@ -9,16 +9,30 @@ THREAD_POOL = []
 def calculate(id):
     # print(id, a, b)
     id = int(id)
-    print("calculating -> ", id)
-    pass
+    if id in CALCULATE_QUEUE:
+        return
+    else:
+        CALCULATE_QUEUE.append(id)
+
+def threads(id):
+    id = int(id)
+    from .models import Abacus
+
+    abacus = Abacus.load(id)
+    if abacus is None:
+        return
+
+    abacus.status = Abacus.PROCESSING
+    sleep(10)
+    abacus.status = Abacus.FINISHED
 
 def manager():
     while True:
         sleep(1)
-        if len(THREAD_POOL) < 15 and len(CALCULATE_QUEUE) > 0:
+        if len(THREAD_POOL) < 5 and len(CALCULATE_QUEUE) > 0:
             id = CALCULATE_QUEUE.pop(0)
             print('id - > ', id, str(id))
-            thread = threading.Thread(target=calculate, args=(str(id), ))
+            thread = threading.Thread(target=threads, args=(str(id), ))
             thread.setDaemon(True)
             thread.start()
             THREAD_POOL.append(thread)
@@ -30,14 +44,3 @@ MAIN_THREAD.setDaemon(True)
 
 def start():
     MAIN_THREAD.start()
-
-# # MAIN_THREAD.start()
-#
-# if __name__ == "__main__":
-#     CALCULATE_QUEUE.append(1)
-#     CALCULATE_QUEUE.append(2)
-#     CALCULATE_QUEUE.append(3)
-#     CALCULATE_QUEUE.append(4)
-#     CALCULATE_QUEUE.append(5)
-#
-#     sleep(10000)
