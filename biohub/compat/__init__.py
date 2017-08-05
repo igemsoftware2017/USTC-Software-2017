@@ -1,4 +1,1 @@
-import pymysql
-import sys
-
-sys.modules['MySQLdb'] = pymysql
+from . import db, warnings  # noqa
