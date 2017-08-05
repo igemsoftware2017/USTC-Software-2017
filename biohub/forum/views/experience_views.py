@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, decorators
+from rest_framework import viewsets, status, decorators, generics
 from rest_framework.response import Response
 from biohub.forum.serializers import ExperienceSerializer
 from biohub.utils.rest import pagination, permissions
@@ -64,3 +64,25 @@ class ExperienceViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(author_name=self.request.user.username)
+
+
+class ExperiencesOfBricksListView(generics.ListAPIView):
+    serializer_class = ExperienceSerializer
+    pagination_class = pagination.factory('PageNumberPagination')
+
+    def get_queryset(self):
+        brick = self.kwargs['brick_id']
+        author = self.request.query_params.get('author', None)
+        if author is not None:
+            return Experience.objects.filter(brick=brick,
+                                             author=User.objects.get(username=author))
+        return Experience.objects.filter(brick=brick)
+
+    def get(self, request, *args, **kwargs):
+        # ?short=true will return only fields of (id, title, author_name)
+        short = self.request.query_params.get('short', None)
+        if short is not None and short.lower() == 'true':
+            page = self.paginate_queryset(self.get_queryset())
+            serializer = ExperienceSerializer(page, fields=('id', 'title', 'author_name'), many=True)
+            return self.get_paginated_response(serializer.data)
+        return super(ExperiencesOfBricksListView, self).get(request=request, *args, **kwargs)

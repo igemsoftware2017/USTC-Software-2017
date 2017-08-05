@@ -86,7 +86,7 @@ class Experience(models.Model):
     # This class only contains user reviews
 
     # According to iGem's websites, a user review has no title. We can make this optional.
-    title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE,null=True,default='')
+    title = models.CharField(max_length=MAX_LEN_FOR_THREAD_TITLE, blank=True, default='')
     # experience can be uploaded by users, so use Article to support markdown.
     content = models.OneToOneField(
         Article, null=True, on_delete=models.SET_NULL, default=None)

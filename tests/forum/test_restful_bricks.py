@@ -1,7 +1,7 @@
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
-from biohub.forum.models import Brick, Article
+from biohub.forum.models import Brick, Article, Experience, SeqFeature
 import json
 # from time import sleep
 
@@ -12,7 +12,7 @@ class BrickRestfulAPITest(TestCase):
         self.user = User.objects.create(username="abc")
         self.user.set_password("123456000+")
         self.user.save()
-        self.document =  Article.objects.create(text='aaa')
+        self.document = Article.objects.create(text='aaa')
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
 
@@ -72,3 +72,40 @@ class BrickRestfulAPITest(TestCase):
     #     # comment test_checking_whether_igem_has_brick test at the same time.
     #     response = self.client.get('/api/forum/bricks/check_igem/?name=K314110')
     #     self.assertEqual(response.status_code, 500)
+
+    def test_fetch_experiences_of_particular_brick(self):
+        Experience.objects.create(title='ha', brick=self.brick, author=self.user)
+        Experience.objects.create(title='emmmm', brick=self.brick)
+        b = Brick.objects.create(name='a')
+        Experience.objects.create(title='e', brick=b)
+        response = self.client.get('/api/forum/bricks/%d/experiences/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 2)
+        response = self.client.get('/api/forum/bricks/%d/experiences/?author=%s'
+                                   % (self.brick.id, self.user.username))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['title'], 'ha')
+        # test short=true
+        response = self.client.get('/api/forum/bricks/%d/experiences/?author=%s&short=true'
+                                   % (self.brick.id, self.user.username))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        self.assertIs('pub_time' in data['results'][0], False)
+        # test: can not post experiences
+        self.assertEqual(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/experiences/' % self.brick.id, {})
+        self.assertEqual(response.status_code, 405)
+
+    def test_fetch_seq_features_of_particular_brick(self):
+        SeqFeature.objects.create(brick=self.brick, name='1')
+        SeqFeature.objects.create(brick=self.brick, name='2')
+        b = Brick.objects.create(name='a')
+        SeqFeature.objects.create(brick=b, name='1')
+        response = self.client.get('/api/forum/bricks/%d/seq_features/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 2)
