@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     'haystack',
     'biohub.biobrick',
+    'biohub.biocircuit',
 ]
 
 MIDDLEWARE = [
