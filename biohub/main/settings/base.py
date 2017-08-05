@@ -160,7 +160,7 @@ CHANNEL_LAYERS = {
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
 
 DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
-INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS
+INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS[:]
 TIME_ZONE = biohub_settings.TIMEZONE
 MEDIA_ROOT = biohub_settings.UPLOAD_DIR
 
