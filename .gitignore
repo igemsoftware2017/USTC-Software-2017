@@ -101,3 +101,8 @@ ENV/
 .mypy_cache/
 
 /config.json
+
+# pycharm
+.idea/
+.cache/
+biohub/abacus/storage/

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'biohub.notices',
     'biohub.core.files',
     'biohub.core.plugins',
+    'biohub.abacus'
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,14 @@ TEMPLATES = [
         'OPTIONS': {
             'autoescape': False,
             'builtins': ['biohub.notices.template.filters']
+        }
+    },
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'NAME': 'abacus',
+        'OPTIONS': {
+            'autoescape': False,
+            'builtins': ['biohub.abacus.template.filters']
         }
     }
 ]
