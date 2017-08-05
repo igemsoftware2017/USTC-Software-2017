@@ -16,6 +16,8 @@ logger = logging.getLogger('biohub.conf')
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
 
+# Field mapping for biohub settings
+# Format: dest_name -> (org_name, default)
 mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
