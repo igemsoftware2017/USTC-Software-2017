@@ -80,6 +80,7 @@ class BrickViewSet(mixins.ListModelMixin,
         if now - brick.update_time > self.UPDATE_DELTA:
             try:
                 self.update_brick(brick_name=brick.name,brick=brick)
+                brick = self.get_object()
             except Exception as e:
                 if e.args == 'The part does not exist on iGEM\'s website':
                     return Response('Unable to find this brick! ' + str(e),
@@ -87,10 +88,10 @@ class BrickViewSet(mixins.ListModelMixin,
                 else:
                     return Response('Unable to fetch data of this brick! ',
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            serializer = BrickSerializer(brick, context={
-                'request': request
-            })
-            return Response(serializer.data)
+        serializer = BrickSerializer(brick, context={
+            'request': request
+        })
+        return Response(serializer.data)
 
     def get_queryset(self):
         ''' enable searching via URL parameter: 'name', not including 'BBa_' '''

@@ -42,7 +42,10 @@ class ExperienceViewSet(viewsets.ModelViewSet):
         if experience.author is None:
             now = timezone.now()
             if now - experience.update_time > self.UPDATE_DELTA:
-                if self.spider.fill_from_page(experience.brick.name, experience=experience) is not True:
+                try:
+                    self.spider.fill_from_page(experience.brick.name)
+                    experience = self.get_object()
+                except Exception as e:
                     return Response('Unable to update data of this experience!',
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = ExperienceSerializer(experience, context={
