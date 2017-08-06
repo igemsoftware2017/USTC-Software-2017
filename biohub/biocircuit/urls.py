@@ -7,7 +7,7 @@ from biohub.core.routes import register_api
 from . import views
 
 router = DefaultRouter()
-router.register(r'', views.BiocircuitView, base_name='')
-router.register(r'score', views.ScoreView, base_name='')
+router.register('', views.BiocircuitView, base_name='')
+router.register('score', views.ScoreView, base_name='')
 
-register_api(r'^', router.urls, 'biocircuit')
+register_api('^', router.urls, 'biocircuit')
