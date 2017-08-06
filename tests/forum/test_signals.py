@@ -243,3 +243,20 @@ class PostSignalTests(TestCase):
         self.post2.content = 'WTF'
         self.post2.save()
         self.assertEqual(self.user1.notices.all().count(), 1)
+
+
+class RatingSignalTests(TestCase):
+    def setUp(self):
+        self.user1 = create_new_user()
+        self.user2 = create_new_user()
+        self.user3 = create_new_user()
+        self.brick = Brick.objects.create(name='K314110')
+        self.experience1 = create_new_experience(self.user1, brick=self.brick)
+
+    def test_rating(self):
+        self.assertIs(self.experience1.rate(2.5, self.user2), True)
+        self.assertEqual(self.user1.notices.all().count(), 1)
+        self.assertIs(self.experience1.rate(4.5, self.user3), True)
+        self.assertEqual(self.user1.notices.all().count(), 2)
+        # print(self.user1.notices.all()[0].message)
+        # print(self.user1.notices.all()[1].message)

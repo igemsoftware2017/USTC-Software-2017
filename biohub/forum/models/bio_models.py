@@ -1,9 +1,11 @@
-from django.db import models
-from django.conf import settings
-from datetime import date
-from django.core.validators import validate_comma_separated_integer_list
-from biohub.core.files.models import File
 import decimal
+from datetime import date
+
+from django.conf import settings
+from django.db import models
+
+from biohub.core.files.models import File
+from biohub.forum.user_defined_signals import rating_experience_signal
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -131,6 +133,8 @@ class Experience(models.Model):
             self.rate_num += 1
             self.rate_users.add(user)
             self.save()
+            rating_experience_signal.send(sender=self.__class__, user_rating=user, instance=self,
+                                          rating_score=rate, curr_score=self.rate_score)
             return True
         return False
 
