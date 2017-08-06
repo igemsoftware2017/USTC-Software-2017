@@ -1,5 +1,5 @@
 from rest_framework import viewsets, mixins, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import decorators
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
@@ -14,7 +14,7 @@ from .models import User
 
 def make_view(serializer_cls):
 
-    @api_view(['POST'])
+    @decorators.api_view(['POST'])
     def handler(request):
         if request.user.is_authenticated():
             raise NotFound
@@ -33,16 +33,16 @@ register = make_view(RegisterSerializer)
 login = make_view(LoginSerializer)
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@decorators.api_view(['GET'])
+@decorators.permission_classes([permissions.IsAuthenticated])
 def logout(request):
     auth_logout(request)
 
     return Response('OK')
 
 
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@decorators.api_view(['POST'])
+@decorators.permission_classes([permissions.IsAuthenticated])
 def change_password(request):
 
     serializer = ChangePasswordSerializer(
@@ -79,3 +79,28 @@ class UserViewSet(
             return self.request.user
 
         return super(UserViewSet, self).get_object()
+
+    @decorators.detail_route(['GET'])
+    def followers(self, request, *args, **kwargs):
+        return pagination.paginate_queryset(
+            self.get_object().followers.all(),
+            self
+        )
+
+    @decorators.detail_route(['GET'])
+    def following(self, request, *args, **kwargs):
+        return pagination.paginate_queryset(
+            self.get_object().following.all(),
+            self)
+
+    @decorators.detail_route(['POST'])
+    def follow(self, request, *args, **kwargs):
+        request.user.follow(self.get_object())
+
+        return Response('OK')
+
+    @decorators.detail_route(['POST'])
+    def unfollow(self, request, *args, **kwargs):
+        request.user.unfollow(self.get_object())
+
+        return Response('OK')

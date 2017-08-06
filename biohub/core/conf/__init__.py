@@ -3,11 +3,15 @@ import os.path
 import json
 import filelock
 import tempfile
+import logging
+import warnings
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
 
 from biohub.utils.collections import unique
+
+logger = logging.getLogger('biohub.conf')
 
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
@@ -16,6 +20,9 @@ mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
+    'UPLOAD_DIR': ('UPLOAD_DIR',
+                   lambda: os.path.join(tempfile.gettempdir, 'biohub')),
+    'REDIS_URI': ('REDIS_URI', '')
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -69,7 +76,7 @@ class Settings(object):
                 value = default_value() if callable(default_value) \
                     else default_value
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             setattr(self, dest_name, value)
 
@@ -84,7 +91,7 @@ class Settings(object):
 
             value = getattr(self, dest_name)
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             result[org_name] = value
 
@@ -95,6 +102,15 @@ class Settings(object):
         BIOHUB_PLUGINS should not contains duplicated items.
         """
         return unique(value)
+
+    def validate_upload_dir(self, value):
+        if value.startswith(tempfile.gettempdir()):
+            warnings.warn(
+                'Your UPLOAD_DIR was under the temporary directory, all '
+                'files will be erased once system reboots.',
+                RuntimeWarning)
+
+        return os.path.abspath(value)
 
     def __delattr__(self, name):
         """
@@ -141,8 +157,6 @@ class LazySettings(LazyObject):
         if val is None:
             val = getattr(self._wrapped, name)
 
-        self.__dict__[name] = val
-
         return val
 
     def __setattr__(self, name, value):
@@ -166,6 +180,10 @@ class SettingsManager(object):
         self._settings_object = settings_object
         self._file_lock = filelock.FileLock(LOCK_FILE_PATH)
         self._store_settings = []
+
+    @property
+    def locking(self):
+        return self._file_lock.is_locked
 
     def _resolve_config_path(self, config_path=None):
         """
@@ -231,7 +249,7 @@ class SettingsManager(object):
 
         path = self._resolve_config_path(path)
 
-        locking = self._file_lock.is_locked
+        locking = self.locking
 
         with self._file_lock:
 

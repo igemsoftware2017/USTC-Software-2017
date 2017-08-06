@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-class WebSocketDataDecodeError(Exception):
+class WebsocketDataDecodeError(Exception):
     pass
 
 
@@ -35,7 +35,7 @@ def decode(content):
     missing_fields = {'handler', 'data'} - set(content)
 
     if missing_fields:
-        raise WebSocketDataDecodeError(
-            "Fields %s missing." % ','.join(missing_fields))
+        raise WebsocketDataDecodeError(
+            "Fields %s missing." % ', '.join(missing_fields))
 
     return content['handler'], content['data']

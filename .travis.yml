@@ -7,6 +7,7 @@ before_install:
 script: "biohub/manage.py test"
 services:
   - mysql
+  - redis-server
 before_script:
   - bash .travis-install
 notifications:

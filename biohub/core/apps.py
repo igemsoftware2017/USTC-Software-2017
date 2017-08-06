@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from django.utils.module_loading import autodiscover_modules
 
 
 class CoreConfig(AppConfig):
@@ -8,4 +7,6 @@ class CoreConfig(AppConfig):
     label = 'biohub_core'
 
     def ready(self):
-        autodiscover_modules('urls')
+        from biohub.core.conf.signal import register
+
+        register()

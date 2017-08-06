@@ -21,7 +21,7 @@ class TestQS(NoticeTestCase):
     def test_categories(self):
         self.assertSequenceEqual(Notice.objects.categories(), ['a', 'b'])
 
-    def test_categories_detail(self):
+    def test_stats(self):
         Notice.objects.filter(category='a')[0].mark_read()
         self.assertSequenceEqual([
             {
@@ -32,12 +32,12 @@ class TestQS(NoticeTestCase):
                 'category': 'b',
                 'count': 10,
                 'unread': 10
-            }], Notice.objects.categories_detail())
+            }], Notice.objects.stats())
 
     def test_mark_read(self):
         qs = Notice.objects.filter(category='a')
         qs.mark_read()
-        self.assertSequenceEqual(qs.categories_detail(), [{
+        self.assertSequenceEqual(qs.stats(), [{
             'category': 'a',
             'count': 10,
             'unread': 0
@@ -94,7 +94,7 @@ class TestCRUD(NoticeTestCase):
         n.refresh_from_db()
         self.assertTrue(n.has_read)
 
-        resp = self._get(user2, 'categories_detail/')
+        resp = self._get(user2, 'stats/')
         self.assertSequenceEqual(resp.data, [{
             'category': 'a',
             'count': 1,

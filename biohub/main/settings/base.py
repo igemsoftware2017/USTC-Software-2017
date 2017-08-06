@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from biohub.utils import path
 
+import logging
+
+logging.captureWarnings(True)
+
+
 # Essential paths
 BIOHUB_DIR = path.modpath('biohub')
 BIOHUB_MAIN_DIR = path.modpath('biohub.main')
@@ -44,6 +49,7 @@ INSTALLED_APPS = [
     'biohub.core',
     'biohub.accounts',
     'biohub.notices',
+    'biohub.core.files',
     'biohub.core.plugins',
     'biohub.abacus'
 ]
@@ -134,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 
 DATABASES = {
     'default': {
@@ -148,8 +155,12 @@ REST_FRAMEWORK = {
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'asgiref.inmemory.ChannelLayer',
-        'ROUTING': 'biohub.core.channel_routing.channels_routing'
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'ROUTING': 'biohub.core.channel_routing.channels_routing',
+        'CONFIG': {
+            'hosts': [],
+            'symmetric_encryption_keys': [SECRET_KEY],
+        }
     }
 }
 
@@ -160,5 +171,31 @@ from biohub.core.conf import settings as biohub_settings  # noqa:E402
 DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
 INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS
 TIME_ZONE = biohub_settings.TIMEZONE
+MEDIA_ROOT = biohub_settings.UPLOAD_DIR
+
+if biohub_settings.REDIS_URI:
+    CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
+        biohub_settings.REDIS_URI)
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": biohub_settings.REDIS_URI,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        }
+    }
+
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
+else:
+
+    import warnings
+
+    warnings.warn('No redis configuration. ', RuntimeWarning)
+
+    CHANNEL_LAYERS['default']['BACKEND'] = 'asgiref.inmemory.ChannelLayer'
+    del CHANNEL_LAYERS['default']['CONFIG']
 
 del biohub_settings

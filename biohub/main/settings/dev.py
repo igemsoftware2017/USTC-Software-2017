@@ -1,6 +1,8 @@
 from .base import *  # noqa
 import coloredlogs
 
+ALLOWED_HOSTS = ['*']
+
 TIME_ZONE = 'Asia/Shanghai'
 
 LOGGING = {
@@ -33,6 +35,11 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'CRITICAL',
             'propagate': False
+        },
+        'py.warnings': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': True
         },
         '': {
             'handlers': ['console'],
