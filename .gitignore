@@ -101,3 +101,6 @@ ENV/
 /biohub/main/settings/whoosh_index/
 /config.json
 /.idea/
+
+# biocircuit
+gate.py

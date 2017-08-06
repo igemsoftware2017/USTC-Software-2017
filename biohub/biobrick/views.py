@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
@@ -17,6 +19,8 @@ list_default_order = 'part_name'
 class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Biobrick.objects.all()
     serializer_class = BiobrickSerializer
+    parser_classes = (JSONParser,)
+    renderer_classes = (JSONRenderer,)
 
     def filter_queryset(self, queryset):
         order = self.request.query_params.get('order')
