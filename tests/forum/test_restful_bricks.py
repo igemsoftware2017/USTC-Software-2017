@@ -118,10 +118,13 @@ class BrickRestfulAPITest(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['group_name'], 'iGEM07_Paris')
         # TODO: continue the test after bugs in ExperienceSpider is fixed...
-        # experience_url = data['experience_set'][0]
-        # response = self.client.get(experience_url)
-        # self.assertEqual(response.status_code, 200)
-        # data = json.loads(response.content)
+        experience_url = data['experience_set'][0]
+        response = self.client.get(experience_url)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        content_url = data['content']
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, 200)
         # self.assertEqual()
 
     def test_retrieve_using_id(self):
@@ -130,3 +133,21 @@ class BrickRestfulAPITest(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['group_name'], 'well')
         # TODO: add the tests for fetching experiences after bugs in ExperienceSpider is fixed.
+        # but the APIs are NOT designed for fetching only experiences with the existing brick
+
+    def test_list_using_searching_param(self):
+        # fetch several bricks
+        response = self.client.get('/api/forum/bricks/I6101/')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/E0240/')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/I742158/')
+        self.assertEqual(response.status_code, 200)
+        # list all bricks
+        response = self.client.get('/api/forum/bricks/')
+        data = json.loads(response.content) # there ought to be 4 items
+        # search bricks beginning with 'I'
+        response = self.client.get('/api/forum/bricks/?name=I')
+        data = json.loads(response.content) # there ought to be 2 items
+
+        

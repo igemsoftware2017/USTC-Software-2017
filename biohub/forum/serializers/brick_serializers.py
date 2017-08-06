@@ -7,6 +7,7 @@ from biohub.accounts.serializers import UserSerializer
 
 @bind_model(Brick)
 class BrickSerializer(ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='api:forum:brick-detail')
     document = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail', read_only=True)
     followers = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
     experience_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
