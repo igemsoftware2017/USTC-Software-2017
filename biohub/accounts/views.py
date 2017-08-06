@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.shortcuts import get_object_or_404
 
 from biohub.utils.rest import pagination, permissions as p
 
@@ -59,7 +60,7 @@ class UserViewSet(
         mixins.UpdateModelMixin,
         viewsets.GenericViewSet):
 
-    lookup_value_regex = r'\d+|me'
+    lookup_value_regex = r'\d+|me|n:[\da-zA-Z_]{4,15}'
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -71,12 +72,17 @@ class UserViewSet(
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
-        if self.kwargs[lookup_url_kwarg] == 'me':
+        lookup = self.kwargs[lookup_url_kwarg]
+
+        if lookup == 'me':
 
             if not self.request.user.is_authenticated():
                 raise NotFound
 
             return self.request.user
+        elif lookup.startswith('n:'):
+
+            return get_object_or_404(User, username=lookup[2:])
 
         return super(UserViewSet, self).get_object()
 

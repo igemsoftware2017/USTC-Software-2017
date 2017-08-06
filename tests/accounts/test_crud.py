@@ -19,6 +19,13 @@ class Test(APITestCase):
         url = '/api/users/%s/%s/' % (user.id, part)
         return self.client.post(url)
 
+    def test_username_lookup(self):
+        User.objects.create_test_user('testtest')
+
+        resp = self.client.get('/api/users/n:testtest/')
+
+        self.assertEqual(resp.data['username'], 'testtest')
+
     def test_fetch_bi_connections(self):
         self.me.follow(self.you)
         self.client.force_authenticate(self.me)
