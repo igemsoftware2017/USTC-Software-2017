@@ -1,8 +1,17 @@
+import os.path as path
+
 from django.urls import reverse
 
 from rest_framework.test import APITestCase
 
 from biohub.accounts.models import User
+
+current_dir = path.dirname(__file__)
+
+
+def open_img(name, mode='rb'):
+
+    return open(path.join(current_dir, 'test_imgs', name), mode)
 
 
 class Test(APITestCase):
@@ -105,16 +114,6 @@ class Test(APITestCase):
     def _patch(self, user, **payload):
         return self.client.patch(user.api_url, payload)
 
-    def test_update_avatar(self):
-        new_url = 'https://www.baidu.com/img/bd_logo1.png'
-
-        self.client.force_authenticate(self.me)
-        resp = self._patch(self.me, avatar_url=new_url)
-        self.assertEqual(200, resp.status_code)
-
-        resp = self.client.get('/api/users/%s/' % self.me.id)
-        self.assertEqual(new_url, resp.data['avatar_url'])
-
     def test_update(self):
         resp = self._patch(self.me)
         self.assertEqual(resp.status_code, 403)
@@ -133,3 +132,34 @@ class Test(APITestCase):
         self.assertDictContainsSubset({
             'description': ''
         }, resp.data)
+
+    def test_upload_avatar(self):
+        self.client.force_authenticate(self.me)
+
+        self.assertEqual(
+            self.client.post('/api/users/upload_avatar/', {}).status_code,
+            400)
+
+        fd = open_img('a.png')
+        resp = self.client.post('/api/users/upload_avatar/', {'file': fd})
+        self.assertEqual(resp.status_code, 200)
+
+        url_a = resp.data
+        self.assertTrue(url_a.endswith('.png'))
+        self.me.refresh_from_db()
+        self.assertEqual(self.me.avatar_url, url_a)
+        self.assertEqual(self.client.get(url_a).status_code, 200)
+
+        fd.close()
+        fd = open_img('b.png')
+        resp = self.client.post('/api/users/upload_avatar/', {'file': fd})
+        self.assertEqual(resp.status_code, 200)
+
+        url_b = resp.data
+        self.assertTrue(url_b.endswith('.png'))
+        self.me.refresh_from_db()
+        self.assertEqual(self.me.avatar_url, url_b)
+        self.assertEqual(self.client.get(url_a).status_code, 404)
+        self.assertEqual(self.client.get(url_b).status_code, 200)
+
+        fd.close()

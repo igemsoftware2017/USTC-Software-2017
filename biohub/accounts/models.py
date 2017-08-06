@@ -5,8 +5,10 @@ from django.utils.functional import cached_property
 from django.core.validators import MaxLengthValidator
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.files.storage import default_storage
 
 from biohub.accounts.validators import UsernameValidator
+from biohub.core.files.utils import url_to_filename
 
 AVATAR_URL_BASE = 'https://www.gravatar.com/avatar/{md5}?s=328&r=g&d=identicon'
 
@@ -125,3 +127,12 @@ class User(AbstractBaseUser):
         To unfollow a specific user.
         """
         target_user.followers.remove(self)
+
+    def update_avatar(self, url):
+        old_name = url_to_filename(self.avatar_url)
+
+        if old_name is not None:
+            default_storage.delete(old_name)
+
+        self.avatar_url = url
+        self.save()

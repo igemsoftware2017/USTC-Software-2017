@@ -1,12 +1,14 @@
 from rest_framework import viewsets, mixins, permissions
 from rest_framework import decorators
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
 
 from biohub.utils.rest import pagination, permissions as p
+from biohub.core.files.utils import store_file
 
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer,\
     ChangePasswordSerializer
@@ -52,6 +54,21 @@ def change_password(request):
     if serializer.is_valid(raise_exception=True):
         serializer.save()
         return Response('OK')
+
+
+@decorators.api_view(['POST'])
+@decorators.permission_classes([permissions.IsAuthenticated])
+def upload_avatar(request):
+
+    if 'file' not in request.FILES:
+        raise ValidationError('Field `file` not found.')
+
+    filename, _ = store_file(request.FILES['file'])
+    url = default_storage.url(filename)
+
+    request.user.update_avatar(url)
+
+    return Response(url)
 
 
 class UserViewSet(
