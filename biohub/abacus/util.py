@@ -20,8 +20,8 @@ STORAGE_PATH = os.path.join(os.getcwd(), 'storage/abacus/')
 UPLOAD_PATH = os.path.join(STORAGE_PATH, 'upload/')
 DOWNLOAD_PATH = os.path.join(STORAGE_PATH, 'download/')
 
-def copyfileobj_example(source, dest, buffer_size=1024*1024):
-    while 1:
+def copy_file(source, dest, buffer_size=1024 * 1024):
+    while True:
         copy_buffer = source.read(buffer_size)
         if not copy_buffer:
             break
@@ -32,7 +32,7 @@ def save_file(id, file):
         os.makedirs(UPLOAD_PATH)
 
     target_path = os.path.join(UPLOAD_PATH, str(id) + '.pdb')
-    copyfileobj_example(file, open(target_path, 'w+'))
+    copy_file(file, open(target_path, 'wb+'))
 
 def delete_file(id):
     file_path = os.path.join(UPLOAD_PATH, str(id) + '.pdb')

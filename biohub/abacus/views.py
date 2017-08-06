@@ -2,12 +2,12 @@ import json
 
 from django.shortcuts import render
 from rest_framework import viewsets, decorators
+from django.http import Http404
 
 from ..abacus import responses
 
 
-class AbacusView(
-        viewsets.GenericViewSet):
+class AbacusView(viewsets.GenericViewSet):
 
     def list_abacus(self):
         return responses.list_abacus(self.request.user)
@@ -64,8 +64,7 @@ class AbacusView(
         elif method == "calculate":
             return self.calculate(id)
         else:
-            return
-        pass
+            return Http404('No such method was found!')
 
     @decorators.list_route(methods=['Get', 'Post'])
     def index(self, request):

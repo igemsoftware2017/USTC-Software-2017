@@ -32,7 +32,7 @@ def threads(id):
 
 def manager():
     while True:
-        sleep(1)
+        sleep(100)
         if len(THREAD_POOL) < 5 and len(CALCULATE_QUEUE) > 0:
             id = CALCULATE_QUEUE.pop(0)
             print('id - > ', id, str(id))
