@@ -98,6 +98,16 @@ class Test(APITestCase):
     def _patch(self, user, **payload):
         return self.client.patch(user.api_url, payload)
 
+    def test_update_avatar(self):
+        new_url = 'https://www.baidu.com/img/bd_logo1.png'
+
+        self.client.force_authenticate(self.me)
+        resp = self._patch(self.me, avatar_url=new_url)
+        self.assertEqual(200, resp.status_code)
+
+        resp = self.client.get('/api/users/%s/' % self.me.id)
+        self.assertEqual(new_url, resp.data['avatar_url'])
+
     def test_update(self):
         resp = self._patch(self.me)
         self.assertEqual(resp.status_code, 403)
