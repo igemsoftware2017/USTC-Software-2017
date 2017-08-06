@@ -160,6 +160,8 @@ class ExperienceSpider:
     logger = logging.getLogger(__name__)
 
     def fill_from_page(self, brick_name):
+        h = html2text.HTML2Text()
+        h.body_width = 1000
         brick = Brick.objects.get(name=brick_name)
         # if experience is None:
         #     experience = Experience(title='Part: ' + brick_name + ': Experience',
@@ -187,8 +189,6 @@ class ExperienceSpider:
                 # change images' URLs to absolute ones
                 restored_content = re.sub('=\"/(.*?\")', '=\"' +
                                           ExperienceSpider.base_site + r'\1', str(content_html))
-                h = html2text.HTML2Text()
-                h.body_width = 1000
                 markdown = h.handle(restored_content)
                 if(experience.content is None):
                     article = Article.objects.create(text=markdown)
@@ -198,6 +198,40 @@ class ExperienceSpider:
                     experience.content.save()
                 experience.save()
         else:
+            content = None
+            experience = None
+            for para in beginning.find_next_siblings('p'):
+                if(re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE)):
+                # save previous collected content
+                    # change images' URLs to absolute ones
+                    if(content and experience):
+                        restored_content = re.sub('=\"/(.*?\")', '=\"' +
+                            ExperienceSpider.base_site + r'\1', str(content))
+                        markdown = h.handle(restored_content)
+                        if(experience.content is None):
+                            article = Article.objects.create(text=markdown)
+                            experience.content = article
+                        else:
+                            experience.content.text = markdown
+                            experience.content.save()
+                        experience.save()
+                        
+                    content = None
+                    # create the next user review
+                    author_name = re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE).group(0)
+                    experience = brick.experience_set.get_or_create(
+                        author_name=author_name, defaults={'title': None, 'brick': brick})[0]
+                else:
+                    if(experience): # created last time in 'if' branch
+                        # collect contents
+                        if(content is None):
+                            content = BeautifulSoup('<p></p>',"lxml")
+                        content.p.append(para)
+                    else:
+                        # so this paragraph doesn't belong to any user reviews, skip it.
+                        pass
+
+
             pass
         return True
 
