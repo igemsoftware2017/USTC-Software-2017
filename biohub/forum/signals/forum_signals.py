@@ -3,7 +3,8 @@ from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
-from biohub.forum.user_defined_signals import rating_experience_signal
+from biohub.forum.user_defined_signals import rating_experience_signal, \
+    up_voting_post_signal
 from biohub.notices.tool import Dispatcher
 
 
@@ -49,6 +50,27 @@ def send_notice_to_the_experience_author_on_rating(instance, rating_score,
                           experience=instance, brick_url=brick_url, experience_url=experience_url,
                           user_rating=user_rating, user_rating_url=user_rating_url,
                           rating_score=rating_score, curr_score=curr_score)
+
+
+@receiver(up_voting_post_signal, sender=Post)
+def send_notice_to_post_author_on_up_voting(instance, user_up_voting,
+                                            curr_up_vote_num, **kwargs):
+    author = instance.author
+    experience = instance.experience
+    brick = instance.experience.brick
+    experience_url = reverse('api:forum:experience-detail', kwargs={'pk': experience.id})
+    brick_url = reverse('api:forum:brick-detail', kwargs={'pk': brick.id})
+    user_up_voting_url = user_up_voting.api_url
+    post_url = reverse('api:forum:post-detail', kwargs={'pk': instance.id})
+    forum_dispatcher.send(author, '{{user_up_voting.username|url:user_up_voting_url}}'
+                                  ' voted for {{"your post"|url:post_url}} on experience '
+                                  '(Title: {{ experience.title|url:experience_url }})'
+                                  ' of brick BBA_{{brick.name|url:brick_url}}. '
+                                  'Now you have {{curr_up_vote_num}} vote(s) for that post.',
+                          experience=experience, brick_url=brick_url, experience_url=experience_url,
+                          user_up_voting=user_up_voting, user_up_voting_url=user_up_voting_url,
+                          brick=brick, curr_up_vote_num=curr_up_vote_num, post_url=post_url)
+
 
 # @receiver(pre_delete, sender=Post)
 # def hide_attached_comments(instance, **kwargs):

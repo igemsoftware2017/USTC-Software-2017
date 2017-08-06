@@ -70,6 +70,7 @@ class PostRestfulAPITest(TestCase):
         other_post = Post.objects.create(author=self.user2, content='125', experience=self.experience)
         response = client.post('/api/forum/posts/' + str(other_post.id) + '/up_vote/')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.user2.notices.all().count(), 1)
         response = client.get('/api/forum/posts/' + str(other_post.id) + '/')
         post_detail = json.loads(response.content)
         self.assertEqual(post_detail['up_vote_num'], 1)

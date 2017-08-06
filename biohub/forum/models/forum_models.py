@@ -3,6 +3,8 @@ from django.conf import settings
 
 from .bio_models import Experience
 
+from ..user_defined_signals import up_voting_post_signal
+
 MAX_LEN_FOR_CONTENT = 1000
 
 # class Studio(models.Model):
@@ -69,6 +71,8 @@ class Post(models.Model):
             self.up_vote_num += 1
             self.up_vote_users.add(user)
             self.save()
+            up_voting_post_signal.send(sender=self.__class__, instance=self,
+                                       user_up_voting=user, curr_up_vote_num=self.up_vote_num)
             return True
         return False
 
