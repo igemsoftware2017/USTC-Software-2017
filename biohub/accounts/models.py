@@ -69,12 +69,13 @@ class User(AbstractBaseUser):
 
     REQUIRED_FIELDS = ['email']
 
+    objects = UserManager()
+
     def get_full_name(self):
+        "For compatibility."
         return self.username
 
     get_short_name = get_full_name
-
-    objects = UserManager()
 
     @cached_property
     def api_url(self):
