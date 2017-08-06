@@ -79,7 +79,7 @@ class BrickViewSet(mixins.ListModelMixin,
         now = timezone.now()
         if now - brick.update_time > self.UPDATE_DELTA:
             try:
-                self.update_brick(brick_name=brick.name,brick=brick)
+                self.update_brick(brick_name=brick.name, brick=brick)
                 brick = self.get_object()
             except Exception as e:
                 if e.args == 'The part does not exist on iGEM\'s website':
@@ -112,7 +112,9 @@ class BrickViewSet(mixins.ListModelMixin,
             pagination_class = self.pagination_class
             page = self.paginate_queryset(self.get_queryset())
             serializer = BrickSerializer(
-                page, fields=('id', 'name'), many=True)
+                page, fields=('url', 'id', 'name'), many=True, context={
+                    'request': request
+                })
             return self.get_paginated_response(serializer.data)
         return super(BrickViewSet, self).list(request=request, *args, **kwargs)
 
