@@ -2,7 +2,7 @@ import json
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
-from biohub.forum.models import Post, Experience
+from biohub.forum.models import Post, Experience, Brick
 import json
 
 
@@ -13,7 +13,8 @@ class PostRestfulAPITest(TestCase):
         self.user1 = User.objects.create(username="abc")
         self.user1.set_password("abc546565132")
         self.user1.save()
-        self.experience = Experience.objects.create(title="hhh", author=self.user1)
+        self.brick = Brick.objects.create(name='K314110')
+        self.experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick)
         self.user2 = User.objects.create(username="fff")
         self.user2.set_password("1593562120")
         self.user2.save()

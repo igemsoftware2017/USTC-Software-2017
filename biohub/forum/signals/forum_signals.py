@@ -1,6 +1,8 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_save
 from biohub.forum.models import Post, Experience
+from biohub.notices.tool import Dispatcher
+from rest_framework.reverse import reverse
 
 
 @receiver(pre_delete, sender=Experience)
@@ -8,6 +10,27 @@ def hide_attached_posts(instance, **kwargs):
     for post in instance.post_set.all():
         post.hide()
 
+forum_dispatcher = Dispatcher('Forum')
+
+
+@receiver(post_save, sender=Post)
+def send_notice_to_the_experience_author(instance, created, **kwargs):
+    if created:
+        # only send a notice when the post is created for the first time.
+        # the later modifications of the posts won't cause sending a notice.
+        experience = instance.experience
+        author = experience.author
+        # ignore if the comment's author is the same as the experience author
+        if author == instance.author:
+            return
+        experience_url = reverse('api:forum:experience-detail', kwargs={'pk': experience.id})
+        post_author_url = instance.author.api_url
+        brick_url = reverse('api:forum:brick-detail', kwargs={'pk': experience.brick.id})
+        forum_dispatcher.send(author, '{{instance.author.username|url:post_author_url}} commented on '
+                                      'your experience (Title: {{ experience.title|url:experience_url }})'
+                                      ' of brick BBA_{{experience.brick.name|url:brick_url}}.',
+                              instance=instance, experience=experience, brick_url=brick_url,
+                              post_author_url=post_author_url, experience_url=experience_url)
 
 # @receiver(pre_delete, sender=Post)
 # def hide_attached_comments(instance, **kwargs):

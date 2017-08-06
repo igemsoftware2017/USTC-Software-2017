@@ -10,9 +10,11 @@ def create_random_string():
 
 
 def create_new_user(**kwargs):
-    user = User(username=create_random_string(), password='123456', **kwargs)
+    user = User.objects.create(username=create_random_string(), **kwargs)
+    user.set_password('123456')
     user.save()
     return user
+
 
 def create_new_article(**kwargs):
     article = Article.objects.create(text=create_random_string(), **kwargs)
@@ -29,6 +31,7 @@ def create_new_experience(author, **kwargs):
 def create_new_brick(**kwargs):
     brick = Brick(name=create_random_string(), document=create_new_article(),
                   **kwargs)
+    return brick
 
 
 def create_new_post(experience, author, **kwargs):
@@ -222,3 +225,21 @@ class BrickSignalTests(TestCase):
         self.assertRaises(Article.DoesNotExist, Article.objects.get, {
             'pk': article_id2
         })
+
+
+class PostSignalTests(TestCase):
+    def setUp(self):
+        self.user1 = create_new_user()
+        self.user2 = create_new_user()
+        self.brick = Brick.objects.create(name='K314110')
+        self.experience1 = create_new_experience(self.user1, brick=self.brick)
+        self.post1 = create_new_post(self.experience1, self.user1)
+        self.post2 = create_new_post(self.experience1, self.user2)
+
+    def test_creating_a_new_post_will_notice_the_author_of_the_experience(self):
+        self.assertEqual(self.user1.notices.all().count(), 1)
+
+    def test_modifying_a_new_post_will_not_notice(self):
+        self.post2.content = 'WTF'
+        self.post2.save()
+        self.assertEqual(self.user1.notices.all().count(), 1)
