@@ -103,4 +103,4 @@ ENV/
 /.idea/
 
 # biocircuit
-gate.py
+biogate.py

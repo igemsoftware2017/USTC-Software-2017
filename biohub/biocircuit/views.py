@@ -15,7 +15,12 @@ from rest_framework import status
 
 
 from . import biocircuit as biocircuit
-from . import biogate as biogate
+from .biogate_gen import GatesJsonFile
+
+try:
+    from . import biogate as biogate
+except ImportError:
+    raise ImportError('The biogate.py doesn\'t exist. Check whether you have generated the file by `python biogate_gen.py`.')
 
 
 class BiocircuitView(APIView):
@@ -74,3 +79,14 @@ class ScoreView(APIView):
             response["status"] = "failed"
             response["detail"] = error.message
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GateView(APIView):
+    parser_classes = (JSONParser,)
+    renderer_classes = (JSONRenderer,)
+
+    def get(self, request):
+        fp = open(GatesJsonFile, 'r')
+        data = fp.read()
+        fp.close()
+        return Response(data)

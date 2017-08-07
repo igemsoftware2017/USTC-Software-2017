@@ -1,4 +1,4 @@
-from rest_framework.routers import DefaultRouter
+from django.conf.urls import url
 
 from biohub.core.routes import register_api
 
@@ -6,8 +6,8 @@ from biohub.core.routes import register_api
 
 from . import views
 
-router = DefaultRouter()
-router.register(r'', views.BiocircuitView, base_name='')
-router.register(r'score', views.ScoreView, base_name='')
-
-register_api(r'^', router.urls, 'biocircuit')
+register_api(r'^', [
+    url(r'^build/$', views.BiocircuitView.as_view()),
+    url(r'^gates/$', views.GatesView.as_view()),
+    url(r'^score/$', views.ScoreView.as_view()),
+], 'biocircuit')
