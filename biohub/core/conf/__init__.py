@@ -5,6 +5,7 @@ import filelock
 import tempfile
 import logging
 import warnings
+import multiprocessing
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
@@ -25,7 +26,10 @@ mapping = {
     'UPLOAD_DIR': ('UPLOAD_DIR',
                    lambda: os.path.join(tempfile.gettempdir, 'biohub')),
     'REDIS_URI': ('REDIS_URI', ''),
-    'SECRET_KEY': ('SECRET_KEY', '')
+    'SECRET_KEY': ('SECRET_KEY', ''),
+    'BIOHUB_MAX_TASKS': ('MAX_TASKS',
+                         lambda: multiprocessing.cpu_count() * 5),
+    'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180)
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -129,7 +133,22 @@ class Settings(object):
 
         return value
 
+    def validate_biohub_max_tasks(self, value):
+
+        assert isinstance(value, int) and value > 0, \
+            "'MAX_TASKS' should be positive integer."
+
+        return value
+
+    def validate_biohub_task_max_timeout(self, value):
+
+        assert isinstance(value, (int, float)) and value > 0, \
+            "'TASK_MAX_TIMEOUT' should be positive float."
+
+        return value
+
     def validate_upload_dir(self, value):
+
         if value.startswith(tempfile.gettempdir()):
             warnings.warn(
                 'Your UPLOAD_DIR is within the temporary directory. All '

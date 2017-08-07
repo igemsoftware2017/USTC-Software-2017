@@ -157,6 +157,10 @@ if biohub_settings.SECRET_KEY:
 if biohub_settings.REDIS_URI:
     CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
         biohub_settings.REDIS_URI)
+    CHANNEL_LAYERS['default']['TEST_CONFIG'] = {
+        'hosts': [biohub_settings.REDIS_URI],
+        'symmetric_encryption_keys': [SECRET_KEY],
+    }
 
     CACHES = {
         "default": {

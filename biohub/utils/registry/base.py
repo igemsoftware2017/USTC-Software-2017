@@ -102,6 +102,8 @@ class DictRegistryBase(RegistryBase, MappingRegistryMixin):
     Note that the registry just owns a weak reference to the items.
     """
 
+    key_error_class = KeyError
+
     def __init__(self):
         self.mapping = WeakValueDictionary()
 
@@ -117,7 +119,7 @@ class DictRegistryBase(RegistryBase, MappingRegistryMixin):
         """
 
         if key in self.mapping:
-            raise KeyError("Key '%s' conflicted." % key)
+            raise self.key_error_class(key)
 
         self.mapping[key] = value
         self.perform_register(key, value)
