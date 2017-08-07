@@ -14,7 +14,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework import status
 
 from . import biocircuit as biocircuit
-from . import biogate_gen as biogate
+from . import biogate as biogate
 
 
 class BiocircuitView(APIView):
