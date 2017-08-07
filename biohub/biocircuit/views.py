@@ -13,6 +13,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework import status
 
 from . import biocircuit as biocircuit
@@ -97,7 +98,6 @@ class GatesView(APIView):
         return Response(data)
 
     def post(self, request):
-        # FIXME permission
         try:
             update_d_gate()
             response = {'status': 'SUCCESS'}
@@ -107,3 +107,9 @@ class GatesView(APIView):
             response["status"] = "failed"
             response["detail"] = error.message
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return (AllowAny(), )
+        else:
+            return (IsAdminUser(), )
