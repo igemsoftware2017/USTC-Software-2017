@@ -6,6 +6,8 @@ method:get
 """
 __author__ = 'ctyi'
 
+import json
+
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -14,12 +16,16 @@ from rest_framework.exceptions import ParseError
 from rest_framework import status
 
 from . import biocircuit as biocircuit
-from .biogate_gen import GatesJsonFile
+from .biogate_man import update_d_gate, GatesJsonFile
 
 try:
     from . import biogate as biogate
 except ImportError:
-    raise ImportError('The biogate.py doesn\'t exist. Check whether you have generated the file by `python biogate_gen.py`.')
+    update_d_gate()
+    try:
+        from . import biogate as biogate
+    except ImportError:
+        raise ImportError('The biogate.py doesn\'t exist. Updating is inefficient.')
 
 
 class BiocircuitView(APIView):
@@ -80,12 +86,24 @@ class ScoreView(APIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GateView(APIView):
+class GatesView(APIView):
     parser_classes = (JSONParser,)
     renderer_classes = (JSONRenderer,)
 
     def get(self, request):
         fp = open(GatesJsonFile, 'r')
-        data = fp.read()
+        data = json.load(fp)
         fp.close()
         return Response(data)
+
+    def post(self, request):
+        # FIXME permission
+        try:
+            update_d_gate()
+            response = {'status': 'SUCCESS'}
+            return Response(response)
+        except BaseException as error:
+            response = {}
+            response["status"] = "failed"
+            response["detail"] = error.message
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)

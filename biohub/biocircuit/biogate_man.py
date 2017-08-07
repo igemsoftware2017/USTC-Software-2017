@@ -1,9 +1,11 @@
 __author__ = 'E-Neo <e-neo@qq.com>'
 
 import simplejson
+import os
 
-GatesJsonFile = 'gates_lizhi.json'
-GatesPyFile = 'biogate.py'
+dirname = os.path.dirname(os.path.abspath(__file__))
+GatesJsonFile = dirname + '/gates_lizhi.json'
+GatesPyFile = dirname + '/biogate.py'
 
 
 def get_d_gate(lizhi_json):
@@ -51,11 +53,13 @@ def get_d_gate(lizhi_json):
     return d_gate_d
 
 
-fp = open(GatesJsonFile, 'r')
-s_lizhi = fp.read()
-fp.close()
-d_gate = get_d_gate(s_lizhi)
-fp = open(GatesPyFile, 'w')
-fp.write('d_gate = ')
-fp.write(str(d_gate))
-fp.close()
+def update_d_gate():
+    print('Updating the gates from %s.' % GatesJsonFile)
+    fp = open(GatesJsonFile, 'r')
+    s_lizhi = fp.read()
+    fp.close()
+    d_gate = get_d_gate(s_lizhi)
+    fp = open(GatesPyFile, 'w')
+    fp.write('d_gate = ')
+    fp.write(str(d_gate))
+    fp.close()
