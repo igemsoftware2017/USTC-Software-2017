@@ -13,7 +13,6 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
 from rest_framework import status
 
-
 from . import biocircuit as biocircuit
 from .biogate_gen import GatesJsonFile
 

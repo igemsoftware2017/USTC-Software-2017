@@ -1,1 +1,1 @@
-default_app_config = 'biobrick.apps.BiobrickConfig'
+default_app_config = 'biohub.biobrick.apps.BiobrickConfig'
