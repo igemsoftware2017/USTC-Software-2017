@@ -22,14 +22,19 @@ def create_new_article(**kwargs):
 
 
 def create_new_experience(author, **kwargs):
-    experience = Experience(title='this is a title', author=author,
-                        content=create_new_article(), **kwargs)
+    brick = None
+    if 'brick' in kwargs:
+        brick = kwargs.pop('brick')
+    else:
+        brick = create_new_brick()
+    experience = Experience(title='this is a title', author=author, brick=brick,
+                            content=create_new_article(), **kwargs)
     experience.save()
     return experience
 
 
 def create_new_brick(**kwargs):
-    brick = Brick(name=create_random_string(), document=create_new_article(),
+    brick = Brick.objects.create(name=create_random_string(), document=create_new_article(),
                   **kwargs)
     return brick
 
@@ -274,3 +279,19 @@ class UpVotingSignalTests(TestCase):
         self.assertIs(self.post1.up_vote(self.user2), True)
         self.assertEqual(self.user1.notices.all().count(), 1)
         # print(self.user1.notices.all()[0].message)
+
+
+class WatchSigalTests(TestCase):
+    def setUp(self):
+        self.brick = Brick.objects.create(name='K314110')
+        self.user = create_new_user()
+
+    def test_watch_the_brick_and_receive_notice(self):
+        self.assertIs(self.brick.watch(self.user), True)
+        user2 = create_new_user()
+        # publishing own experience won't receive notice
+        experience_own = create_new_experience(self.user, brick=self.brick)
+        self.assertEqual(self.user.notices.all().count(), 0)
+        experience2 = create_new_experience(user2, brick=self.brick)
+        self.assertEqual(self.user.notices.all().count(), 1)
+        # print(self.user.notices.all()[0].message)
