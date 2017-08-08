@@ -24,7 +24,7 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
         experience = instance.experience
         author = experience.author
         # ignore if the comment's author is the same as the experience author
-        if author == instance.author:
+        if author.id == instance.author.id:
             return
         experience_url = reverse('api:forum:experience-detail', kwargs={'pk': experience.id})
         post_author_url = instance.author.api_url

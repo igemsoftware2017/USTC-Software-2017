@@ -22,7 +22,7 @@ class Article(models.Model):
 
 
 class Brick(models.Model):
-    #is_part = models.BooleanField(default=True)
+    # is_part = models.BooleanField(default=True)
     # no need. can be telled from 'sub_parts'
     name = models.CharField(max_length=100, unique=True)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -76,7 +76,7 @@ class Brick(models.Model):
     # a gene part has two strand, so use two fields to record the sequence.
     sequence_a = models.TextField(default='')
     sequence_b = models.TextField(default='')
-    #used_by = models.TextField(blank=True, default='') # temporarily removed
+    # used_by = models.TextField(blank=True, default='') # temporarily removed
     # recursive relation. the brick related must be a Device
 
     # private to Device
@@ -105,7 +105,7 @@ class Brick(models.Model):
     def cancel_watch(self, user):
         if self.watch_users.filter(pk=user.id).exists():
             self.watch_users.remove(user)
-            return  True
+            return True
         return False
 
 
