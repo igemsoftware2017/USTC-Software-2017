@@ -145,9 +145,11 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         # list all bricks
         response = self.client.get('/api/forum/bricks/')
-        data = json.loads(response.content) # there ought to be 4 items
+        data = json.loads(response.content)
+        # there ought to be 4 items, including the one in setUp()
         # search bricks beginning with 'I'
+        self.assertEqual(len(data['results']), 4)
         response = self.client.get('/api/forum/bricks/?name=I')
-        data = json.loads(response.content) # there ought to be 2 items
-
-        
+        data = json.loads(response.content)
+        # there ought to be 2 items
+        self.assertEqual(len(data['results']), 2)

@@ -21,7 +21,7 @@ class BrickSpider:
             brick = Brick(name=brick_name)
             raw_response = requests.get(
                 BrickSpider.base_site + 'Part:BBa_' + brick_name)
-            if(raw_response.status_code == 404):
+            if raw_response.status_code == 404:
                 raise Exception('The part does not exist on iGEM\'s website')
         raw_html = raw_response.text
         # fill name
@@ -43,13 +43,13 @@ class BrickSpider:
             'String\(\'(.*?)\'\)', raw_bioinfo).group(1)
         sequence_b = ''
         for char in list(brick.sequence_a):
-            if(char == 'a'):
+            if char == 'a':
                 sequence_b += 't'
-            if(char == 't'):
+            if char == 't':
                 sequence_b += 'a'
-            if(char == 'c'):
+            if char == 'c':
                 sequence_b += 'g'
-            if(char == 'g'):
+            if char == 'g':
                 sequence_b += 'c'
         brick.sequence_b = sequence_b
         # dna_position = re.search(
@@ -57,7 +57,7 @@ class BrickSpider:
         # add char field with the suitable validator eg: "23,435" done!
         sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\);', raw_bioinfo) and re.search(
             'subParts.*?new Array\s*\((.+?)\);', raw_bioinfo).group(1)
-        if(sub_parts_data):
+        if sub_parts_data:
             sub_parts_list = re.findall(
                 'Part\s*\(\d*,\s*\'(.*?)\'.*?\)', sub_parts_data)
             brick.sub_parts = ','.join(sub_parts_list)
@@ -76,13 +76,13 @@ class BrickSpider:
         brick.experience_status = div2.text
         # fetch use number
         div2 = div.find_all('div')[3]
-        if(re.search('(\d+)\s*', div2.text)):
+        if re.search('(\d+)\s*', div2.text):
             brick.use_num = int(re.search('(\d+)\s*', div2.text).group(1))
         else:
             brick.use_num = 0
         # fetch twin num(if exists)
         div2 = div.find_all('div')[4]
-        if(re.search('(\d+)\s*Twins.*?', div2.text)):
+        if re.search('(\d+)\s*Twins.*?', div2.text):
             brick.twin_num = int(
                 re.search('(\d+)\s*Twins.*?', div2.text).group(1))
         else:
@@ -95,7 +95,7 @@ class BrickSpider:
         # fetch parameters
         parameters = []
         div = soup.find(id='parameters')
-        if(div.table.tr.td.text == 'None'):
+        if div.table.tr.td.text == 'None':
             brick.parameters = ''
         else:
             print(div.table.tr.td.text)
@@ -114,13 +114,13 @@ class BrickSpider:
         for each in scriptset:
             each.extract()
         panel = soup.find(id='sequencePaneDiv')
-        if(panel):
+        if panel:
             panel.extract()
         panel = soup.find(class_='h3bb', text='Sequence and Features')
-        if(panel):
+        if panel:
             panel.extract()
         compat = soup.find(class_='compatibility_div')
-        if(compat):
+        if compat:
             compat.parent.extract()
         # restore images by supplementing URLs
         newdoc = re.sub('=\"/(.*?\")', '=\"' +
@@ -168,7 +168,7 @@ class ExperienceSpider:
         #                             brick=Brick.objects.get(name=brick_name))
         raw_response = requests.get(
             ExperienceSpider.base_site + 'Part:BBa_' + brick_name + ':Experience')
-        if(raw_response.status_code == 404):
+        if raw_response.status_code == 404:
             raise Exception('The experience does not exist on iGEM\'s website')
         raw_html = raw_response.text
         soup = BeautifulSoup(raw_html, "lxml")
@@ -177,20 +177,20 @@ class ExperienceSpider:
             rubbish.extract()
         # determine the structure of user reviews (there are 2 types)
         beginning = soup.find(id='User_Reviews').parent
-        if(beginning.find_next_siblings('table')):
+        if beginning.find_next_siblings('table'):
             # the first type
             for entry in beginning.find_next_siblings('table'):
                 author_name = entry.tr.find_all('td')[0].p.text
                 author_name = re.search(
                     '\s*(.*?)\s*$', author_name, re.DOTALL).group(1)
                 experience = brick.experience_set.get_or_create(
-                    author_name=author_name, defaults={'title': None, 'brick': brick})[0]
+                    author_name=author_name, defaults={'title': '', 'brick': brick})[0]
                 content_html = entry.tr.find_all('td')[1]
                 # change images' URLs to absolute ones
                 restored_content = re.sub('=\"/(.*?\")', '=\"' +
                                           ExperienceSpider.base_site + r'\1', str(content_html))
                 markdown = h.handle(restored_content)
-                if(experience.content is None):
+                if experience.content is None:
                     article = Article.objects.create(text=markdown)
                     experience.content = article
                 else:
@@ -201,14 +201,14 @@ class ExperienceSpider:
             content = None
             experience = None
             for para in beginning.find_next_siblings('p'):
-                if(re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE)):
+                if re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE):
                 # save previous collected content
                     # change images' URLs to absolute ones
-                    if(content and experience):
+                    if content and experience:
                         restored_content = re.sub('=\"/(.*?\")', '=\"' +
                             ExperienceSpider.base_site + r'\1', str(content))
                         markdown = h.handle(restored_content)
-                        if(experience.content is None):
+                        if experience.content is None:
                             article = Article.objects.create(text=markdown)
                             experience.content = article
                         else:
@@ -220,11 +220,11 @@ class ExperienceSpider:
                     # create the next user review
                     author_name = re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE).group(0)
                     experience = brick.experience_set.get_or_create(
-                        author_name=author_name, defaults={'title': None, 'brick': brick})[0]
+                        author_name=author_name, defaults={'title': '', 'brick': brick})[0]
                 else:
-                    if(experience): # created last time in 'if' branch
+                    if experience: # created last time in 'if' branch
                         # collect contents
-                        if(content is None):
+                        if content is None:
                             content = BeautifulSoup('<p></p>',"lxml")
                         content.p.append(para)
                     else:

@@ -273,4 +273,4 @@ class UpVotingSignalTests(TestCase):
     def test_up_vote(self):
         self.assertIs(self.post1.up_vote(self.user2), True)
         self.assertEqual(self.user1.notices.all().count(), 1)
-        print(self.user1.notices.all()[0].message)
+        # print(self.user1.notices.all()[0].message)

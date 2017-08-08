@@ -67,7 +67,7 @@ class Post(models.Model):
     def up_vote(self, user):
         if user.id == self.author.id:
             return False
-        if user not in self.up_vote_users.all():
+        if not self.up_vote_users.filter(pk=user.id).exists():
             self.up_vote_num += 1
             self.up_vote_users.add(user)
             self.save()
@@ -77,7 +77,7 @@ class Post(models.Model):
         return False
 
     def cancel_up_vote(self, user):
-        if user in self.up_vote_users.all():
+        if self.up_vote_users.filter(pk=user.id).exists():
             self.up_vote_users.remove(user)
             self.up_vote_num -= 1
             self.save()
