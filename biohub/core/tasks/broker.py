@@ -5,7 +5,7 @@ from channels import Channel
 from biohub.core.conf import settings as biohub_settings
 from biohub.core.tasks.registry import tasks
 from biohub.core.tasks.payload import TaskPayload
-from biohub.core.tasks.storage import make_key, storage
+from biohub.core.tasks.storage import storage
 from biohub.core.tasks.data_structures import Queue, Set
 from biohub.core.tasks.status import set_status
 
@@ -80,7 +80,7 @@ class Broker(object):
         should be set by the caller since there're multiple reasons for a
         task's finishing (timeout, success or error, etc.).
         """
-        storage.delete(make_key(task_id))
+        storage.delete(task_id)
         self._running_set.remove(task_id)
         self._pending_queue.rdel(task_id)
 

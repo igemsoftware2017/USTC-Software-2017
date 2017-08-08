@@ -1,25 +1,8 @@
-from itertools import chain
-
-from django_redis import get_redis_connection
-from django.core.cache import cache
-
-from biohub.utils.detect import features
+from biohub.utils import redis
 
 
-CACHE_PREFIX = ('__test_biohub_tasks__'
-                if features.testing else '__biohub_tasks__')
-
-
-def make_key(key):
-    return '{}{}'.format(CACHE_PREFIX, key)
-
-
-storage = cache
-redis_client = get_redis_connection('default')
+storage = redis.Storage('__biohub_tasks__')
 
 
 def clear_keys():
-    for key in chain(
-            redis_client.keys(CACHE_PREFIX + '*'),
-            redis_client.keys(storage.make_key(CACHE_PREFIX) + '*')):
-        redis_client.delete(key)
+    storage.delete_pattern('*')

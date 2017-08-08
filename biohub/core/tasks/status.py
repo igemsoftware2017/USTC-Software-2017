@@ -1,7 +1,7 @@
 import enum
 
 from biohub.utils.detect import features
-from biohub.core.tasks.storage import make_key, storage
+from biohub.core.tasks.storage import storage
 
 
 class TaskStatus(enum.Enum):
@@ -14,7 +14,7 @@ class TaskStatus(enum.Enum):
 
 
 def make_task_status_key(task_id):
-    return make_key(task_id + 'status')
+    return task_id + 'status'
 
 
 def set_status(task_id, status):

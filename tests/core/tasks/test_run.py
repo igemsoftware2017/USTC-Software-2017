@@ -1,7 +1,7 @@
 import time
 import subprocess
 
-from biohub.core.tasks.storage import make_key, storage
+from biohub.core.tasks.storage import storage
 from biohub.core.plugins import plugins, install
 
 
@@ -28,7 +28,7 @@ class Test(TaskLiveTestCase):
     def test_run(self):
         from tests.core.tasks.myplugin.tasks import MyTask
 
-        keys = [make_key('test%d' % i) for i in range(6)]
+        keys = ['test%d' % i for i in range(6)]
         tasks = []
 
         for i in range(6):
@@ -54,7 +54,7 @@ class Test(TaskLiveTestCase):
         from tests.core.tasks.myplugin.tasks import LongTimeTask
         from biohub.core.tasks import apply_async
 
-        key = make_key('test')
+        key = 'test'
 
         task = apply_async(LongTimeTask, args=(key, ), timeout=2)
 
