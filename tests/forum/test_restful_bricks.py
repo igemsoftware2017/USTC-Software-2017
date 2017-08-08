@@ -153,3 +153,41 @@ class BrickRestfulAPITest(TestCase):
         data = json.loads(response.content)
         # there ought to be 2 items
         self.assertEqual(len(data['results']), 2)
+
+    def test_star_a_brick(self):
+        self.assertEqual(self.brick.star_users.all().count(), 0)
+        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.star_users.all().count(), 1)
+
+    def test_cancel_star_a_brick(self):
+        self.assertIs(self.brick.star(self.user), True)
+        self.assertEqual(self.brick.star_users.all().count(), 1)
+        response = self.client.post('/api/forum/bricks/%d/cancel_star/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/cancel_star/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.star_users.all().count(), 0)
+
+    def test_watch_a_brick(self):
+        self.assertEqual(self.brick.watch_users.all().count(), 0)
+        response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.watch_users.all().count(), 1)
+
+    def test_cancel_watch_a_brick(self):
+        self.assertIs(self.brick.watch(self.user), True)
+        self.assertEqual(self.brick.watch_users.all().count(), 1)
+        response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.watch_users.all().count(), 0)

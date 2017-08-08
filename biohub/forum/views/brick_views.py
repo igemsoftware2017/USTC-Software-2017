@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 from django.db.models.query import QuerySet
-from biohub.utils.rest import pagination
+from biohub.utils.rest import pagination, permissions
 from ..serializers import BrickSerializer
 from ..models import Brick
 from ..spiders import BrickSpider, ExperienceSpider
@@ -73,6 +73,30 @@ class BrickViewSet(mixins.ListModelMixin,
                 return Response('iGEM has it.', status=status.HTTP_200_OK)
             return Response('iGEM does not have it', status=status.HTTP_404_NOT_FOUND)
         return Response('Must specify param \'name\'.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def star(self, *args, **kwargs):
+        if self.get_object().star(self.request.user) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def watch(self, *args, **kwargs):
+        if self.get_object().watch(self.request.user) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def cancel_star(self, *args, **kwargs):
+        if self.get_object().cancel_star(self.request.user) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def cancel_watch(self, *args, **kwargs):
+        if self.get_object().cancel_watch(self.request.user) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
         brick = self.get_object()

@@ -63,8 +63,11 @@ class Brick(models.Model):
     # dna_position = models.CharField(max_length=15, validators=[
     #                                 validate_comma_separated_integer_list], default='')
 
-    followers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_from_follower',)
+    star_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_starred',)
+    watch_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_watched',
+    )
     # eg: "True,False,False,True,True,True"
     assembly_compatibility = models.CharField(max_length=40, default='')
     parameters = models.TextField(default='')
@@ -80,6 +83,30 @@ class Brick(models.Model):
     # format: "BBa_K808013,BBa_K648028"
     sub_parts = models.TextField(blank=True, default='', null=True)
     update_time = models.DateTimeField('last updated', auto_now=True)
+
+    def star(self, user):
+        if not self.star_users.filter(pk=user.id).exists():
+            self.star_users.add(user)
+            return True
+        return False
+
+    def cancel_star(self, user):
+        if self.star_users.filter(pk=user.id).exists():
+            self.star_users.remove(user)
+            return  True
+        return False
+
+    def watch(self, user):
+        if not self.watch_users.filter(pk=user.id).exists():
+            self.watch_users.add(user)
+            return True
+        return False
+
+    def cancel_watch(self, user):
+        if self.watch_users.filter(pk=user.id).exists():
+            self.watch_users.remove(user)
+            return  True
+        return False
 
 
 class Experience(models.Model):
@@ -127,7 +154,7 @@ class Experience(models.Model):
     def rate(self, rate, user):
         if user.id == self.author.id:
             return False
-        if user not in self.rate_users.all():
+        if not self.rate_users.filter(pk=user.id).exists():
             self.rate_score = (self.rate_score *
                                self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
             self.rate_num += 1
