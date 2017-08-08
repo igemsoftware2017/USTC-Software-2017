@@ -64,7 +64,9 @@ class User(AbstractBaseUser):
         blank=True,
         validators=[MaxLengthValidator(200)])
     site_url = models.URLField('personal site url', blank=True)
-    description = models.TextField('personal description', blank=True)
+    description = models.TextField(
+        'personal description', blank=True,
+        validators=[MaxLengthValidator(1023)])
 
     followers = models.ManyToManyField(
         'self',

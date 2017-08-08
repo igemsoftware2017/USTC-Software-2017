@@ -133,6 +133,9 @@ class Test(APITestCase):
             'description': ''
         }, resp.data)
 
+        resp = self._patch(self.me, description='a' * 1024)
+        self.assertEqual(resp.status_code, 400)
+
     def test_upload_avatar(self):
         self.client.force_authenticate(self.me)
 
