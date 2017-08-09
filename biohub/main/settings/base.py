@@ -135,6 +135,7 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
     'PAGE_SIZE': 30,
     'DEFAULT_AUTHENTICATION_CLASSES': ('biohub.utils.rest.authentication.NoCSRFAuthentication',)
 }
@@ -165,6 +166,10 @@ if biohub_settings.SECRET_KEY:
 if biohub_settings.REDIS_URI:
     CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
         biohub_settings.REDIS_URI)
+    CHANNEL_LAYERS['default']['TEST_CONFIG'] = {
+        'hosts': [biohub_settings.REDIS_URI],
+        'symmetric_encryption_keys': [SECRET_KEY],
+    }
 
     CACHES = {
         "default": {

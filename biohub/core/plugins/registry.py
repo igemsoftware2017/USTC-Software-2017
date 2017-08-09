@@ -276,12 +276,20 @@ class PluginManager(object):
         """
         self._invalidate_urlconf()
         self._invalidate_websocket_handlers()
+        self._invalidate_tasks_registry()
 
     def _invalidate_websocket_handlers(self):
         """
         To invalidate websocket handlers registration.
         """
         from biohub.core.websocket.registry import cache_clear
+        cache_clear()
+
+    def _invalidate_tasks_registry(self):
+        """
+        To invalidate tasks registration.
+        """
+        from biohub.core.tasks.registry import cache_clear
         cache_clear()
 
     def _invalidate_urlconf(self):

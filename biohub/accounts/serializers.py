@@ -14,7 +14,7 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         exclude = ('password', 'followers',)
-        read_only_fields = ('last_logined',)
+        read_only_fields = ('last_logined', 'avatar_url')
 
 
 class RegisterSerializer(serializers.ModelSerializer):

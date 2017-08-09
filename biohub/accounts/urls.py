@@ -11,6 +11,7 @@ register_api(r'^', [
     url(r'^users/register/$', views.register, name='register'),
     url(r'^users/login/$', views.login, name='login'),
     url(r'^users/logout/$', views.logout, name='logout'),
+    url(r'^users/upload_avatar/$', views.upload_avatar, name='upload-avatar'),
     url(r'^users/change_password/$',
         views.change_password, name='change-password')
 ] + router.urls, 'accounts')

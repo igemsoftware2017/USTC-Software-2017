@@ -1,10 +1,16 @@
+import hashlib
+
 from django.db import models
 from django.utils.functional import cached_property
 from django.core.validators import MaxLengthValidator
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.files.storage import default_storage
 
 from biohub.accounts.validators import UsernameValidator
+from biohub.core.files.utils import url_to_filename
+
+AVATAR_URL_BASE = 'https://www.gravatar.com/avatar/{md5}?s=328&r=g&d=identicon'
 
 
 class UserManager(BaseUserManager):
@@ -51,13 +57,16 @@ class User(AbstractBaseUser):
             'unique': ('A user with that username already exists.'),
         })
     email = models.EmailField('email address', blank=True)
+    avatar_url = models.URLField('avatar url', blank=True)
     address = models.CharField(
         'address',
         max_length=200,
         blank=True,
         validators=[MaxLengthValidator(200)])
     site_url = models.URLField('personal site url', blank=True)
-    description = models.TextField('personal description', blank=True)
+    description = models.TextField(
+        'personal description', blank=True,
+        validators=[MaxLengthValidator(1023)])
 
     followers = models.ManyToManyField(
         'self',
@@ -69,12 +78,34 @@ class User(AbstractBaseUser):
 
     REQUIRED_FIELDS = ['email']
 
+    objects = UserManager()
+
     def get_full_name(self):
+        "For compatibility."
         return self.username
 
-    get_short_name = get_full_name
+    def __getattribute__(self, name):
+        """
+        Hacky approach to set default avatar url.
+        """
+        super_get = super(User, self).__getattribute__
 
-    objects = UserManager()
+        # Use super_get to avoid infinite recursion.
+        if (name == 'avatar_url' and not super_get('avatar_url')):
+            self.avatar_url = self.default_avatar_url
+            return self.avatar_url
+
+        return super(User, self).__getattribute__(name)
+
+    @property
+    def default_avatar_url(self):
+        """
+        Generates default avatar url using user's email.
+        """
+        return AVATAR_URL_BASE.format(
+            md5=hashlib.md5(self.email.encode()).hexdigest())
+
+    get_short_name = get_full_name
 
     @cached_property
     def api_url(self):
@@ -98,3 +129,12 @@ class User(AbstractBaseUser):
         To unfollow a specific user.
         """
         target_user.followers.remove(self)
+
+    def update_avatar(self, url):
+        old_name = url_to_filename(self.avatar_url)
+
+        if old_name is not None:
+            default_storage.delete(old_name)
+
+        self.avatar_url = url
+        self.save()

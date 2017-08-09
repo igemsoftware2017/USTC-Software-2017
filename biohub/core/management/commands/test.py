@@ -47,6 +47,8 @@ class Command(BaseCommand):
         if recreate:
             pytest_args.extend(['--create-db'])
 
+        os.environ['BIOHUB_TESTING'] = '1'
+
         if not capture_stdout:
             pytest_args.extend(['-s'])
 

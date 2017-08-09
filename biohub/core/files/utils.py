@@ -1,10 +1,21 @@
+import re
+
 import tempfile
 import os.path
 import functools
 import mimetypes
 
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files import File as FileWrapper
+
+
+def url_to_filename(url):
+
+    try:
+        return re.findall(r'{}(.+)$'.format(settings.MEDIA_URL), url)[0]
+    except IndexError:
+        return None
 
 
 def stash_file_pos(func):
