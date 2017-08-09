@@ -18,6 +18,8 @@ class AbacusTestCase(APITestCase):
             for x in map(lambda i: 'user_%s' % i, range(10))]
 
 class TestUpload(AbacusTestCase):
+    pass
+
     # def test_upload(self):
     #     data = ['tag', 'describle', True, True]
     #     file = open("biohub/abacus/storage/download/download.pdb")
@@ -136,7 +138,7 @@ class TestUpload(AbacusTestCase):
     #     from time import sleep
     #     sleep(100)
 
-    def test_req(self):
-        url = 'abacus/index'
-        r = requests.post(url)
-        print(r.status_code)
+    # def test_req(self):
+    #     url = 'abacus/index'
+    #     r = requests.post(url)
+    #     print(r.status_code)
