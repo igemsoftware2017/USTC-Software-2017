@@ -8,8 +8,8 @@ from biohub.accounts.models import User
 class Test(APITestCase):
 
     def setUp(self):
-        self.me = User.objects.create_user(username='me', password='me')
-        self.you = User.objects.create_user(username='you', password='you')
+        self.me = User.objects.create_test_user('me')
+        self.you = User.objects.create_test_user('you')
 
     def _get(self, user, part):
         url = '/api/users/%s/%s/' % (user.id, part)
@@ -104,15 +104,15 @@ class Test(APITestCase):
 
         self.client.force_authenticate(self.me)
 
-        resp = self._patch(self.me, education='ustc')
+        resp = self._patch(self.me, description='ustc')
         self.assertDictContainsSubset({
-            'education': 'ustc'
+            'description': 'ustc'
         }, resp.data)
 
         resp = self._patch(self.you)
         self.assertEqual(resp.status_code, 403)
 
-        resp = self._patch(self.me, education='')
+        resp = self._patch(self.me, description='')
         self.assertDictContainsSubset({
-            'education': ''
+            'description': ''
         }, resp.data)

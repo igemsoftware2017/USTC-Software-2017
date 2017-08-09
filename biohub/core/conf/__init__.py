@@ -16,16 +16,24 @@ logger = logging.getLogger('biohub.conf')
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
 
+# Field mapping for biohub settings
+# Format: dest_name -> (org_name, default)
 mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
     'UPLOAD_DIR': ('UPLOAD_DIR',
                    lambda: os.path.join(tempfile.gettempdir, 'biohub')),
-    'REDIS_URI': ('REDIS_URI', '')
+    'REDIS_URI': ('REDIS_URI', ''),
+    'SECRET_KEY': ('SECRET_KEY', '')
 }
 
 valid_settings_keys = tuple(mapping.values())
+
+
+class BiohubSettingsWarning(RuntimeWarning):
+
+    pass
 
 
 class Settings(object):
@@ -103,12 +111,30 @@ class Settings(object):
         """
         return unique(value)
 
+    def validate_redis_uri(self, value):
+
+        if not value:
+            warnings.warn(
+                'No redis configuration provided, redis-based services '
+                'will be disabled.', BiohubSettingsWarning)
+
+        return value
+
+    def validate_secret_key(self, value):
+
+        if not value:
+            warnings.warn(
+                'No secret key provided, default value used instead.',
+                BiohubSettingsWarning)
+
+        return value
+
     def validate_upload_dir(self, value):
         if value.startswith(tempfile.gettempdir()):
             warnings.warn(
-                'Your UPLOAD_DIR was under the temporary directory, all '
+                'Your UPLOAD_DIR is within the temporary directory. All '
                 'files will be erased once system reboots.',
-                RuntimeWarning)
+                BiohubSettingsWarning)
 
         return os.path.abspath(value)
 

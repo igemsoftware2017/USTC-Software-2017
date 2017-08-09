@@ -13,11 +13,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from biohub.utils import path
 
-import logging
-
-logging.captureWarnings(True)
-
-
 # Essential paths
 BIOHUB_DIR = path.modpath('biohub')
 BIOHUB_MAIN_DIR = path.modpath('biohub.main')
@@ -58,7 +53,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -105,18 +99,9 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    # },
+    {
+        'NAME': 'biohub.accounts.validators.PasswordValidator'
+    }
 ]
 
 # Overwrite default User model.
@@ -150,7 +135,8 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-    'PAGE_SIZE': 30
+    'PAGE_SIZE': 30,
+    'DEFAULT_AUTHENTICATION_CLASSES': ('biohub.utils.rest.authentication.NoCSRFAuthentication',)
 }
 
 CHANNEL_LAYERS = {
@@ -169,9 +155,12 @@ CHANNEL_LAYERS = {
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
 
 DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
-INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS
+INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS[:]
 TIME_ZONE = biohub_settings.TIMEZONE
 MEDIA_ROOT = biohub_settings.UPLOAD_DIR
+
+if biohub_settings.SECRET_KEY:
+    SECRET_KEY = SECRET_KEY
 
 if biohub_settings.REDIS_URI:
     CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
@@ -190,11 +179,6 @@ if biohub_settings.REDIS_URI:
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
     SESSION_CACHE_ALIAS = "default"
 else:
-
-    import warnings
-
-    warnings.warn('No redis configuration. ', RuntimeWarning)
-
     CHANNEL_LAYERS['default']['BACKEND'] = 'asgiref.inmemory.ChannelLayer'
     del CHANNEL_LAYERS['default']['CONFIG']
 

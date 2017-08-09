@@ -66,7 +66,7 @@ class UserViewSet(
     pagination_class = pagination.factory('CursorPagination', page_size=20)
     permission_classes = [
         p.C(p.IsAuthenticatedOrReadOnly) & p.check_owner()]
-    filter_fields = ('username', 'first_name', 'last_name')
+    filter_fields = ('username',)
 
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field

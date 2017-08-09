@@ -9,7 +9,7 @@ class NoticeTestCase(APITestCase):
 
     def setUp(self):
         self.users = [
-            User.objects.create_user(username=x, password=x)
+            User.objects.create_test_user(x)
             for x in map(lambda i: 'user_%s' % i, range(10))]
 
         tool.Dispatcher('a').group_send(self.users, '')

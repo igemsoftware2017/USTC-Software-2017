@@ -1,3 +1,5 @@
+from django.contrib.auth import authenticate
+
 from rest_framework.test import APITestCase
 
 import logging
@@ -10,7 +12,7 @@ class Test(APITestCase):
         payload = {
             'username': 'user1',
             'email': '123@123.com',
-            'password': 'password',
+            'password': 'passws1ord',
         }
 
         if drops is not None:
@@ -20,6 +22,17 @@ class Test(APITestCase):
         payload.update(kwargs)
 
         return self.client.post('/api/users/register/', payload)
+
+    def test_password_fail(self):
+        resp = self._post_register(password='123')
+
+        self.assertIn('password', resp.data)
+
+    def test_password_correct_set(self):
+        self._post_register()
+
+        self.assertIsNotNone(
+            authenticate(username='user1', password='passws1ord'))
 
     def test_success(self):
         resp = self._post_register()
@@ -46,10 +59,7 @@ class Test(APITestCase):
     def test_duplicate(self):
         from biohub.accounts.models import User
 
-        User.objects.create_user(
-            username='user1',
-            email='123@123.com',
-            password='12345')
+        User.objects.create_test_user('user1')
 
         resp = self._post_register(email='123@12.com')
 
@@ -72,10 +82,7 @@ class Test(APITestCase):
     def test_logined(self):
         from biohub.accounts.models import User
         self.client.force_authenticate(
-            User.objects.create_user(
-                username='user1',
-                email='123@123.com',
-                password='12345'))
+            User.objects.create_test_user('user1'))
 
         resp = self._post_register()
         self.assertEqual(resp.status_code, 404)
