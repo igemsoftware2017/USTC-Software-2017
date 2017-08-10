@@ -39,7 +39,7 @@ class Brick(models.Model):
     #     ('Discontinued', 'Discontinued')
     # )
     part_status = models.CharField(
-        default='Not Released', max_length=20)
+        default='Not Released', max_length=30)
     # SAMPLE_STATUS_CHOICE = (
     #     ('Sample in Stock', 'Sample in Stock'),
     #     ('It\'s complicated', 'It\'s complicated'),
@@ -47,14 +47,14 @@ class Brick(models.Model):
     #     ('Informational', 'Informational')
     # )
     sample_status = models.CharField(
-        default='Sample in Stock', max_length=20)
+        default='Sample in Stock', max_length=30)
     # EXPERIENCE_CHOICE = (
     #     ('works', 'works'),
     #     ('issues', 'issues'),
     #     ('fails', 'fails')
     # )
     experience_status = models.CharField(
-        default='works', max_length=20)
+        default='works', max_length=30)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(

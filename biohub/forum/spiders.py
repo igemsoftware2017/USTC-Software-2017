@@ -62,7 +62,7 @@ class BrickSpider:
                 'Part\s*\(\d*,\s*\'(.*?)\'.*?\)', sub_parts_data)
             brick.sub_parts = ','.join(sub_parts_list)
         else:
-            brick.sub_parts = None  # for stand-alone bricks
+            brick.sub_parts = ''  # for stand-alone bricks
         soup = BeautifulSoup(raw_html, "lxml")
         div = soup.find(id='part_status_wrapper')
         # fetch release status
@@ -236,14 +236,14 @@ class ExperienceSpider:
         return True
 
 
-class SeqFeatureSpider:
-    """
-    Before using the spider, the brick witch the seq_feature is attached to should exist in database.
-    """
+# class SeqFeatureSpider:
+#     """
+#     Before using the spider, the brick witch the seq_feature is attached to should exist in database.
+#     """
 
-    def fill_from_page(self, brick_name, seq_feature=None):
-        if seq_feature is None:
-            seq_feature = SeqFeature(brick=Brick.objects.get(name=brick_name))
+#     def fill_from_page(self, brick_name, seq_feature=None):
+#         if seq_feature is None:
+#             seq_feature = SeqFeature(brick=Brick.objects.get(name=brick_name))
 
-        seq_feature.save()
-        return True
+#         seq_feature.save()
+#         return True
