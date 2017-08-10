@@ -8,6 +8,7 @@ from ..serializers import ArticleSerializer
 
 @bind_model(Experience)
 class ExperienceSerializer(ModelSerializer):
+    api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail',
                                                   read_only=True)
     author = UserSerializer(fields=('id', 'username'), read_only=True)

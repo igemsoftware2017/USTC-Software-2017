@@ -135,7 +135,9 @@ class BrickViewSet(mixins.ListModelMixin,
         if short is not None and short.lower() == 'true':
             pagination_class = self.pagination_class
             page = self.paginate_queryset(self.get_queryset())
-            serializer = BrickSerializer(page, fields=('id', 'name'), many=True)
+            serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
+                'request': request
+            })
             return self.get_paginated_response(serializer.data)
         return super(BrickViewSet, self).list(request=request, *args, **kwargs)
 
