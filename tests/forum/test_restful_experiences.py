@@ -125,4 +125,41 @@ class ExperienceRestfulAPITest(TestCase):
     def test_api_url_field(self):
         response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
         data = json.loads(response.content)
-        self.assertEqual(data['api_url'], 'http://testserver/api/forum/experiences/%d/' %self.experience.id)
+        self.assertEqual(data['api_url'], 'http://testserver/api/forum/experiences/%d/' % self.experience.id)
+
+    def test_vote(self):
+        client = self.client
+        # unauthenticated user can't vote
+        response = client.post('/api/forum/experiences/' + str(self.post1.id) + '/up_vote/')
+        self.assertEqual(response.status_code, 403)
+        # vote for others
+        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        other = Experience.objects.create(brick=self.brick)
+        response = client.post('/api/forum/experiences/' + str(other.id) + '/up_vote/')
+        self.assertEqual(response.status_code, 200)
+        response = client.get('/api/forum/experiences/' + str(other.id) + '/')
+        post_detail = json.loads(response.content)
+        self.assertEqual(post_detail['up_vote_num'], 1)
+        # vote for my experience
+        mine = Experience.objects.create(author=self.user1, brick=self.brick, author_name=self.user1.username)
+        response = client.post('/api/forum/experiences/' + str(mine.id) + '/up_vote/')
+        self.assertEqual(response.status_code, 400)
+
+    def test_cancel_vote(self):
+        client = self.client
+        other = Experience.objects.create(author=self.user2, brick=self.brick)
+        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        # test cancel a vote which does not exist
+        response = client.post('/api/forum/experiences/9999999999999999999999999999999/cancel_up_vote/')
+        self.assertEqual(response.status_code, 404)
+        response = client.post('/api/forum/experiences/' + str(other.id) + '/cancel_up_vote/')
+        self.assertEqual(response.status_code, 400)
+        # test cancel a normal vote
+        client.post('/api/forum/experiences/' + str(other.id) + '/up_vote/')
+        response = client.get('/api/forum/experiences/' + str(other.id) + '/')
+        data = json.loads(response.content)
+        self.assertEqual(data['up_vote_num'], 1)
+        client.post('/api/forum/experiences/' + str(other.id) + '/cancel_up_vote/')
+        response = client.get('/api/forum/experiences/' + str(other.id) + '/')
+        data = json.loads(response.content)
+        self.assertEqual(data['up_vote_num'], 0)

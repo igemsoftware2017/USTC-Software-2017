@@ -25,18 +25,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def up_vote(self, request, *args, **kwargs):
-        if self.get_object().up_vote(User.objects.get(username=request.user)) is True:
-            return Response('OK')
-        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
-
-    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def cancel_up_vote(self, request, *args, **kwargs):
-        if self.get_object().cancel_up_vote(User.objects.get(username=request.user)) is True:
-            return Response('OK')
-        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
-
 
 class PostsOfExperiencesListView(generics.ListAPIView):
     serializer_class = PostSerializer

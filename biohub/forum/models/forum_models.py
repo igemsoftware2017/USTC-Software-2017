@@ -3,7 +3,6 @@ from django.conf import settings
 
 from .bio_models import Experience
 
-from ..user_defined_signals import up_voting_post_signal
 
 MAX_LEN_FOR_CONTENT = 1000
 
@@ -34,10 +33,6 @@ class Post(models.Model):
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
     pub_time = models.DateTimeField('publish time', auto_now_add=True)
-    up_vote_num = models.IntegerField(default=0)
-    # add records for users mark down who has already voted for the post
-    up_vote_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='post_voted_set')
     # down_vote_num = models.IntegerField(default=0)
     is_visible = models.BooleanField(default=True)
     # No need to explicitly specify is_comment. It will be added automatically.
@@ -63,27 +58,6 @@ class Post(models.Model):
         self.save()
         # for comment in self.comments.all():
         #     comment.show()
-
-    def up_vote(self, user):
-        if user.id == self.author.id:
-            return False
-        if not self.up_vote_users.filter(pk=user.id).exists():
-            self.up_vote_num += 1
-            self.up_vote_users.add(user)
-            self.save()
-            up_voting_post_signal.send(sender=self.__class__, instance=self,
-                                       user_up_voting=user, curr_up_vote_num=self.up_vote_num)
-            return True
-        return False
-
-    def cancel_up_vote(self, user):
-        if self.up_vote_users.filter(pk=user.id).exists():
-            self.up_vote_users.remove(user)
-            self.up_vote_num -= 1
-            self.save()
-            return True
-        return False
-
 
 # # Inherit Post to support comments of comments.
 # class Comment(Post):

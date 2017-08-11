@@ -16,13 +16,15 @@ class ExperienceSerializer(ModelSerializer):
     brick = serializers.HyperlinkedRelatedField(view_name='api:forum:brick-detail',
                                                 read_only=True)
     brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())
-    # posts = serializers.HyperlinkedRelatedField
+    post_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
+                                                   view_name='api:forum:post-detail')
+    up_vote_users = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
 
     class Meta:
         model = Experience
-        exclude = ('update_time',)
-        read_only_fields = ('author', 'author_name', 'pub_time',
-                            'content_url', 'brick_url')
+        exclude = ('update_time', )
+        read_only_fields = ('author', 'author_name', 'pub_time', 'up_vote_users',
+                            'content_url', 'brick_url', 'up_vote_num')
 
     def create(self, validated_data):
         brick = validated_data.pop('brick_id')

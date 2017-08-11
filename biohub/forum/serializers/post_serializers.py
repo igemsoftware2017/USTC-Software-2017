@@ -15,9 +15,9 @@ class PostSerializer(ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'experience_id', 'experience',
-                  'content', 'up_vote_num', 'update_time',
+                  'content', 'update_time',
                   'pub_time', 'author')
-        read_only_fields = ('id', 'update_time', 'pub_time', 'up_vote_num')
+        read_only_fields = ('id', 'update_time', 'pub_time')
 
     def create(self, validated_data):
         experience = validated_data.pop('experience_id')

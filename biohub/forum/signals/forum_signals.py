@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
-from biohub.forum.user_defined_signals import up_voting_post_signal
+from biohub.forum.user_defined_signals import up_voting_experience_signal
 from biohub.notices.tool import Dispatcher
 
 
@@ -35,24 +35,25 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
                               post_author_url=post_author_url, experience_url=experience_url)
 
 
-@receiver(up_voting_post_signal, sender=Post)
-def send_notice_to_post_author_on_up_voting(instance, user_up_voting,
-                                            curr_up_vote_num, **kwargs):
+@receiver(up_voting_experience_signal, sender=Experience)
+def send_notice_to_experience_author_on_up_voting(instance, user_up_voting,
+                                                  curr_up_vote_num, **kwargs):
     author = instance.author
-    experience = instance.experience
-    brick = instance.experience.brick
-    experience_url = reverse('api:forum:experience-detail', kwargs={'pk': experience.id})
+    # ignore if up_voting an experience fetched from iGEM website.
+    if author is None:
+        return
+    brick = instance.brick
+    experience_url = reverse('api:forum:experience-detail', kwargs={'pk': instance.id})
     brick_url = reverse('api:forum:brick-detail', kwargs={'pk': brick.id})
     user_up_voting_url = user_up_voting.api_url
-    post_url = reverse('api:forum:post-detail', kwargs={'pk': instance.id})
     forum_dispatcher.send(author, '{{user_up_voting.username|url:user_up_voting_url}}'
-                                  ' voted for {{"your post"|url:post_url}} on experience '
+                                  ' voted for your experience '
                                   '(Title: {{ experience.title|url:experience_url }})'
                                   ' of brick BBA_{{brick.name|url:brick_url}}. '
-                                  'Now you have {{curr_up_vote_num}} vote(s) for that post.',
-                          experience=experience, brick_url=brick_url, experience_url=experience_url,
+                                  'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
+                          experience=instance, brick_url=brick_url, experience_url=experience_url,
                           user_up_voting=user_up_voting, user_up_voting_url=user_up_voting_url,
-                          brick=brick, curr_up_vote_num=curr_up_vote_num, post_url=post_url)
+                          brick=brick, curr_up_vote_num=curr_up_vote_num)
 
 
 # @receiver(pre_delete, sender=Post)

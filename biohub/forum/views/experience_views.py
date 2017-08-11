@@ -26,6 +26,18 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             query_set = Experience.objects.all()
         return query_set.order_by('-pub_time', '-update_time')
 
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def up_vote(self, request, *args, **kwargs):
+        if self.get_object().up_vote(User.objects.get(username=request.user)) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def cancel_up_vote(self, request, *args, **kwargs):
+        if self.get_object().cancel_up_vote(User.objects.get(username=request.user)) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
     def retrieve(self, request, *args, **kwargs):
         experience = self.get_object()
         # experience.author is None means it is from iGEM website,
