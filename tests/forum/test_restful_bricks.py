@@ -160,28 +160,6 @@ class BrickRestfulAPITest(TestCase):
         # there ought to be 2 items
         self.assertEqual(len(data['results']), 2)
 
-    def test_star_a_brick(self):
-        self.assertEqual(self.brick.star_users.all().count(), 0)
-        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
-        self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
-        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
-        self.assertEqual(response.status_code, 200)
-        # response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
-        # with open("brick_star_content.txt",'wb') as f:
-        #     f.write(response.content)
-        self.assertEqual(self.brick.star_users.all().count(), 1)
-
-    def test_cancel_star_a_brick(self):
-        self.assertIs(self.brick.star(self.user), True)
-        self.assertEqual(self.brick.star_users.all().count(), 1)
-        response = self.client.post('/api/forum/bricks/%d/cancel_star/' % self.brick.id)
-        self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
-        response = self.client.post('/api/forum/bricks/%d/cancel_star/' % self.brick.id)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.brick.star_users.all().count(), 0)
-
     def test_watch_a_brick(self):
         self.assertEqual(self.brick.watch_users.all().count(), 0)
         response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
@@ -200,3 +178,46 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.watch_users.all().count(), 0)
+
+    def test_api_url_field(self):
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        data = json.loads(response.content)
+        self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' %self.brick.id)
+
+    def test_rate(self):
+        user2 = User.objects.create(username="fff")
+        user2.set_password("1593562120")
+        user2.save()
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '0.0')
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='fff', password='1593562120'), True)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 3
+        })
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '3.0')
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 4
+        })
+        self.assertEqual(response.status_code, 400)
+        user3 = User.objects.create(username='bbb')
+        user3.set_password('1010101010')
+        user3.save()
+        self.assertIs(self.client.login(username='bbb', password='1010101010'), True)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 4
+        })
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '3.5')

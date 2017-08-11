@@ -75,26 +75,24 @@ class BrickViewSet(mixins.ListModelMixin,
         return Response('Must specify param \'name\'.', status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def star(self, *args, **kwargs):
-        if self.get_object().star(self.request.user) is True:
-            return Response('OK')
-        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
-
-    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def watch(self, *args, **kwargs):
         if self.get_object().watch(self.request.user) is True:
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def cancel_star(self, *args, **kwargs):
-        if self.get_object().cancel_star(self.request.user) is True:
+    def cancel_watch(self, *args, **kwargs):
+        if self.get_object().cancel_watch(self.request.user) is True:
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def cancel_watch(self, *args, **kwargs):
-        if self.get_object().cancel_watch(self.request.user) is True:
+    def rate(self, request, *args, **kwargs):
+        score = request.data.get('score', None)
+        if score is None:
+            return Response('Must upload your rating score.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        if self.get_object().rate(score, self.request.user) is True:
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 

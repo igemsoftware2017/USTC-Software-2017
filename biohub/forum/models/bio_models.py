@@ -5,7 +5,9 @@ from django.conf import settings
 from django.db import models
 
 from biohub.core.files.models import File
-from biohub.forum.user_defined_signals import rating_experience_signal
+from biohub.forum.user_defined_signals import rating_brick_signal, \
+    up_voting_experience_signal
+
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -63,8 +65,6 @@ class Brick(models.Model):
     # dna_position = models.CharField(max_length=15, validators=[
     #                                 validate_comma_separated_integer_list], default='')
 
-    star_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_starred',)
     watch_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_watched',
     )
@@ -84,17 +84,12 @@ class Brick(models.Model):
     sub_parts = models.TextField(blank=True, default='', null=True)
     update_time = models.DateTimeField('last updated', auto_now=True)
 
-    def star(self, user):
-        if not self.star_users.filter(pk=user.id).exists():
-            self.star_users.add(user)
-            return True
-        return False
-
-    def cancel_star(self, user):
-        if self.star_users.filter(pk=user.id).exists():
-            self.star_users.remove(user)
-            return  True
-        return False
+    rate_score = models.DecimalField(
+        max_digits=2, decimal_places=1, default=0)  # eg: 3.7
+    rate_num = models.IntegerField(default=0)
+    # add records for users mark down who has already rated
+    rate_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_rated')
 
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
@@ -105,6 +100,18 @@ class Brick(models.Model):
     def cancel_watch(self, user):
         if self.watch_users.filter(pk=user.id).exists():
             self.watch_users.remove(user)
+            return True
+        return False
+
+    def rate(self, rate, user):
+        if not self.rate_users.filter(pk=user.id).exists():
+            self.rate_score = (self.rate_score *
+                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
+            self.rate_num += 1
+            self.rate_users.add(user)
+            self.save()
+            rating_brick_signal.send(sender=self.__class__, user_rating=user, instance=self,
+                                     rating_score=rate, curr_score=self.rate_score)
             return True
         return False
 
@@ -132,38 +139,42 @@ class Experience(models.Model):
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
     pub_time = models.DateField('publish time', default=date.today)
-    rate_score = models.DecimalField(
-        max_digits=2, decimal_places=1, default=0)  # eg: 3.7
-    rate_num = models.IntegerField(default=0)
-    # add records for users mark down who has already rated
-    rate_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='experience_rated_set')
     # is_visible: no need for Experience, for the Part always exists
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)
     # is_sticky = models.BooleanField(default=False)
     brick = models.ForeignKey(
         Brick, on_delete=models.CASCADE, null=True, default=None)
+    up_vote_num = models.IntegerField(default=0)
+    # add records for users mark down who has already voted for the post
+    up_vote_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='experiences_voted')
+
+    def up_vote(self, user):
+        if self.author is not None and self.author.id == user.id:
+            return False
+        if not self.up_vote_users.filter(pk=user.id).exists():
+            self.up_vote_num += 1
+            self.up_vote_users.add(user)
+            self.save()
+            up_voting_experience_signal.send(sender=self.__class__, instance=self,
+                                             user_up_voting=user, curr_up_vote_num=self.up_vote_num)
+            return True
+        return False
+
+    def cancel_up_vote(self, user):
+        if self.up_vote_users.filter(pk=user.id).exists():
+            self.up_vote_users.remove(user)
+            self.up_vote_num -= 1
+            self.save()
+            return True
+        return False
 
     class Meta:
         ordering = ('pub_time', 'id')
 
     def __unicode__(self):
         return '%s' % self.title
-
-    def rate(self, rate, user):
-        if user.id == self.author.id:
-            return False
-        if not self.rate_users.filter(pk=user.id).exists():
-            self.rate_score = (self.rate_score *
-                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
-            self.rate_num += 1
-            self.rate_users.add(user)
-            self.save()
-            rating_experience_signal.send(sender=self.__class__, user_rating=user, instance=self,
-                                          rating_score=rate, curr_score=self.rate_score)
-            return True
-        return False
 
     # def hide(self):
     #     self.is_visible = False

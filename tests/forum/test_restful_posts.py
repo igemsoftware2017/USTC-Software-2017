@@ -62,44 +62,6 @@ class PostRestfulAPITest(TestCase):
         })
         self.assertEqual(response.status_code, 403)
 
-    def test_vote(self):
-        client = APIClient()
-        # unauthenticated user can't vote
-        response = client.post('/api/forum/posts/' + str(self.post1.id) + '/up_vote/')
-        self.assertEqual(response.status_code, 403)
-        # vote for others
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
-        other_post = Post.objects.create(author=self.user2, content='125', experience=self.experience)
-        response = client.post('/api/forum/posts/' + str(other_post.id) + '/up_vote/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.user2.notices.all().count(), 1)
-        response = client.get('/api/forum/posts/' + str(other_post.id) + '/')
-        post_detail = json.loads(response.content)
-        self.assertEqual(post_detail['up_vote_num'], 1)
-        # vote for my post
-        my_post = Post.objects.create(author=self.user1, content='dgfl', experience=self.experience)
-        response = client.post('/api/forum/posts/' + str(my_post.id) + '/up_vote/')
-        self.assertEqual(response.status_code, 400)
-
-    def test_cancel_vote(self):
-        client = APIClient()
-        other_post = Post.objects.create(author=self.user2, content='125', experience=self.experience)
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
-        # test cancel a vote which does not exist
-        response = client.post('/api/forum/posts/9999999999999999999999999999999/cancel_up_vote/')
-        self.assertEqual(response.status_code, 404)
-        response = client.post('/api/forum/posts/' + str(other_post.id) + '/cancel_up_vote/')
-        self.assertEqual(response.status_code, 400)
-        # test cancel a normal vote
-        client.post('/api/forum/posts/' + str(other_post.id) + '/up_vote/')
-        response = client.get('/api/forum/posts/' + str(other_post.id) + '/')
-        post_detail = json.loads(response.content)
-        self.assertEqual(post_detail['up_vote_num'], 1)
-        client.post('/api/forum/posts/' + str(other_post.id) + '/cancel_up_vote/')
-        response = client.get('/api/forum/posts/' + str(other_post.id) + '/')
-        post_detail = json.loads(response.content)
-        self.assertEqual(post_detail['up_vote_num'], 0)
-
     def test_listing_posts(self):
         client = APIClient()
         self.post1.is_visible = False
