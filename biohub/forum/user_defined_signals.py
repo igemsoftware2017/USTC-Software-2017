@@ -8,8 +8,8 @@ from django.dispatch import Signal
 # curr_score: The score after that user rated.
 # user_rating: The person (User instance) who rated.
 # instance: the instance which send this signal
-rating_experience_signal = Signal(providing_args=('rating_score', 'curr_score',
-                                                  'user_rating', 'instance'))
+rating_brick_signal = Signal(providing_args=('rating_score', 'curr_score',
+                                             'user_rating', 'instance'))
 
 # instance: the instance sending this signal.
 # user_up_voting: the user who vote for the post

@@ -17,16 +17,6 @@ class ExperienceViewSet(viewsets.ModelViewSet):
     spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
-    @decorators.detail_route(methods=['POST'])
-    def rate(self, request, *args, **kwargs):
-        score = request.data.get('score', None)
-        if score is None:
-            return Response('Must upload your rating score.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        if self.get_object().rate(score, self.request.user) is True:
-            return Response('OK')
-        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
-
     def get_queryset(self):
         author = self.request.query_params.get('author', None)
         if author is not None:
@@ -59,7 +49,8 @@ class ExperienceViewSet(viewsets.ModelViewSet):
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
-            serializer = ExperienceSerializer(page, fields=('api_url', 'id', 'title', 'author_name', 'author'),
+            serializer = ExperienceSerializer(page, fields=(
+                'api_url', 'id', 'title', 'author_name', 'author', 'brick'),
                                               many=True, context={
                 'request': request
             })

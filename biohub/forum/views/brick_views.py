@@ -86,6 +86,16 @@ class BrickViewSet(mixins.ListModelMixin,
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def rate(self, request, *args, **kwargs):
+        score = request.data.get('score', None)
+        if score is None:
+            return Response('Must upload your rating score.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        if self.get_object().rate(score, self.request.user) is True:
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
     def retrieve(self, request, *args, **kwargs):
         brick = self.get_object()
         now = timezone.now()

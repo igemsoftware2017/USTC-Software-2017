@@ -177,3 +177,41 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         data = json.loads(response.content)
         self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' %self.brick.id)
+
+    def test_rate(self):
+        user2 = User.objects.create(username="fff")
+        user2.set_password("1593562120")
+        user2.save()
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '0.0')
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertIs(self.client.login(username='fff', password='1593562120'), True)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 3
+        })
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '3.0')
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 4
+        })
+        self.assertEqual(response.status_code, 400)
+        user3 = User.objects.create(username='bbb')
+        user3.set_password('1010101010')
+        user3.save()
+        self.assertIs(self.client.login(username='bbb', password='1010101010'), True)
+        response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
+            'score': 4
+        })
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['rate_score'], '3.5')

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 
 from biohub.core.files.models import File
-from biohub.forum.user_defined_signals import rating_experience_signal
+from biohub.forum.user_defined_signals import rating_brick_signal
 
 MAX_LEN_FOR_CONTENT = 1000
 MAX_LEN_FOR_THREAD_TITLE = 100
@@ -82,6 +82,13 @@ class Brick(models.Model):
     sub_parts = models.TextField(blank=True, default='', null=True)
     update_time = models.DateTimeField('last updated', auto_now=True)
 
+    rate_score = models.DecimalField(
+        max_digits=2, decimal_places=1, default=0)  # eg: 3.7
+    rate_num = models.IntegerField(default=0)
+    # add records for users mark down who has already rated
+    rate_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_rated')
+
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
             self.watch_users.add(user)
@@ -91,6 +98,18 @@ class Brick(models.Model):
     def cancel_watch(self, user):
         if self.watch_users.filter(pk=user.id).exists():
             self.watch_users.remove(user)
+            return True
+        return False
+
+    def rate(self, rate, user):
+        if not self.rate_users.filter(pk=user.id).exists():
+            self.rate_score = (self.rate_score *
+                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
+            self.rate_num += 1
+            self.rate_users.add(user)
+            self.save()
+            rating_brick_signal.send(sender=self.__class__, user_rating=user, instance=self,
+                                     rating_score=rate, curr_score=self.rate_score)
             return True
         return False
 
@@ -118,12 +137,6 @@ class Experience(models.Model):
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
     pub_time = models.DateField('publish time', default=date.today)
-    rate_score = models.DecimalField(
-        max_digits=2, decimal_places=1, default=0)  # eg: 3.7
-    rate_num = models.IntegerField(default=0)
-    # add records for users mark down who has already rated
-    rate_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='experience_rated_set')
     # is_visible: no need for Experience, for the Part always exists
     # is_visible: defines whether the thread is visible to the public.
     # is_visible = models.BooleanField(default=True)
@@ -136,20 +149,6 @@ class Experience(models.Model):
 
     def __unicode__(self):
         return '%s' % self.title
-
-    def rate(self, rate, user):
-        if user.id == self.author.id:
-            return False
-        if not self.rate_users.filter(pk=user.id).exists():
-            self.rate_score = (self.rate_score *
-                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
-            self.rate_num += 1
-            self.rate_users.add(user)
-            self.save()
-            rating_experience_signal.send(sender=self.__class__, user_rating=user, instance=self,
-                                          rating_score=rate, curr_score=self.rate_score)
-            return True
-        return False
 
     # def hide(self):
     #     self.is_visible = False

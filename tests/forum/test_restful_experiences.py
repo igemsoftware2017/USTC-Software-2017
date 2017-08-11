@@ -35,7 +35,7 @@ class ExperienceRestfulAPITest(TestCase):
                                    + '&short=true')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertIs(data['results'][0].get('rate_score'), None)
+        self.assertIs(data['results'][0].get('content'), None)
 
     def test_post_experiences(self):
         payloads = {
@@ -97,46 +97,6 @@ class ExperienceRestfulAPITest(TestCase):
             }
         }, format='json')
         self.assertEqual(response.status_code, 400)
-
-    def test_rate(self):
-        response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['rate_score'], '0.0')
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id)
-        self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='abc546565132'), True)
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id, {
-            'score': 3
-        })
-        self.assertEqual(response.status_code, 400)
-        self.assertIs(self.client.login(username='fff', password='1593562120'), True)
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id)
-        self.assertEqual(response.status_code, 400)
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id, {
-            'score': 3
-        })
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['rate_score'], '3.0')
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id, {
-            'score': 4
-        })
-        self.assertEqual(response.status_code, 400)
-        user3 = User.objects.create(username='bbb')
-        user3.set_password('1010101010')
-        user3.save()
-        self.assertIs(self.client.login(username='bbb', password='1010101010'), True)
-        response = self.client.post('/api/forum/experiences/%d/rate/' % self.experience.id, {
-            'score': 4
-        })
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['rate_score'], '3.5')
 
         # def test_auto_updating_experience_from_igem(self):
         #     """

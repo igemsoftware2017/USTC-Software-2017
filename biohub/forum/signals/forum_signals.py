@@ -3,8 +3,7 @@ from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
-from biohub.forum.user_defined_signals import rating_experience_signal, \
-    up_voting_post_signal
+from biohub.forum.user_defined_signals import up_voting_post_signal
 from biohub.notices.tool import Dispatcher
 
 
@@ -34,22 +33,6 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
                                       ' of brick BBA_{{experience.brick.name|url:brick_url}}.',
                               instance=instance, experience=experience, brick_url=brick_url,
                               post_author_url=post_author_url, experience_url=experience_url)
-
-
-@receiver(rating_experience_signal, sender=Experience)
-def send_notice_to_the_experience_author_on_rating(instance, rating_score,
-                                                   curr_score, user_rating, **kwargs):
-    author = instance.author
-    brick_url = reverse('api:forum:brick-detail', kwargs={'pk': instance.brick.id})
-    experience_url = reverse('api:forum:experience-detail', kwargs={'pk': instance.id})
-    user_rating_url = user_rating.api_url
-    forum_dispatcher.send(author, '{{user_rating.username|url:user_rating_url}} rated {{rating_score}} '
-                                  'on your experience (Title: {{ experience.title|url:experience_url }})'
-                                  ' of brick BBA_{{experience.brick.name|url:brick_url}}. Now the '
-                                  'score of the experience is {{curr_score}}.',
-                          experience=instance, brick_url=brick_url, experience_url=experience_url,
-                          user_rating=user_rating, user_rating_url=user_rating_url,
-                          rating_score=rating_score, curr_score=curr_score)
 
 
 @receiver(up_voting_post_signal, sender=Post)
