@@ -40,6 +40,8 @@ class PostRestfulAPITest(TestCase):
         })
         self.assertEqual(response.status_code, 201)
         response = client.get('/api/forum/posts/')
+        # with open("posts_content.txt",'wb') as f:
+        #     f.write(response.content)
         self.assertEqual(response.status_code, 200)
 
     def test_modify_my_post(self):

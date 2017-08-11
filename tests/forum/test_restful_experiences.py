@@ -135,6 +135,8 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
         self.assertEqual(response.status_code, 200)
+        # with open("experiencedata.txt",'wb') as f:
+        #     f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(data['rate_score'], '3.5')
 

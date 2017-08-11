@@ -13,8 +13,10 @@ class BrickRestfulAPITest(TestCase):
         self.user.set_password("123456000+")
         self.user.save()
         self.document = Article.objects.create(text='aaa')
+        self.client.get('/api/forum/bricks/E0240/')
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
+        self.brick = Brick.objects.get(name='E0240')
 
     # def test_checking_whether_database_has_brick(self):
     #     response = self.client.get('/api/forum/bricks/check_database/?name=ADD')
@@ -115,6 +117,8 @@ class BrickRestfulAPITest(TestCase):
     def test_using_name_rather_than_id_to_retrieve_brick(self):
         response = self.client.get('/api/forum/bricks/I718017/')
         self.assertEqual(response.status_code, 200)
+        # with open("brick_content.txt",'wb') as f:
+        #     f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(data['group_name'], 'iGEM07_Paris')
         # TODO: continue the test after bugs in ExperienceSpider is fixed...
@@ -145,6 +149,8 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         # list all bricks
         response = self.client.get('/api/forum/bricks/')
+        # with open("brick_content_list.txt",'wb') as f:
+        #     f.write(response.content)
         data = json.loads(response.content)
         # there ought to be 4 items, including the one in setUp()
         # search bricks beginning with 'I'
@@ -161,6 +167,9 @@ class BrickRestfulAPITest(TestCase):
         self.assertIs(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
+        # response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        # with open("brick_star_content.txt",'wb') as f:
+        #     f.write(response.content)
         self.assertEqual(self.brick.star_users.all().count(), 1)
 
     def test_cancel_star_a_brick(self):
