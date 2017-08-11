@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
+from biohub.forum.models import Activity
 from biohub.forum.user_defined_signals import rating_experience_signal, \
     up_voting_post_signal
 from biohub.notices.tool import Dispatcher
@@ -35,6 +36,11 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
                               instance=instance, experience=experience, brick_url=brick_url,
                               post_author_url=post_author_url, experience_url=experience_url)
 
+@receiver(post_save, sender=Experience)
+def add_creating_experience_activity(instance, created, **kwargs):
+    # do nothing when it's from iGEM's website
+    if instance.author:
+        activity = Activity(type_='Experience',user=instance.author,partName=instance.brick.name)
 
 @receiver(rating_experience_signal, sender=Experience)
 def send_notice_to_the_experience_author_on_rating(instance, rating_score,
