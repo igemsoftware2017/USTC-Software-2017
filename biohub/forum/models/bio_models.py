@@ -63,8 +63,6 @@ class Brick(models.Model):
     # dna_position = models.CharField(max_length=15, validators=[
     #                                 validate_comma_separated_integer_list], default='')
 
-    star_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_starred',)
     watch_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_watched',
     )
@@ -83,18 +81,6 @@ class Brick(models.Model):
     # format: "BBa_K808013,BBa_K648028"
     sub_parts = models.TextField(blank=True, default='', null=True)
     update_time = models.DateTimeField('last updated', auto_now=True)
-
-    def star(self, user):
-        if not self.star_users.filter(pk=user.id).exists():
-            self.star_users.add(user)
-            return True
-        return False
-
-    def cancel_star(self, user):
-        if self.star_users.filter(pk=user.id).exists():
-            self.star_users.remove(user)
-            return  True
-        return False
 
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
