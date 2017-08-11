@@ -59,7 +59,8 @@ class ExperienceViewSet(viewsets.ModelViewSet):
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
-            serializer = ExperienceSerializer(page, fields=('api_url', 'id', 'title', 'author_name'), many=True, context={
+            serializer = ExperienceSerializer(page, fields=('api_url', 'id', 'title', 'author_name', 'author'),
+                                              many=True, context={
                 'request': request
             })
             return self.get_paginated_response(serializer.data)
@@ -90,7 +91,7 @@ class ExperiencesOfBricksListView(generics.ListAPIView):
         if short is not None and short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
             serializer = ExperienceSerializer(page, fields=(
-                'api_url', 'id', 'title', 'author_name'), many=True, context={
+                'api_url', 'id', 'title', 'author_name', 'author'), many=True, context={
                 'request': request
             })
             return self.get_paginated_response(serializer.data)

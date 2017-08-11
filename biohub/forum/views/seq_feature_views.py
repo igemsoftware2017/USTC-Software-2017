@@ -1,11 +1,11 @@
-from rest_framework import viewsets, status, mixins, generics
-from rest_framework.response import Response
+from rest_framework import viewsets, mixins, generics
+# from rest_framework.response import Response
 from ..serializers import SeqFeatureSerializer
 from ..models import SeqFeature
-from ..spiders import SeqFeatureSpider
-from django.utils import timezone
+# from ..spiders import SeqFeatureSpider
+# from django.utils import timezone
 from biohub.utils.rest import pagination
-import datetime
+# import datetime
 
 
 class SeqFeatureViewSet(mixins.RetrieveModelMixin,

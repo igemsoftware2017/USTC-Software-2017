@@ -161,3 +161,8 @@ class ExperienceRestfulAPITest(TestCase):
         self.client.login(username='abc', password='abc546565132')
         response = self.client.post('/api/forum/experiences/%d/posts/' % self.experience.id, {})
         self.assertEqual(response.status_code, 405)
+
+    def test_api_url_field(self):
+        response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
+        data = json.loads(response.content)
+        self.assertEqual(data['api_url'], 'http://testserver/api/forum/experiences/%d/' %self.experience.id)

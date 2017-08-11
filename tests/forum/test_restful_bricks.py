@@ -191,3 +191,8 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.watch_users.all().count(), 0)
+
+    def test_api_url_field(self):
+        response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
+        data = json.loads(response.content)
+        self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' %self.brick.id)
