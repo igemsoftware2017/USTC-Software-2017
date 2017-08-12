@@ -5,10 +5,32 @@ from rest_framework.fields import SkipField
 from rest_framework.relations import PKOnlyObject
 from ..models import Activity, ActivityParam
 from collections import Mapping, OrderedDict
-
+from rest_framework.utils.serializer_helpers import BindingDict
 
 @bind_model(ActivityParam)
 class ActivityParamSerializer(ModelSerializer):
+
+    # override to remove 'lazy' characters
+    @property
+    def fields(self):
+        """
+        A dictionary of {field_name: field_instance}.
+        """
+        # `fields` is NOT evaluated lazily any more. We do this to ensure that we don't
+        # have issues importing modules that use ModelSerializers as fields,
+        # even if Django's app-loading stage has not yet run.
+        self._fields = BindingDict(self)
+        for key, value in self.get_fields().items():
+            self._fields[key] = value
+        return self._fields
+    
+    # override to remove cached property
+    @property
+    def _readable_fields(self):
+        return [
+            field for field in self.fields.values()
+            if not field.write_only
+        ]
 
     # override from src code
     def to_representation(self, instance):
