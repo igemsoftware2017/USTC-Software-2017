@@ -182,7 +182,7 @@ class BrickRestfulAPITest(TestCase):
     def test_api_url_field(self):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         data = json.loads(response.content)
-        self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' %self.brick.id)
+        self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' % self.brick.id)
 
     def test_rate(self):
         user2 = User.objects.create(username="fff")
@@ -221,3 +221,24 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['rate_score'], '3.5')
+
+    def test_getting_bricks_watched(self):
+        response = self.client.get('/api/forum/bricks/watched_bricks/')
+        self.assertEqual(response.status_code, 400)
+        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 0)
+        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['id'], self.brick.id)
+        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
+        data = json.loads(response.content)
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['id'], self.brick.id)
+        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc&short=true')
+        data = json.loads(response.content)
+        self.assertEqual('designer' in data['results'][0], False)
