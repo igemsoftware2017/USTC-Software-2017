@@ -25,6 +25,8 @@ class ArticleRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/articles/')
         self.assertEqual(response.status_code, 404)
         response = self.client.get('/api/forum/articles/%d/' % self.article.id)
+        # with open("articledata.txt",'wb') as f:
+        #     f.write(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertIs(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.get('/api/forum/articles/')

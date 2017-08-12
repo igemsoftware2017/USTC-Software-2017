@@ -160,8 +160,7 @@ class ExperienceSpider:
     logger = logging.getLogger(__name__)
 
     def fill_from_page(self, brick_name):
-        h = html2text.HTML2Text()
-        h.body_width = 1000
+        
         brick = Brick.objects.get(name=brick_name)
         # if experience is None:
         #     experience = Experience(title='Part: ' + brick_name + ': Experience',
@@ -189,6 +188,8 @@ class ExperienceSpider:
                 # change images' URLs to absolute ones
                 restored_content = re.sub('=\"/(.*?\")', '=\"' +
                                           ExperienceSpider.base_site + r'\1', str(content_html))
+                h = html2text.HTML2Text()
+                h.body_width = 1000
                 markdown = h.handle(restored_content)
                 if experience.content is None:
                     article = Article.objects.create(text=markdown)
@@ -207,6 +208,8 @@ class ExperienceSpider:
                     if content and experience:
                         restored_content = re.sub('=\"/(.*?\")', '=\"' +
                             ExperienceSpider.base_site + r'\1', str(content))
+                        h = html2text.HTML2Text()
+                        h.body_width = 1000
                         markdown = h.handle(restored_content)
                         if experience.content is None:
                             article = Article.objects.create(text=markdown)

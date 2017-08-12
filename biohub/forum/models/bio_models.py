@@ -6,7 +6,7 @@ from django.db import models
 
 from biohub.core.files.models import File
 from biohub.forum.user_defined_signals import rating_brick_signal, \
-    up_voting_experience_signal
+    up_voting_experience_signal, watching_brick_signal
 
 
 MAX_LEN_FOR_CONTENT = 1000
@@ -94,6 +94,7 @@ class Brick(models.Model):
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
             self.watch_users.add(user)
+            watching_brick_signal.send(sender=self.__class__, instance=self, user=user)
             return True
         return False
 

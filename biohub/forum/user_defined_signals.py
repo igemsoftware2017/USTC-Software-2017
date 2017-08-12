@@ -16,3 +16,5 @@ rating_brick_signal = Signal(providing_args=('rating_score', 'curr_score',
 # curr_up_vote_num: the number of votes after this voting.
 up_voting_experience_signal = Signal(providing_args=('instance', 'user_up_voting',
                                                      'curr_up_vote_num'))
+
+watching_brick_signal = Signal(providing_args=('instance','user'))

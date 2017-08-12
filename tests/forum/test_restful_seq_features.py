@@ -32,6 +32,11 @@ class SeqFeatureRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['feature_type'], 'ha')
+        # response = self.client.get('/api/forum/bricks/K266000/')
+        # data = json.loads(response.content)
+        # response = self.client.get(data['seqFeatures'][0])
+        # with open("sequenceFeature_content.txt",'wb') as f:
+        #     f.write(response.content)
 
         # def test_auto_updating_seq_feature_from_igem(self):
         #     """
