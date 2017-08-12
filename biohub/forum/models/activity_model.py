@@ -25,3 +25,4 @@ class Activity(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE, related_name='activities')
     params = models.OneToOneField(ActivityParam, null=True, on_delete=models.CASCADE)
+    acttime = models.DateTimeField(auto_now_add=True)
