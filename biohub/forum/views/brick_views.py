@@ -6,6 +6,7 @@ from django.db.models.query import QuerySet
 from biohub.utils.rest import pagination, permissions
 from ..serializers import BrickSerializer
 from ..models import Brick
+from biohub.accounts.models import User
 from ..spiders import BrickSpider, ExperienceSpider
 from django.utils import timezone
 import datetime
@@ -95,6 +96,25 @@ class BrickViewSet(mixins.ListModelMixin,
         if self.get_object().rate(score, self.request.user) is True:
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.list_route(methods=['GET'])
+    def watched_bricks(self, request, *args, **kwargs):
+        username = self.request.query_params.get('username', None)
+        if username is not None:
+            queryset = User.objects.get(username=username).bricks_watched.all().order_by('name', 'id')
+            short = self.request.query_params.get('short', None)
+            pagination_class = self.pagination_class
+            page = self.paginate_queryset(queryset)
+            if short is not None and short.lower() == 'true':
+                serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
+                    'request': request
+                })
+                return self.get_paginated_response(serializer.data)
+            serializer = BrickSerializer(page, many=True, context={
+                'request': request
+            })
+            return self.get_paginated_response(serializer.data)
+        return Response('Must specify param \'username\'.', status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
         brick = self.get_object()
