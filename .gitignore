@@ -101,6 +101,7 @@ ENV/
 .mypy_cache/
 
 /config.json
+/abacus_server/config.json
 
 # pycharm
 .idea/
