@@ -26,13 +26,13 @@ class Article(models.Model):
 class Brick(models.Model):
     # is_part = models.BooleanField(default=True)
     # no need. can be telled from 'sub_parts'
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=200, unique=True)
     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
     #                          on_delete = models.CASCADE, related_name = 'bricks_from_owner')
-    designer = models.CharField(max_length=100, default='')
-    group_name = models.CharField(max_length=100, default='')
-    part_type = models.CharField(max_length=50, default='')  # eg: Signalling
-    nickname = models.CharField(max_length=50, default='')  # eg: f1 ori
+    designer = models.CharField(max_length=200, default='')
+    group_name = models.CharField(max_length=200, default='')
+    part_type = models.CharField(max_length=100, default='')  # eg: Signalling
+    nickname = models.CharField(max_length=100, default='')  # eg: f1 ori
 
     # PART_STATUS_CHOICES = (
     #     ('Released', 'Released'),
@@ -41,7 +41,7 @@ class Brick(models.Model):
     #     ('Discontinued', 'Discontinued')
     # )
     part_status = models.CharField(
-        default='Not Released', max_length=30)
+        default='Not Released', max_length=50)
     # SAMPLE_STATUS_CHOICE = (
     #     ('Sample in Stock', 'Sample in Stock'),
     #     ('It\'s complicated', 'It\'s complicated'),
@@ -49,14 +49,14 @@ class Brick(models.Model):
     #     ('Informational', 'Informational')
     # )
     sample_status = models.CharField(
-        default='Sample in Stock', max_length=30)
+        default='Sample in Stock', max_length=50)
     # EXPERIENCE_CHOICE = (
     #     ('works', 'works'),
     #     ('issues', 'issues'),
     #     ('fails', 'fails')
     # )
     experience_status = models.CharField(
-        default='works', max_length=30)
+        default='works', max_length=50)
     use_num = models.PositiveIntegerField(default=0)
     twin_num = models.PositiveIntegerField(default=0)
     document = models.OneToOneField(
