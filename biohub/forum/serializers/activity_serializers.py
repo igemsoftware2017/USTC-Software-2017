@@ -40,15 +40,15 @@ class ActivityParamSerializer(ModelSerializer):
         ret = OrderedDict()
         # modify Meta.exclude:
         if instance.type == 'Experience':
-            self.Meta.exclude = ('type', 'score')
+            self.Meta.exclude = ('id','type', 'score')
         elif(instance.type == 'Comment'):
-            self.Meta.exclude = ('type', 'score')
+            self.Meta.exclude = ('id','type', 'score')
         elif instance.type == 'Star':
-            self.Meta.exclude = ('type', 'score')
+            self.Meta.exclude = ('id','type', 'score')
         elif instance.type == 'Rating':
-            self.Meta.exclude = ('type', 'intro')
+            self.Meta.exclude = ('id','type', 'intro')
         elif instance.type == 'Watch':
-            self.Meta.exclude = ('type', 'expLink', 'score', 'intro')
+            self.Meta.exclude = ('id','type', 'expLink', 'score', 'intro')
         fields = self._readable_fields
 
         for field in fields:
@@ -83,5 +83,5 @@ class ActivitySerializer(ModelSerializer):
     params = ActivityParamSerializer(read_only=True)
     class Meta:
         model = Activity
-        exclude = ('user',)
+        exclude = ('user','id')
         read_only_fields=('type','params','acttime',)

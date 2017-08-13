@@ -55,7 +55,7 @@ class BrickViewSet(mixins.ListModelMixin,
             BrickViewSet.brick_spider.fill_from_page(brick_name, brick=brick)
             BrickViewSet.experience_spider.fill_from_page(brick_name)
         except Exception as e:
-            raise
+            raise e
 
     # @decorators.list_route(methods=['GET'])
     def check_database(self, *args, **kwargs):

@@ -3,4 +3,4 @@ from .article_serializers import ArticleSerializer
 from .brick_serializers import BrickSerializer
 from .experience_serializers import ExperienceSerializer
 from .seq_feature_serializers import SeqFeatureSerializer
-from .activity_serializers import ActivityParamSerializer
+from .activity_serializers import ActivityParamSerializer, ActivitySerializer

@@ -43,11 +43,12 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
 def add_creating_experience_activity(instance, created, **kwargs):
     # do nothing when it's from iGEM's website
     if instance.author:
-        activityparam = ActivityParam(type='Experience', user=instance.author, partName=instance.brick.name, expLink=reverse(
-            'api:forum:experience-detail', kwargs={'pk': instance.id}))
-        activityparam.save()
-        Activity.objects.create(
-            type='Experience', user=instance.author, params=activityparam)
+        if created:
+            activityparam = ActivityParam(type='Experience', user=instance.author, partName=instance.brick.name, expLink=reverse(
+                'api:forum:experience-detail', kwargs={'pk': instance.id}))
+            activityparam.save()
+            Activity.objects.create(
+                type='Experience', user=instance.author, params=activityparam)
 
 
 @receiver(post_save, sender=Post)
@@ -68,7 +69,7 @@ def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
 
 
 @receiver(rating_brick_signal, sender=Brick)
-def add_rating_brick_activity(instance, created, rating_score, user_rating, **kwargs):
+def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
     activityparam = ActivityParam(type='Rating', user=user_rating, expLink=reverse(
         'api:forum:brick-detail', kwargs={'pk': instance.id}), score=rating_score, partName=instance.name)
     activityparam.save()
@@ -77,9 +78,9 @@ def add_rating_brick_activity(instance, created, rating_score, user_rating, **kw
 
 
 @receiver(watching_brick_signal, sender=Brick)
-def add_watching_brick_activity(instance, created, user, **kwargs):
+def add_watching_brick_activity(instance, user, **kwargs):
     activityparam = ActivityParam.objects.create(
-        type='Watch', user=user, partName=Brick.name)
+        type='Watch', user=user, partName=instance.name)
     Activity.objects.create(type='Watch', user=user, params=activityparam)
 
 
