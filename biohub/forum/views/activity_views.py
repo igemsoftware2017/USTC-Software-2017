@@ -8,6 +8,6 @@ from biohub.utils.rest import pagination
 
 class ActivityViewSet(viewsets.GenericViewSet,
                       mixins.ListModelMixin):
-    queryset = Activity.objects.all().order_by('acttime')
+    queryset = Activity.objects.all().order_by('-acttime')
     serializer_class = ActivitySerializer
     pagination_class = pagination.factory('PageNumberPagination', page_size=15)
