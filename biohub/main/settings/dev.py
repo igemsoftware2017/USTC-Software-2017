@@ -1,6 +1,8 @@
 from .base import *  # noqa
 import coloredlogs
 
+ALLOWED_HOSTS = ['*']
+
 TIME_ZONE = 'Asia/Shanghai'
 
 LOGGING = {

@@ -101,5 +101,8 @@ ENV/
 .mypy_cache/
 
 /config.json
+
 # editor configs
 .vscode/
+
+/abacus_server/config.json

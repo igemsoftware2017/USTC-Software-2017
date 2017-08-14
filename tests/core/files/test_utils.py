@@ -33,3 +33,11 @@ class Test(APITestCase):
         name = tmpfile.name
         tmpfile.close()
         self.assertFalse(path.exists(name))
+
+    def test_url_to_filename(self):
+
+        from django.conf import settings
+
+        name = 'a/b/c'
+        url = settings.MEDIA_URL + name
+        self.assertEqual(utils.url_to_filename(url), name)

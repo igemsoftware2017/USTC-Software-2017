@@ -7,10 +7,7 @@ class Test(APITestCase):
 
     def setUp(self):
         self.client.force_authenticate(
-            User.objects.create_user(
-                username='user1',
-                email='123@123.com',
-                password='12345'))
+            User.objects.create_test_user('user1'))
 
     def test_success(self):
         resp = self.client.get('/api/users/logout/')

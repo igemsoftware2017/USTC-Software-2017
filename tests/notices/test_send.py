@@ -7,8 +7,8 @@ from biohub.accounts.models import User
 class Test(APITestCase):
 
     def setUp(self):
-        self.me = User.objects.create_user(username='me', password='me')
-        self.you = User.objects.create_user(username='you', password='you')
+        self.me = User.objects.create_test_user('me')
+        self.you = User.objects.create_test_user('you')
         self.dispatcher = tool.Dispatcher('test')
 
     def test_basic_send(self):
