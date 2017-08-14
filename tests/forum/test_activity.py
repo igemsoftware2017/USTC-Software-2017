@@ -1,10 +1,13 @@
-from django.test import TestCase
-from biohub.forum.models import Activity, ActivityParam, Experience, Brick
-from biohub.forum.serializers import ActivityParamSerializer, ActivitySerializer
-from biohub.accounts.models import User
+import json
+import os
+import tempfile
+
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
-import json
+
+from biohub.accounts.models import User
+from biohub.forum.models import Activity, ActivityParam, Experience
+from biohub.forum.serializers import ActivityParamSerializer, ActivitySerializer
 
 
 class ActivityParamTest(APITestCase):
@@ -73,6 +76,6 @@ class ActivityParamTest(APITestCase):
         data_set = act_serializer.data
 
         response = client.get('/api/forum/activities/')
-        with open('activities_data.txt','wb') as f:
+        with open(os.path.join(tempfile.gettempdir(),'activities_data.txt'),'wb') as f:
             f.write(response.content)
         pass
