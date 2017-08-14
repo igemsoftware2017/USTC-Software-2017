@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'biohub.notices',
     'biohub.core.files',
     'biohub.core.plugins',
+    'biohub.forum',
 ]
 
 MIDDLEWARE = [
