@@ -17,7 +17,7 @@ class NoticeQuerySet(models.QuerySet):
         return self.order_by('category')\
             .values_list('category', flat=True).distinct()
 
-    def categories_detail(self):
+    def stats(self):
         return self.order_by('category').values('category')\
             .annotate(count=models.Count('id'))\
             .annotate(

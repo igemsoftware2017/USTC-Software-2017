@@ -7,14 +7,12 @@ Biohub Command-Line Tool.
 import sys
 import os
 import os.path
-from collections import defaultdict
+import argparse
 
 import django
 from django.utils.functional import cached_property
 from django.core.management import find_commands, load_command_class
-from django.core.management.color import color_style
-from django.core.management.base import (
-    CommandParser, BaseCommand)
+from django.core.management.base import BaseCommand
 
 # Resolve the base directory of biohub
 current_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -32,16 +30,29 @@ from biohub.utils.path import modpath  # noqa
 
 
 class ManagementUtility(object):
-    """
-    Encapsulates the logic of this CLI tool.
-    """
+
+    commands_mapping = {
+        'plugin': {
+            'new': 'newplugin',
+            'mkmigrations': 'mkpluginmigrations',
+            'migrate': 'migrateplugin',
+            'install': 'installplugin',
+            'remove': 'removeplugin'
+        }
+    }
 
     BIOHUB_PLUGINS_MODULE = 'biohub.core.plugins'
 
-    def __init__(self):
+    def setup(self):
+        """
+        Set up django environment.
+        """
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'biohub.main.settings.dev'
+        os.environ.setdefault(
+            'BIOHUB_CONFIG_PATH',
+            os.path.join(biohub_base_dir, 'config.json'))
 
-        self.argv = sys.argv[:]
-        self.prog_name = os.path.basename(self.argv[0])
+        django.setup()
 
     @cached_property
     def available_commands(self):
@@ -59,57 +70,6 @@ class ManagementUtility(object):
 
         return commands
 
-    def setup(self):
-        """
-        Sets up essential environment variables, and configures django.
-        """
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'biohub.main.settings.dev'
-        os.environ.setdefault(
-            'BIOHUB_CONFIG_PATH',
-            os.path.join(biohub_base_dir, 'config.json'))
-
-        django.setup()
-
-    def main_help_text(self, commands_only=False):
-        """
-        Returns the script's main help text, as a string.
-
-        By setting `commands_only` to True, the function will just return
-        the names of available commands, separated by new lines.
-        """
-
-        if commands_only:
-            usage = sorted(self.available_commands.keys())
-        else:
-            usage = [
-                "",
-                "Type '%s help <subcommand>' for help on a specific"
-                " subcommand." % self.prog_name,
-                "",
-                "Available subcommands:"]
-
-            # Gather up available commands
-            commands_dict = defaultdict(list)
-            for name, app in self.available_commands.items():
-
-                if app == self.BIOHUB_PLUGINS_MODULE:
-                    app = 'biohub.plugins'
-                else:
-                    app = app.rpartition('.')[-1]
-
-                commands_dict[app].append(name)
-
-            style = color_style()
-
-            # Construct help text
-            for app in sorted(commands_dict.keys()):
-                usage.append("")
-                usage.append(style.NOTICE("[%s]" % app))  # title
-                for name in sorted(commands_dict[app]):
-                    usage.append("    %s" % name)
-
-        return '\n'.join(usage)
-
     def fetch_command(self, subcommand):
         """
         Tries to fetch the given subcommand. If it can't be found, prints a
@@ -122,7 +82,7 @@ class ManagementUtility(object):
             app_name = self.available_commands[subcommand]
         except KeyError:
             sys.stderr.write(
-                "Unknown command: %r\nType '%s help' for usage.\n"
+                "Unknown command: %r\nType '%s --help' for usage.\n"
                 % (subcommand, self.prog_name))
             sys.exit(1)
 
@@ -135,38 +95,59 @@ class ManagementUtility(object):
 
     def execute(self):
         """
-        Given the command-line arguments, the function figures out which
-        subcommand to be executed, creates a parser appropriate to that
-        command, and runs it.
+        The main function of the tool.
         """
+
         self.setup()
 
-        try:
-            subcommand = self.argv[1]
-        except IndexError:
-            subcommand = 'help'  # Display help if no arguments were given
+        self.argv = sys.argv[:]
+        self.prog_name = os.path.basename(sys.argv[0])
 
-        # Preprocess options
-        parser = CommandParser(
-            None,
-            usage='%(prog)s subcommand [options] [args]', add_help=False)
-        parser.add_argument('args', nargs='*')
-        # Capture all remaining arguments
-        options, args = parser.parse_known_args(self.argv[2:])
+        parser = argparse.ArgumentParser(
+            prog=self.prog_name,
+            usage='%(prog)s <command> [<args>]',
+            description='Biohub CLI Tool')
 
-        if subcommand == 'help':
-            if '--commands' in args:
-                sys.stdout.write(
-                    self.main_help_text(commands_only=True) + '\n')
-            elif len(options.args) < 1:
-                sys.stdout.write(self.main_help_text() + '\n')
-            else:
-                self.fetch_command(options.args[0])\
-                    .print_help(self.prog_name, options.args[0])
-        elif self.argv[1:] in (['--help'], ['-h']):
-            sys.stdout.write(self.main_help_text() + '\n')
-        else:
-            self.fetch_command(subcommand).run_from_argv(self.argv)
+        parser.add_argument(
+            'command',
+            choices=self.commands_mapping,
+            help='Available commands: %s.' % ', '.join(self.commands_mapping)
+        )
+
+        # if no command provided
+        if len(self.argv) < 2:
+            parser.print_help()
+            sys.exit()
+
+        command = parser.parse_args(self.argv[1:2]).command
+
+        getattr(self, command)()
+
+    def plugin(self):
+        """
+        The main function of plugin command.
+        """
+
+        plugin_commands = self.commands_mapping['plugin']
+
+        parser = argparse.ArgumentParser(
+            prog=self.prog_name,
+            usage='%(prog)s plugin <subcommand> [<args>]')
+
+        parser.add_argument(
+            'subcommand',
+            choices=plugin_commands,
+            help='Available subcommands: %s.' % ', '.join(plugin_commands))
+
+        # if no subcommand provided
+        if not self.argv[2:]:
+            parser.print_help()
+            sys.exit()
+
+        subcommand = parser.parse_args(self.argv[2:3]).subcommand
+
+        self.fetch_command(
+            plugin_commands[subcommand]).run_from_argv(self.argv[1:])
 
 
 if __name__ == '__main__':

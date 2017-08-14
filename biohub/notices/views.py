@@ -43,5 +43,5 @@ class NoticeViewSet(
         return Response(self.get_queryset().categories())
 
     @decorators.list_route(['GET'])
-    def categories_detail(self, *args, **kwargs):
-        return Response(self.get_queryset().categories_detail())
+    def stats(self, *args, **kwargs):
+        return Response(self.get_queryset().stats())

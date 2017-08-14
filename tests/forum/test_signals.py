@@ -6,7 +6,7 @@ import random
 
 def create_random_string():
     seed = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return ''.join([random.choice(seed) for x in range(0, 20)])
+    return ''.join([random.choice(seed) for x in range(0, 7)])
 
 
 def create_new_user(**kwargs):

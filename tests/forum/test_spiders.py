@@ -1,6 +1,8 @@
 from django.test import TestCase
 from biohub.forum.models import Brick
 from biohub.forum import spiders
+import tempfile
+import os
 
 
 class BrickSpiderTests(TestCase):
@@ -59,7 +61,7 @@ class ExperienceSpiderTests(TestCase):
         experiences = brick.experience_set.all()
         for experience in experiences:
             markdown = experience.content.text
-            with open('exp' + experience.author_name + '.md', 'w') as f:
+            with open(os.path.join(tempfile.gettempdir(), 'exp' + experience.author_name + '.md'), 'w') as f:
                 f.write(markdown)
                 # examine manually whether the experiences are rendered properly.
                 # the output files can be found at Biohub-Server/. remove them after checking.
