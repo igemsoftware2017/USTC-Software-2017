@@ -5,9 +5,6 @@ from biohub.forum.models import Brick, Article, Experience, SeqFeature
 import json
 
 
-# from time import sleep
-
-
 class SeqFeatureRestfulAPITest(TestCase):
     def setUp(self):
         self.document = Article.objects.create(text='aaa')
@@ -37,11 +34,3 @@ class SeqFeatureRestfulAPITest(TestCase):
         # response = self.client.get(data['seqFeatures'][0])
         # with open("sequenceFeature_content.txt",'wb') as f:
         #     f.write(response.content)
-
-        # def test_auto_updating_seq_feature_from_igem(self):
-        #     """
-        #     To run this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1).
-        #     Same reason as it is in test_restful_bricks.py
-        #     """
-        #     # TODO: tests need to be added.
-        #

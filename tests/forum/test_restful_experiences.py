@@ -98,13 +98,20 @@ class ExperienceRestfulAPITest(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
-        # def test_auto_updating_experience_from_igem(self):
-        #     """
-        #     To run this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1).
-        #     Same reason as it is in test_restful_bricks.py
-        #     """
-        #     # TODO: tests need to be added.
-        #
+    # def test_auto_updating_experience_from_igem(self):
+    #     """
+    #     To run this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1).
+    #     Same reason as it is in test_restful_bricks.py
+    #     """
+    #     brick = Brick.objects.create(name='I718017')
+    #     experience = Experience.objects.create(brick=brick, author_name='igem2010 UT-Tokyo ')
+    #     self.assertEqual(experience.content, None)
+    #     sleep(5)
+    #     response = self.client.get('/api/forum/experiences/%d/' % experience.id)
+    #     sleep(5)
+    #     self.assertEqual(response.status_code, 200)
+    #     data = json.loads(response.content)
+    #     self.assertNotEqual(data['content'], None)
 
     def test_fetch_posts_of_particular_experience(self):
         response = self.client.get('/api/forum/experiences/%d/posts/' % self.experience.id)
