@@ -37,6 +37,21 @@ def add_params(url, **params):
 @app.task(bind=True, base=AbortableTask)
 def run_abacus(self, input_file, callback, output_file, output_file_url):
 
+    # Install signal handler for SIGINT (a bit hacky, but it works)
+    # See: https://stackoverflow.com/questions/45650904/in-celery-how-to-abort-running-tasks-when-workers-are-about-to-shut-down
+    import celery.platforms
+
+    p = None
+
+    def int_handler(signum, frame):
+
+        if p is not None:
+            p.kill()
+            p.wait()
+
+    celery.platforms.signals['INT'] = int_handler
+
+    # Task begins
     task_id = self.request.id
     logger.info('Task %s started.' % task_id)
 
