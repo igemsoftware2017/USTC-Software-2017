@@ -5,6 +5,8 @@ from django.http import HttpResponse
 from .models import Abacus
 from ..abacus import aux_responses
 from ..abacus import util
+from .task import task
+
 
 WRONG_OCCURRED_MSG = "Some wrong occurred,please ask administrator for help!"
 STATE_IN_BLOCK_MSG = "Abacus state is not ready,please wait it finished or ask administrator for help!"
@@ -31,7 +33,7 @@ def upload_file(user, jsn, files):
             abacus.status = Abacus.TO_BE_START
             abacus.save()
 
-            util.save_file(abacus.id, file)
+            util.save_upload_file(abacus.id, file)
 
             abacus.status = Abacus.UPLOADED
             abacus.save()
@@ -70,7 +72,7 @@ def get_download_file(user, id):
             buf[4] = ACCESS_DENY_MSG
             continue
 
-        if util.get_file_path(i) is not None:
+        if util.get_download_file_path(i) is not None:
             buf[3] = "download/" + str(i)
         else:
             buf[3] = None
@@ -101,6 +103,10 @@ def get_status(user, id):
             buf[4] = ACCESS_DENY_MSG
             continue
 
+        # check abacus task is finished
+        if abacus.status == Abacus.QUEUING or abacus.status == Abacus.PROCESSING:
+            task.get_status_by_abacus(abacus)
+
         buf[3] = abacus.status
         buf[2] = True
         buf[1] = i
@@ -129,7 +135,7 @@ def delete_file(user, id):
             continue
 
         try:
-            util.delete_file(i)
+            util.delete_abacus_file(i)
             abacus.delete()
         except Exception:
             buf[4] = WRONG_OCCURRED_MSG
@@ -170,7 +176,7 @@ def edit_abacus(user, jsn, files):
                     continue
                 else:
                     abacus.status = Abacus.TO_BE_START
-                    util.save_file(abacus.id, file)
+                    util.save_upload_file(abacus.id, file)
                     abacus.status = Abacus.UPLOADED
 
             abacus.tag = block[1]
@@ -257,4 +263,9 @@ def download_service(user, id):
     if user.id != abacus.user.id and not abacus.shared:
         return HttpResponse(ACCESS_DENY_MSG)
 
-    return aux_responses.download_file_service(id)
+    return aux_responses.download_file_service(id, abacus.tag)
+
+def callback(id):
+    abacus = Abacus.load(id)
+    if abacus is not None:
+        task.get_status_by_abacus(abacus)

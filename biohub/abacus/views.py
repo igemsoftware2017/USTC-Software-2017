@@ -5,9 +5,12 @@ from rest_framework import viewsets, decorators
 from django.http import Http404
 
 from ..abacus import responses
-
+from .models import Abacus
 
 class AbacusView(viewsets.GenericViewSet):
+
+    def callback(self, r):
+        pass
 
     def list_abacus(self):
         return responses.list_abacus(self.request.user)
@@ -34,22 +37,23 @@ class AbacusView(viewsets.GenericViewSet):
     def download(self, request):
         return responses.download_service(self.request.user, request.GET['id'])
 
-    @decorators.list_route(methods=['GET', 'POST'])
+    @decorators.list_route(methods=['POST'])
     def upload(self, request):
         print('upload...')
         return self.upload_file(json.load(request.body), request.FILES.getlist('files'))
 
-    @decorators.list_route(methods=['GET', 'POST'])
+    @decorators.list_route(methods=['POST'])
     def edit(self, request):
         return self.edit_abacus(json.load(request.body), request.FILES.getlist('files'))
 
     @decorators.list_route(methods=['GET', 'POST'])
     def action(self, request):
-        # request.POST.
-        print("\n----------------\n", request.body, request.POST, request.GET, '\n-----------------\n')
+        jsn = None
+        if request.method == 'GET':
+            jsn = json.loads(request.GET)
+        elif request.method == 'POST':
+            jsn = json.loads(request.POST)
 
-        print(str(json.dumps(str(request.POST.dict()))))
-        jsn = json.loads(json.dumps(str(request.POST.dict())))
         method = jsn['method']
         id = jsn['data']
 
@@ -59,13 +63,18 @@ class AbacusView(viewsets.GenericViewSet):
             return self.get_status(id)
         elif method == "list_abacus":
             return self.list_abacus()
-        elif method == "delete_file":
+        elif method == "delete_abacus_file":
             return self.delete_file(id)
         elif method == "calculate":
             return self.calculate(id)
         else:
             return Http404('No such method was found!')
 
-    @decorators.list_route(methods=['Get', 'Post'])
+    @decorators.list_route(methods=['Get'])
     def index(self, request):
         return render(request, 'abacus.html')
+
+    @decorators.list_route(methods=['POST'])
+    def callback(self, request):
+        responses.callback(int(request.POST['id']))
+        pass
