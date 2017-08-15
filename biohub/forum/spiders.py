@@ -1,9 +1,11 @@
-import requests
-import re
 import json
 import logging
+import re
+
+import requests
 from bs4 import BeautifulSoup
-from biohub.forum.models import Brick, Experience, SeqFeature, Article
+
+from biohub.forum.models import Brick, Article
 from biohub.utils.htm2text import html2text
 
 
@@ -34,10 +36,10 @@ class BrickSpider:
         # final URL: http://parts.igem.org/Part:BBa_K314110
         if brick is None:
             brick = Brick(name=brick_name)
-            raw_response = requests.get(
-                BrickSpider.base_site + 'Part:BBa_' + brick_name)
-            if raw_response.status_code == 404:
-                raise Exception('The part does not exist on iGEM\'s website')
+        raw_response = requests.get(
+            BrickSpider.base_site + 'Part:BBa_' + brick_name)
+        if raw_response.status_code == 404:
+            raise Exception('The part does not exist on iGEM\'s website')
         raw_html = raw_response.text
         soup = BeautifulSoup(raw_html, "lxml")
         # fill name
@@ -157,7 +159,7 @@ class BrickSpider:
             # go to another page to fetch sequence features
             raw_response = requests.get(
                 BrickSpider.registry_base_site + 'part=BBa_' + brick_name)
-            soup = BeautifulSoup(raw_response.text, ["lxml","xml"])
+            soup = BeautifulSoup(raw_response.text, "lxml-xml")
             feature_set = soup.find_all('feature')
             for feature in feature_set:
                 brick.seqFeatures.create(feature_type=feature.type.text, start_loc=int(feature.startpos.text), end_loc=int(
