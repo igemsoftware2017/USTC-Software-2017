@@ -46,6 +46,13 @@ class BrickSpiderTests(TestCase):
         brickspider = spiders.BrickSpider()
         brickspider.fill_from_page(brick_name='I6084')
         brick = Brick.objects.get(name='I6084')
+
+    def test4(self):
+        ''' test with page: BBa_K314110'''
+        brick = spiders.BrickSpider().fill_from_page(brick_name='K314110')
+        ''' test a page with no sequence feature panel'''
+        spiders.BrickSpider().fill_from_page(brick_name = 'B1003')
+        brick = Brick.objects.get(name='B1003')
         pass
 
 class ExperienceSpiderTests(TestCase):
@@ -65,3 +72,4 @@ class ExperienceSpiderTests(TestCase):
                 f.write(markdown)
                 # examine manually whether the experiences are rendered properly.
                 # the output files can be found at Biohub-Server/. remove them after checking.
+        pass
