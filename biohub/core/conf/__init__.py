@@ -23,13 +23,12 @@ mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
-    'UPLOAD_DIR': ('UPLOAD_DIR',
-                   lambda: os.path.join(tempfile.gettempdir(), 'biohub')),
+    'UPLOAD_DIR': ('UPLOAD_DIR', lambda: os.path.join(tempfile.gettempdir(), 'biohub')),
     'REDIS_URI': ('REDIS_URI', ''),
     'SECRET_KEY': ('SECRET_KEY', ''),
-    'BIOHUB_MAX_TASKS': ('MAX_TASKS',
-                         lambda: multiprocessing.cpu_count() * 5),
-    'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180)
+    'BIOHUB_MAX_TASKS': ('MAX_TASKS', lambda: multiprocessing.cpu_count() * 5),
+    'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180),
+    'EMAIL': ('EMAIL', dict)
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -156,6 +155,25 @@ class Settings(object):
                 BiohubSettingsWarning)
 
         return os.path.abspath(value)
+
+    def validate_email(self, value):
+
+        if not isinstance(value, dict):
+            raise TypeError("'EMAIL' should be a dict, got type %r." % type(type(value)))
+
+        required = 'HOST HOST_USER HOST_PASSWORD PORT'.split()
+
+        missing = set(required) - set(value)
+
+        if missing:
+            warnings.warn(
+                'Fields %s not found in EMAIL, which may affect email related services.'
+                % ', '.join(missing), BiohubSettingsWarning)
+
+            for field in missing:
+                value[field] = ''
+
+        return value
 
     def __delattr__(self, name):
         """
