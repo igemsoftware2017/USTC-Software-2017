@@ -15,9 +15,9 @@ class ActivityParamTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create(username='abc')
         self.user.set_password('123456000+')
-        another_user = User.objects.create(username='another')     
-        another_user.set_password('hahaha')
-        another_user.save()
+        self.another_user = User.objects.create(username='another')
+        self.another_user.set_password('hahaha')
+        self.another_user.save()
         self.user.save()
 
     def test_param_serialization(self):
@@ -82,11 +82,12 @@ class ActivityParamTest(APITestCase):
 
     def test_only_fetching_one_user_activities(self):
         client = APIClient()
-        self.assertIs(client.login(username='abc', password='123456000+'), True)
         brick = Brick.objects.create(name='emmm')
         Experience.objects.create(brick=brick, author=self.user)
-        brick.watch(self.user)
-        brick.rate(2.3, self.user)
+        self.assertIs(brick.watch(self.user), True)
+        Experience.objects.create(brick=brick, author=self.another_user)
+        self.assertIs(brick.watch(self.another_user), True)
+        self.assertIs(brick.rate(2.3, self.user), True)
         response = client.get('/api/forum/activities/?user=abc')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
