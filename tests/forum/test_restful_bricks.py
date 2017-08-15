@@ -13,10 +13,8 @@ class BrickRestfulAPITest(TestCase):
         self.user.set_password("123456000+")
         self.user.save()
         self.document = Article.objects.create(text='aaa')
-        self.client.get('/api/forum/bricks/E0240/')
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
-        self.brick = Brick.objects.get(name='E0240')
 
     # def test_checking_whether_database_has_brick(self):
     #     response = self.client.get('/api/forum/bricks/check_database/?name=ADD')
@@ -36,11 +34,10 @@ class BrickRestfulAPITest(TestCase):
     #     self.assertEqual(response.status_code, 200)
 
     # def test_automatically_update_bricks_when_retrieving(self):
-    #     # TODO: add tests for updating experiences after bugs in ExperienceSpider is fixed.
-    #     # TODO: WTF, delete updating experiences...
-    #     brick = Brick.objects.get(name='K314110')
+    #     brick = Brick(name='I718017')
     #     brick.group_name = 'emmm'
     #     brick.save()
+    #     self.assertEqual(brick.experience_set.all().count(), 0)
     #     # Because auto_now is set to True in Brick model, update_time is impossible to be set manually.
     #     # To use this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1) in views.
     #     sleep(5)
@@ -48,16 +45,17 @@ class BrickRestfulAPITest(TestCase):
     #     sleep(5)
     #     self.assertEqual(response.status_code, 200)
     #     data = json.loads(response.content)
-    #     self.assertEqual(data['group_name'], 'iGEM10_Washington')
-    #     brick = Brick.objects.create(name='a')
-    #     response = self.client.get('/api/forum/bricks/%d/' % brick.id)
+    #     self.assertEqual(data['group_name'], 'iGEM07_Paris')
+    #     self.assertGreater(brick.experience_set.all().count(), 0)
+    #     brick2 = Brick.objects.create(name='a')
+    #     response = self.client.get('/api/forum/bricks/%d/' % brick2.id)
     #     self.assertEqual(response.status_code, 500)
 
     def test_list_data_with_and_without_param_short(self):
         response = self.client.get('/api/forum/bricks/')
         data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['results'][0]['group_name'], 'Antiquity')
+        self.assertEqual(data['results'][0]['group_name'], 'well')
         response = self.client.get('/api/forum/bricks/?short=true')
         data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
@@ -78,31 +76,31 @@ class BrickRestfulAPITest(TestCase):
     #     self.assertEqual(response.status_code, 500)
 
     def test_fetch_experiences_of_particular_brick(self):
-        Experience.objects.create(title='ha', brick=self.brick, author=self.user)
-        Experience.objects.create(title='emmmm', brick=self.brick)
+        brick = Brick.objects.create(name='test')
+        Experience.objects.create(title='ha', brick=brick, author=self.user)
+        Experience.objects.create(title='emmmm', brick=brick)
         b = Brick.objects.create(name='a')
         Experience.objects.create(title='e', brick=b)
-        response = self.client.get('/api/forum/bricks/%d/experiences/' % self.brick.id)
+        response = self.client.get('/api/forum/bricks/%d/experiences/' % brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        # there are 4 experiences in this brick, 2 of which are ours, with the others from iGEM.
-        self.assertEqual(len(data['results']), 4)
+        self.assertEqual(len(data['results']), 2)
         response = self.client.get('/api/forum/bricks/%d/experiences/?author=%s'
-                                   % (self.brick.id, self.user.username))
+                                   % (brick.id, self.user.username))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 1)
         self.assertEqual(data['results'][0]['title'], 'ha')
         # test short=true
         response = self.client.get('/api/forum/bricks/%d/experiences/?author=%s&short=true'
-                                   % (self.brick.id, self.user.username))
+                                   % (brick.id, self.user.username))
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 1)
         self.assertIs('pub_time' in data['results'][0], False)
         # test: can not post experiences
         self.assertEqual(self.client.login(username='abc', password='123456000+'), True)
-        response = self.client.post('/api/forum/bricks/%d/experiences/' % self.brick.id, {})
+        response = self.client.post('/api/forum/bricks/%d/experiences/' % brick.id, {})
         self.assertEqual(response.status_code, 405)
 
     def test_fetch_seq_features_of_particular_brick(self):
@@ -113,7 +111,7 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/seq_features/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 12)
+        self.assertEqual(len(data['results']), 2)
 
     def test_using_name_rather_than_id_to_retrieve_brick(self):
         response = self.client.get('/api/forum/bricks/I718017/')
@@ -122,23 +120,20 @@ class BrickRestfulAPITest(TestCase):
         #     f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(data['group_name'], 'iGEM07_Paris')
-        # TODO: continue the test after bugs in ExperienceSpider is fixed...
         experience_url = data['experience_set'][0]
         response = self.client.get(experience_url)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
+        self.assertEqual(data['author_name'], 'igem2010 UT-Tokyo ')
         content_url = data['content']
         response = self.client.get(content_url)
         self.assertEqual(response.status_code, 200)
-        # self.assertEqual()
 
     def test_retrieve_using_id(self):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertEqual(data['group_name'], 'Antiquity')
-        # TODO: add the tests for fetching experiences after bugs in ExperienceSpider is fixed.
-        # but the APIs are NOT designed for fetching only experiences with the existing brick
+        self.assertEqual(data['group_name'], 'well')
 
     def test_list_using_searching_param(self):
         # fetch several bricks
