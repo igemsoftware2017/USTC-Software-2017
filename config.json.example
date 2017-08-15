@@ -13,5 +13,13 @@
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "",
     "REDIS_URI": "",
-    "SECRET_KEY": ""
+    "SECRET_KEY": "",
+    "MAX_TASKS": 20,
+    "TASK_MAX_TIMEOUT": 180,
+    "EMAIL": {
+        "HOST": "",
+        "HOST_USER": "",
+        "HOST_PASSWORD": "",
+        "PORT": 25
+    }
 }

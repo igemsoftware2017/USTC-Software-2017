@@ -59,9 +59,14 @@ class Test(APITestCase):
     def test_duplicate(self):
         from biohub.accounts.models import User
 
-        User.objects.create_test_user('user1')
+        u = User.objects.create_test_user('user1')
 
         resp = self._post_register(email='123@12.com')
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn(b'exists', resp.content)
+
+        resp = self._post_register(username='user2', email=u.email)
 
         self.assertEqual(resp.status_code, 400)
         self.assertIn(b'exists', resp.content)
