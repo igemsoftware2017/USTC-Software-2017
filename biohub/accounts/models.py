@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
         if not username:
             raise ValueError('The given username must be set')
 
-        user = self.model(username=username, email='1@2.com', **extra_fields)
+        user = self.model(username=username, email=username + '@example.com', **extra_fields)
         user.set_password(self.model._test_password)
         user.save(using=self._db)
 
@@ -56,7 +56,7 @@ class User(AbstractBaseUser):
         error_messages={
             'unique': ('A user with that username already exists.'),
         })
-    email = models.EmailField('email address', blank=True)
+    email = models.EmailField('email address', unique=True)
     avatar_url = models.URLField('avatar url', blank=True)
     address = models.CharField(
         'address',

@@ -25,13 +25,11 @@ class Base(APITestCase):
 
     valid_callback = 'http://localhost/?a=1#2333'
 
-    def request_url(self, callback=valid_callback):
-        return '/api/users/reset_password/?callback=%s' % quote(callback)
-
-    def prepare_client(self):
-        self.client.force_authenticate(self.me)
-
-        return self.client
+    def request_url(self, callback=valid_callback, email=True):
+        return '/api/users/reset_password/?callback=%s&lookup=%s' % (
+            quote(callback),
+            quote(self.me.email if email else self.me.username)
+        )
 
     def setUp(self):
         self.me = User.objects.create_test_user('me')
@@ -54,7 +52,7 @@ class TestPerform(Base):
         return get_params(url)['sign']
 
     def _post(self, **payload):
-        return self.prepare_client().post('/api/users/reset_password/', data=payload)
+        return self.client.post('/api/users/reset_password/', data=payload)
 
     def test_bad_signature(self):
         resp = self._post(sign='a')
@@ -63,7 +61,7 @@ class TestPerform(Base):
         self.assertIn('Bad signature.', resp.data['sign'])
 
     def test_success(self):
-        c = self.prepare_client()
+        c = self.client
         new_password = 'a12345678'
 
         self.assertEqual(c.get(self.request_url()).status_code, 200)
@@ -78,7 +76,7 @@ class TestPerform(Base):
 
     def test_expired(self):
         with patch_expiration(.5):
-            c = self.prepare_client()
+            c = self.client
             new_password = 'a12345678'
 
             self.assertEqual(c.get(self.request_url()).status_code, 200)
@@ -95,7 +93,7 @@ class TestPerform(Base):
         self.assertNotEqual(resp.status_code, 403)
 
     def test_user_not_exist(self):
-        c = self.prepare_client()
+        c = self.client
         new_password = 'a12345678'
 
         self.assertEqual(c.get(self.request_url()).status_code, 200)
@@ -105,24 +103,38 @@ class TestPerform(Base):
         self.assertEqual(resp.status_code, 400)
         self.assertIn('exist', resp.data['sign'][0])
 
+
 class TestRequest(Base):
 
-    def test_authentication(self):
-        self.assertEqual(
-            self.client.get('/api/users/reset_password/').status_code, 403)
-
     def test_bad_callback(self):
-        c = self.prepare_client()
+        c = self.client
 
         self.assertIn(
             'callback',
             c.get('/api/users/reset_password/').data
         )
 
-    def test_success(self):
-        c = self.prepare_client()
+    def test_bad_lookup(self):
+        self.assertIn(
+            b'exist',
+            self.client.get('/api/users/reset_password/?lookup=a').content
+        )
 
-        self.assertEqual(c.get(self.request_url()).status_code, 200)
+    def test_username_success(self):
+        c = self.client
+
+        self.assertEqual(c.get(self.request_url(email=False)).status_code, 200)
+        self.assertEqual(1, len(mail.outbox))
+
+        m = mail.outbox[0]
+
+        self.assertEqual(m.to, [self.me.email])
+        self.assertIn('localhost', m.body)
+
+    def test_email_success(self):
+        c = self.client
+
+        self.assertEqual(c.get(self.request_url(email=True)).status_code, 200)
         self.assertEqual(1, len(mail.outbox))
 
         m = mail.outbox[0]
@@ -132,7 +144,7 @@ class TestRequest(Base):
 
     def test_throttle(self):
 
-        c = self.prepare_client()
+        c = self.client
 
         self.assertEqual(c.get(self.request_url()).status_code, 200)
         self.assertEqual(c.get(self.request_url()).status_code, 429)

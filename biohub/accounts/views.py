@@ -74,26 +74,16 @@ def upload_avatar(request):
 
 class PasswordResetView(APIView):
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [permissions.IsAuthenticated()]
-        else:
-            return []
-
     def get(self, request, *args, **kwargs):
 
-        serializer = PasswordResetRequestSerializer(
-            data={'callback': request.GET.get('callback', '')},
-            context={'request': request})
+        serializer = PasswordResetRequestSerializer(data=request.GET)
 
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.save())
 
     def post(self, request, *args, **kwargs):
 
-        serializer = PasswordResetPerformSerializer(
-            data=request.data,
-            context={'request': request})
+        serializer = PasswordResetPerformSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.save())

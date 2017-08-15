@@ -103,6 +103,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 PASSWORD_RESET_THROTTLE = 60
 PASSWORD_RESET_SIGNING_EXPIRATION = 5 * 60
 
+
 class PasswordResetPerformSerializer(serializers.Serializer):
 
     sign = serializers.CharField(write_only=True)
@@ -117,7 +118,7 @@ class PasswordResetPerformSerializer(serializers.Serializer):
             raise serializers.ValidationError('Bad signature.')
 
         try:
-            self.user = User.objects.get(pk=self.signed_data['user_id'])
+            self.user = User.objects.get(pk=self.signed_data.get('user_id', None))
         except User.DoesNotExist:
             raise serializers.ValidationError('User does not exist.')
 
@@ -141,11 +142,12 @@ def password_reset_cache_key(user_id):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
 
-    callback = serializers.URLField(write_only=True)
+    callback = serializers.URLField(write_only=True, required=True)
+    lookup = serializers.CharField(required=True)
 
     @property
     def throttle_cache_key(self):
-        return password_reset_cache_key(self.request.user.id)
+        return password_reset_cache_key(self.user.id)
 
     def _set_cache(self):
         cache.set(self.throttle_cache_key, 1, timeout=PASSWORD_RESET_THROTTLE)
@@ -153,24 +155,26 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     def _get_cache(self):
         return cache.get(self.throttle_cache_key)
 
-    def validate(self, data):
-        self.request = self.context['request']
-        user_id = self.request.user.pk
+    def validate_lookup(self, value):
+        from django.db.models import Q
+
+        try:
+            self.user = User.objects.get(Q(username=value) | Q(email=value))
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Should be an existed username or email.')
+
+        return value
+
+    def create(self, validated_data):
 
         if self._get_cache() is not None:
             raise Throttled()
 
-        data['user_id'] = user_id
-
-        return data
-
-    def create(self, validated_data):
-
         callback = validated_data['callback']
-        signed_data = signing.dumps(validated_data)
+        signed_data = signing.dumps(dict(callback=callback, user_id=self.user.pk))
         callback = add_params(callback, sign=signed_data)
 
-        email_message = get_password_reset_email(self.request.user, callback)
+        email_message = get_password_reset_email(self.user, callback)
 
         try:
             email_message.send()
