@@ -57,7 +57,7 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/')
         data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['results'][0]['group_name'], 'well')
+        self.assertEqual(data['results'][0]['group_name'], 'Antiquity')
         response = self.client.get('/api/forum/bricks/?short=true')
         data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
@@ -85,7 +85,8 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/experiences/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 2)
+        # there are 4 experiences in this brick, 2 of which are ours, with the others from iGEM.
+        self.assertEqual(len(data['results']), 4)
         response = self.client.get('/api/forum/bricks/%d/experiences/?author=%s'
                                    % (self.brick.id, self.user.username))
         self.assertEqual(response.status_code, 200)
@@ -112,7 +113,7 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/seq_features/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 2)
+        self.assertEqual(len(data['results']), 12)
 
     def test_using_name_rather_than_id_to_retrieve_brick(self):
         response = self.client.get('/api/forum/bricks/I718017/')
@@ -135,7 +136,7 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertEqual(data['group_name'], 'well')
+        self.assertEqual(data['group_name'], 'Antiquity')
         # TODO: add the tests for fetching experiences after bugs in ExperienceSpider is fixed.
         # but the APIs are NOT designed for fetching only experiences with the existing brick
 
