@@ -13,9 +13,9 @@ from biohub.forum.serializers import ActivityParamSerializer, ActivitySerializer
 class ActivityParamTest(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create(username='abc')
+        self.user = User.objects.create_test_user(username='abc')
         self.user.set_password('123456000+')
-        self.another_user = User.objects.create(username='another')
+        self.another_user = User.objects.create_test_user(username='another')
         self.another_user.set_password('hahaha')
         self.another_user.save()
         self.user.save()

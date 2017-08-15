@@ -5,12 +5,11 @@ from biohub.forum.models import Article
 from biohub.core.files.models import File
 import tempfile
 import os
-import json
 
 
 class ArticleRestfulAPITest(TestCase):
     def setUp(self):
-        user = User.objects.create(username='abc')
+        user = User.objects.create_test_user(username='abc')
         user.set_password('123456000+')
         user.save()
         with open(os.path.join(tempfile.gettempdir(), 'for_test.txt'), "w") as f:
@@ -44,7 +43,7 @@ class ArticleRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 405)
         # response = self.client.get('/api/forum/articles/%d/' % self.article.id)
         # self.assertEqual(json.loads(response.content)['text'], 'jjjjjjjjjjj')
-        # user_other = User.objects.create(username="ddd")
+        # user_other = User.objects.create_test_user(username="ddd")
         # user_other.set_password("123456000+")
         # user_other.save()
         # self.article = Article.objects.create(text="124651321")

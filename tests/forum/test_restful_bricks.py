@@ -9,7 +9,7 @@ import json
 class BrickRestfulAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create(username="abc")
+        self.user = User.objects.create_test_user(username="abc")
         self.user.set_password("123456000+")
         self.user.save()
         self.document = Article.objects.create(text='aaa')
@@ -181,7 +181,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' % self.brick.id)
 
     def test_rate(self):
-        user2 = User.objects.create(username="fff")
+        user2 = User.objects.create_test_user(username="fff")
         user2.set_password("1593562120")
         user2.save()
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
@@ -205,7 +205,7 @@ class BrickRestfulAPITest(TestCase):
             'score': 4
         })
         self.assertEqual(response.status_code, 400)
-        user3 = User.objects.create(username='bbb')
+        user3 = User.objects.create_test_user(username='bbb')
         user3.set_password('1010101010')
         user3.save()
         self.assertIs(self.client.login(username='bbb', password='1010101010'), True)

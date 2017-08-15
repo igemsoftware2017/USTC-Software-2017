@@ -10,12 +10,12 @@ class ExperienceRestfulAPITest(TestCase):
     def setUp(self):
         self.brick = Brick.objects.create(name='emmmm')
         self.article = Article.objects.create(text='aha?')
-        self.user1 = User.objects.create(username="abc")
+        self.user1 = User.objects.create_test_user(username="abc")
         self.user1.set_password("abc546565132")
         self.user1.save()
         self.experience = Experience.objects.create(title="hhh", author=self.user1,
                                                     brick=self.brick, content=self.article)
-        self.user2 = User.objects.create(username="fff")
+        self.user2 = User.objects.create_test_user(username="fff")
         self.user2.set_password("1593562120")
         self.user2.save()
         self.post1 = Post.objects.create(author=self.user1, content="15210", experience=self.experience)

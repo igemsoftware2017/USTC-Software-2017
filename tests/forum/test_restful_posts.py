@@ -1,4 +1,3 @@
-import json
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
@@ -10,12 +9,12 @@ class PostRestfulAPITest(TestCase):
     def setUp(self):
         # don't pass the password on create() method,
         # or the database won't save the hash, but only the raw password.
-        self.user1 = User.objects.create(username="abc")
+        self.user1 = User.objects.create_test_user(username="abc")
         self.user1.set_password("abc546565132")
         self.user1.save()
         self.brick = Brick.objects.create(name='K314110')
         self.experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick)
-        self.user2 = User.objects.create(username="fff")
+        self.user2 = User.objects.create_test_user(username="fff")
         self.user2.set_password("1593562120")
         self.user2.save()
         self.post1 = Post.objects.create(author=self.user1, content="15210", experience=self.experience)

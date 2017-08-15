@@ -17,7 +17,7 @@ class SeqFeatureRestfulAPITest(TestCase):
     def test_unable_to_list_or_put_seq_features(self):
         response = self.client.get('/api/forum/seq_features/')
         self.assertEqual(response.status_code, 404)
-        user = User.objects.create(username="abc")
+        user = User.objects.create_test_user(username="abc")
         user.set_password("101")
         user.save()
         self.assertEqual(self.client.login(username='abc', password='101'), True)

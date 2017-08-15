@@ -10,7 +10,7 @@ def create_random_string():
 
 
 def create_new_user(**kwargs):
-    user = User.objects.create(username=create_random_string(), **kwargs)
+    user = User.objects.create_test_user(username=create_random_string(), **kwargs)
     user.set_password('123456')
     user.save()
     return user
