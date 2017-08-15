@@ -11,7 +11,22 @@ from biohub.utils.htm2text import html2text
 
 class BrickSpider:
     base_site = 'http://parts.igem.org/'
+    registry_base_site = 'http://parts.igem.org/cgi/xml/part.cgi?'
     logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def reverse_sequence(sequence_a):
+        sequence_b = ''
+        for char in list(sequence_a):
+            if char == 'a':
+                sequence_b += 't'
+            if char == 't':
+                sequence_b += 'a'
+            if char == 'c':
+                sequence_b += 'g'
+            if char == 'g':
+                sequence_b += 'c'
+        return sequence_b
 
     def fill_from_page(self, brick_name, brick=None):
         """
@@ -26,46 +41,45 @@ class BrickSpider:
         if raw_response.status_code == 404:
             raise Exception('The part does not exist on iGEM\'s website')
         raw_html = raw_response.text
+        soup = BeautifulSoup(raw_html, "lxml")
         # fill name
         brick.name = brick_name
         # fetch Designer
         # brick.save()
-        brick.designer = re.search(
-            'Designed by:\s*(.*?)\s*&nbsp', raw_html).group(1)
-        brick.group_name = re.search(
-            'Group:\s*(.*?)\s*&nbsp', raw_html).group(1)
-        brick.part_type = re.search(
-            '<div style=\'.*?\'\s*title=\'Part Type\'>\s*(.*?)</div>', raw_html).group(1)
-        brick.nickname = re.search(
-            '<div style=\'.*?\'\s*type=\'Nickname\'>\s*(.*?)</div>', raw_html).group(1)
+        brick.designer = re.search('Designed by:\s*(.*?)\s*&nbsp', raw_html) and re.search(
+            'Designed by:\s*(.*?)\s*&nbsp', raw_html).group(1) or ''
+        brick.group_name = re.search('Group:\s*(.*?)\s*&nbsp', raw_html) and re.search(
+            'Group:\s*(.*?)\s*&nbsp', raw_html).group(1) or ''
+        brick.part_type = re.search('<div style=\'.*?\'\s*title=\'Part Type\'>\s*(.*?)</div>', raw_html) and re.search(
+            '<div style=\'.*?\'\s*title=\'Part Type\'>\s*(.*?)</div>', raw_html).group(1) or ''
+        brick.nickname = re.search('<div style=\'.*?\'\s*type=\'Nickname\'>\s*(.*?)</div>', raw_html) and re.search(
+            '<div style=\'.*?\'\s*type=\'Nickname\'>\s*(.*?)</div>', raw_html).group(1) or ''
         # TODO: add another way of fetch sequence features
-        raw_bioinfo = re.search(
-            '<script>\s*(var\s*sequence.*?)\s*</script>', raw_html).group(1)
-        brick.sequence_a = re.search(
-            'String\(\'(.*?)\'\)', raw_bioinfo).group(1)
-        sequence_b = ''
-        for char in list(brick.sequence_a):
-            if char == 'a':
-                sequence_b += 't'
-            if char == 't':
-                sequence_b += 'a'
-            if char == 'c':
-                sequence_b += 'g'
-            if char == 'g':
-                sequence_b += 'c'
-        brick.sequence_b = sequence_b
+        fetch_here = bool(
+            re.search('<script>\s*(var\s*sequence.*?)\s*</script>', raw_html))
+        if(fetch_here):
+            raw_bioinfo = re.search('<script>\s*(var\s*sequence.*?)\s*</script>', raw_html) and re.search(
+                '<script>\s*(var\s*sequence.*?)\s*</script>', raw_html).group(1) or ''
+            brick.sequence_a = re.search(
+                'String\(\'(.*?)\'\)', raw_bioinfo) and re.search('String\(\'(.*?)\'\)', raw_bioinfo).group(1) or ''
+            brick.sequence_b = BrickSpider.reverse_sequence(brick.sequence_a)
         # dna_position = re.search(
         #     'new Array\(.*?\'dna\',(\d+,\d+).*?\)', raw_bioinfo).group(1)
         # add char field with the suitable validator eg: "23,435" done!
-        sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\);', raw_bioinfo) and re.search(
-            'subParts.*?new Array\s*\((.+?)\);', raw_bioinfo).group(1)
-        if sub_parts_data:
-            sub_parts_list = re.findall(
-                'Part\s*\(\d*,\s*\'(.*?)\'.*?\)', sub_parts_data)
-            brick.sub_parts = ','.join(sub_parts_list)
-        else:
-            brick.sub_parts = ''  # for stand-alone bricks
-        soup = BeautifulSoup(raw_html, "lxml")
+            sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\);', raw_bioinfo) and re.search(
+                'subParts.*?new Array\s*\((.+?)\);', raw_bioinfo).group(1) or ''
+            if sub_parts_data:
+                sub_parts_list = re.findall(
+                    'Part\s*\(\d*,\s*\'(.*?)\'.*?\)', sub_parts_data)
+                brick.sub_parts = ','.join(sub_parts_list)
+            else:
+                brick.sub_parts = ''  # for stand-alone bricks
+        # fetch assembly compatibility
+        div = soup.find(class_='compatibility_div')
+        assembly_compatibility = div and [('box_green' in item['class'])
+                                          for item in div.ul.find_all('li')] or ''
+        brick.assembly_compatibility = div and json.dumps(
+            assembly_compatibility) or ''
         div = soup.find(id='part_status_wrapper')
         # fetch release status
         div2 = div.find_all('div')[0]
@@ -89,11 +103,7 @@ class BrickSpider:
                 re.search('(\d+)\s*Twins.*?', div2.text).group(1))
         else:
             brick.twin_num = 0
-        # fetch assembly compatibility
-        div = soup.find(class_='compatibility_div')
-        assembly_compatibility = [('box_green' in item['class'])
-                                  for item in div.ul.find_all('li')]
-        brick.assembly_compatibility = json.dumps(assembly_compatibility)
+
         # fetch parameters
         parameters = []
         div = soup.find(id='parameters')
@@ -108,7 +118,7 @@ class BrickSpider:
         # fetch categories
         div = soup.find(id='categories')
         categories = re.search(
-            '(//.*?)\s*\Z', div.text, re.DOTALL).group(1)
+            '(//.*?)\s*\Z', div.text, re.DOTALL) and re.search('(//.*?)\s*\Z', div.text, re.DOTALL).group(1) or ''
         brick.categories = categories
         soup = soup.find('div', id='mw-content-text')
         # remove scripts, panel, and compatibility infos
@@ -135,15 +145,31 @@ class BrickSpider:
         brick.document = article
         brick.save()
     # this must be executed after the brick has been saved
-        if(re.search(
-                'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
-            seqFeature_data = re.search(
-                'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
-            seqFeatureList = re.findall(
-                '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
-            for each in seqFeatureList:
-                brick.seqFeatures.create(feature_type=each[0], start_loc=int(
-                    each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
+        if(fetch_here):
+            if(re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
+                seqFeature_data = re.search(
+                    'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo).group(1)
+                seqFeatureList = re.findall(
+                    '\[\'(.*?)\'\s*,\s*(\d*)\s*,\s*(\d*)\s*,\s*\'(.*?)\',(\d*)\s*', seqFeature_data)
+                for each in seqFeatureList:
+                    brick.seqFeatures.create(feature_type=each[0], start_loc=int(
+                        each[1]), end_loc=int(each[2]), name=each[3], reserve=bool(each[4]))
+        else:
+            # go to another page to fetch sequence features
+            raw_response = requests.get(
+                BrickSpider.registry_base_site + 'part=BBa_' + brick_name)
+            soup = BeautifulSoup(raw_response.text, "lxml-xml")
+            feature_set = soup.find_all('feature')
+            for feature in feature_set:
+                brick.seqFeatures.create(feature_type=feature.type.text, start_loc=int(feature.startpos.text), end_loc=int(
+                    feature.endpos.text), name=feature.title.text, reserve=(feature.direction.text == 'reserve'))
+            brick.sequence_a = soup.find('seq_data').text
+            brick.sequence_b = BrickSpider.reverse_sequence(brick.sequence_a)
+            subparts = soup.find('deep_subparts').find_all('subpart')
+            subpart_set = [subpart.name.text[4:] for subpart in subparts]
+            brick.sub_parts = ','.join(subpart_set)
+            brick.save()
         # except Exception as e:
         #     self.logger.error('Error during parsing contents.')
         #     self.logger.error(e)
@@ -162,7 +188,7 @@ class ExperienceSpider:
     logger = logging.getLogger(__name__)
 
     def fill_from_page(self, brick_name):
-        
+
         brick = Brick.objects.get(name=brick_name)
         # if experience is None:
         #     experience = Experience(title='Part: ' + brick_name + ': Experience',
@@ -204,12 +230,12 @@ class ExperienceSpider:
             content = None
             experience = None
             for para in beginning.find_next_siblings('p'):
-                if re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE):
-                # save previous collected content
+                if re.match('\s*igem.{1,60}$', para.text, re.IGNORECASE):
+                    # save previous collected content
                     # change images' URLs to absolute ones
                     if content and experience:
                         restored_content = re.sub('=\"/(.*?\")', '=\"' +
-                            ExperienceSpider.base_site + r'\1', str(content))
+                                                  ExperienceSpider.base_site + r'\1', str(content))
                         h = html2text.HTML2Text()
                         h.body_width = 1000
                         markdown = h.handle(restored_content)
@@ -220,22 +246,22 @@ class ExperienceSpider:
                             experience.content.text = markdown
                             experience.content.save()
                         experience.save()
-                        
+
                     content = None
                     # create the next user review
-                    author_name = re.match('\s*igem.{1,60}$',para.text,re.IGNORECASE).group(0)
+                    author_name = re.match(
+                        '\s*igem.{1,60}$', para.text, re.IGNORECASE).group(0)
                     experience = brick.experience_set.get_or_create(
                         author_name=author_name, defaults={'title': '', 'brick': brick})[0]
                 else:
-                    if experience: # created last time in 'if' branch
+                    if experience:  # created last time in 'if' branch
                         # collect contents
                         if content is None:
-                            content = BeautifulSoup('<p></p>',"lxml")
+                            content = BeautifulSoup('<p></p>', "lxml")
                         content.p.append(para)
                     else:
                         # so this paragraph doesn't belong to any user reviews, skip it.
                         pass
-
 
             pass
         return True
