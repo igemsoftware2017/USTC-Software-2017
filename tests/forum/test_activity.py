@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 from biohub.accounts.models import User
-from biohub.forum.models import Activity, ActivityParam, Experience
+from biohub.forum.models import Activity, ActivityParam, Experience, Brick
 from biohub.forum.serializers import ActivityParamSerializer, ActivitySerializer
 
 
@@ -15,9 +15,9 @@ class ActivityParamTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create(username='abc')
         self.user.set_password('123456000+')
-        another_user = User.objects.create(username='another')     
-        another_user.set_password('hahaha')
-        another_user.save()
+        self.another_user = User.objects.create(username='another')
+        self.another_user.set_password('hahaha')
+        self.another_user.save()
         self.user.save()
 
     def test_param_serialization(self):
@@ -79,3 +79,17 @@ class ActivityParamTest(APITestCase):
         with open(os.path.join(tempfile.gettempdir(),'activities_data.txt'),'wb') as f:
             f.write(response.content)
         pass
+
+    def test_only_fetching_one_user_activities(self):
+        client = APIClient()
+        brick = Brick.objects.create(name='emmm')
+        Experience.objects.create(brick=brick, author=self.user)
+        self.assertIs(brick.watch(self.user), True)
+        Experience.objects.create(brick=brick, author=self.another_user)
+        self.assertIs(brick.watch(self.another_user), True)
+        self.assertIs(brick.rate(2.3, self.user), True)
+        response = client.get('/api/forum/activities/?user=abc')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        # print(response.content)
+        self.assertEqual(len(data['results']), 3)
