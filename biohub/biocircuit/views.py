@@ -54,7 +54,7 @@ class BiocircuitView(APIView):
             # raise
             response = {}
             response["status"] = "failed"
-            response["detail"] = error.__doc__
+            response["detail"] = str(error)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -85,7 +85,7 @@ class ScoreView(APIView):
             # raise
             response = {}
             response["status"] = "failed"
-            response["detail"] = error.__doc__
+            response["detail"] = str(error)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
