@@ -36,24 +36,26 @@ class BiocircuitView(APIView):
     parser_classes = (JSONParser,)
     renderer_classes = (JSONRenderer,)
 
-    def get(self, request, expr, format=None):
+    def get(self, request, string, format=None):
         """
         request: GET /biocircuit/ID
         response: json api_circuit
         """
-        digit_count = 0
-        # print('expr: %s' % expr)
-        for char1 in range(0, len(expr)):
-            if expr[char1] == '0' or expr[char1] == '1':
-                digit_count += 1
-        if digit_count < 2:
-            raise ParseError(detail="At least two digits are required.")
-        expr_from_back = biocircuit.string2expr(expr)
-        # print(expr_from_back)
-        circuit_from_back = biocircuit.create_circuit(expr_from_back)
-        scores_from_back = biocircuit.circuit_score(circuit_from_back, biogate.d_gate)
-        response_dict = biocircuit.api_circuit(circuit_from_back, scores_from_back)
-        return Response(response_dict)
+        try:
+            digit_count = len([c for c in string if c == '0' or c == '1'])
+            if digit_count < 2:
+                raise ParseError(detail="At least two digits are required.")
+            expr = biocircuit.string2expr(string)
+            circuit = biocircuit.create_circuit(expr)
+            scores = biocircuit.circuit_score(circuit, biogate.d_gate)
+            response_dict = biocircuit.api_circuit(circuit, scores)
+            return Response(response_dict)
+        except BaseException as error:
+            # raise
+            response = {}
+            response["status"] = "failed"
+            response["detail"] = error.__doc__
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ScoreView(APIView):
@@ -73,16 +75,17 @@ class ScoreView(APIView):
                 }
         """
         try:
-            response_from_back = biocircuit.get_score_from_front(request.data, biogate.d_gate)
+            nodes = request.data['nodes']
+            score = biocircuit.calc_score(nodes, biogate.d_gate)
             response = {}
             response["status"] = "SUCCESS"
-            response["score"] = response_from_back
+            response["score"] = score
             return Response(response)
         except BaseException as error:
             # raise
             response = {}
             response["status"] = "failed"
-            response["detail"] = error.message
+            response["detail"] = error.__doc__
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -91,7 +94,14 @@ class GatesView(APIView):
     renderer_classes = (JSONRenderer,)
 
     def get(self, request):
-        fp = open(GatesJsonFile, 'r')
-        data = json.load(fp)
-        fp.close()
-        return Response(data)
+        try:
+            fp = open(GatesJsonFile, 'r')
+            data = json.load(fp)
+            fp.close()
+            return Response(data)
+        except BaseException as error:
+            # raise
+            response = {}
+            response["status"] = "failed"
+            response["detail"] = error.__doc__
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)

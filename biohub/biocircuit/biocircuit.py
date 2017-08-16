@@ -315,24 +315,3 @@ def api_circuit(circuit, gate):
             tmp.append(graph[i])
         graph = tmp
     return graph
-
-
-def get_score_from_front(d_json, d_gate):
-    """Calculate score of circuit from front end.
-
-    Parameters
-    ----------
-    d_json : dict
-        dict include information of nodes and something else
-
-    d_gate : dict
-        A dict of biogates and their 4 parameters. It should be
-        stored in the file biogate.py.
-
-    Returns
-    -------
-    score : float
-        The score of the biocircuit.
-    """
-    score = calc_score(d_json['nodes'], d_gate)
-    return score
