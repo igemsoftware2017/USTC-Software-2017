@@ -53,6 +53,8 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.content)
         response = self.client.get('/api/forum/experiences/')
+        # with open('experiences_list.txt','wb') as f:
+        #     f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 2)
         response = self.client.get('/api/forum/articles/%d/'
@@ -146,6 +148,9 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         response = client.get('/api/forum/experiences/' + str(other.id) + '/')
         post_detail = json.loads(response.content)
+        # response = client.get('/api/forum/experiences/')
+        # with open('experiences_list.txt','wb') as f:
+        #     f.write(response.content)
         self.assertEqual(post_detail['up_vote_num'], 1)
         # vote for my experience
         mine = Experience.objects.create(author=self.user1, brick=self.brick, author_name=self.user1.username)
