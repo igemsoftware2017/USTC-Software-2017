@@ -139,7 +139,9 @@ class BrickViewSet(mixins.ListModelMixin,
         ''' enable searching via URL parameter: 'name', not including 'BBa_' '''
         name_begin_with = self.request.query_params.get('name', None)
         if name_begin_with:
-            return Brick.objects.filter(name__startswith=name_begin_with).order_by('name')
+            # query_string = '%'.join(name_begin_with)
+            # Brick.objects.raw('SELECT * FROM forum_brick WHERE name LIKE '+query_string)
+            return Brick.objects.filter(name__icontains=name_begin_with).order_by('name')
         else:
             # from REST framework's src code:
             queryset = self.queryset

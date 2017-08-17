@@ -1,20 +1,27 @@
 from rest_framework import serializers
 from biohub.utils.rest.serializers import bind_model,\
     ModelSerializer
-from ..models import Brick
 from biohub.accounts.serializers import UserSerializer
+from biohub.forum.serializers import ArticleSerializer,\
+    SeqFeatureSerializer
+from ..models import Brick
 
 
 @bind_model(Brick)
 class BrickSerializer(ModelSerializer):
-    api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:brick-detail')
-    document = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail', read_only=True)
-    watch_users = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
-    rate_users = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
+    api_url = serializers.HyperlinkedIdentityField(
+        view_name='api:forum:brick-detail')
+    # document = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail', read_only=True)
+    document = ArticleSerializer(read_only=True)
+    watch_users = UserSerializer(
+        fields=('id', 'username'), read_only=True, many=True)
+    rate_users = UserSerializer(
+        fields=('id', 'username'), read_only=True, many=True)
     experience_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
                                                          view_name='api:forum:experience-detail')
-    seqFeatures = serializers.HyperlinkedRelatedField(read_only=True, many=True,
-                                                      view_name='api:forum:seq_feature-detail')
+    seqFeatures = SeqFeatureSerializer(read_only=True, many=True)
+    # seqFeatures = serializers.HyperlinkedRelatedField(read_only=True, many=True,
+    #                                                   view_name='api:forum:seq_feature-detail')
 
     class Meta:
         model = Brick
