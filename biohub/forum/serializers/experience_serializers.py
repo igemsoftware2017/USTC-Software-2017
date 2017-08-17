@@ -9,10 +9,11 @@ from ..serializers import ArticleSerializer
 @bind_model(Experience)
 class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
-    content = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail',
-                                                  read_only=True)
+    # content = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail',
+    #                                               read_only=True)
+    content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    content_data = ArticleSerializer(write_only=True)
+    # content_data = ArticleSerializer(write_only=True)
     brick = serializers.HyperlinkedRelatedField(view_name='api:forum:brick-detail',
                                                 read_only=True)
     brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())
@@ -28,7 +29,7 @@ class ExperienceSerializer(ModelSerializer):
 
     def create(self, validated_data):
         brick = validated_data.pop('brick_id')
-        content_data = validated_data.pop('content_data')
+        content_data = validated_data.pop('content')
         content_serializer = ArticleSerializer(data=content_data)
         # In these two method, use .create() and .update() directly without verifying.
         # Because the data validation will be accomplished by the Experience serializer.
@@ -41,8 +42,8 @@ class ExperienceSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         instance.brick = validated_data.get('brick_id', instance.brick)
         instance.author_name = validated_data['author_name']
-        if 'content_data'in validated_data:
-            content_data = validated_data.pop('content_data')
+        if 'content'in validated_data:
+            content_data = validated_data.pop('content')
             content_serializer = ArticleSerializer(instance.content, data=content_data)
             content_serializer.update(instance.content, content_data)
         return super(ExperienceSerializer, self).update(instance, validated_data)
