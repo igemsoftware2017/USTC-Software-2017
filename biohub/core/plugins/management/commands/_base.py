@@ -54,7 +54,7 @@ class PluginCommand(BaseCommand):
         self.plugin_name = self.handle_plugin_name(plugin)
         plugin_name = self.plugin_name
 
-        install([plugin_name], invalidate_urlconf=False)
+        install([plugin_name])
         try:
             self.plugin_config = [
                 ac for ac in apps.app_configs.values()

@@ -21,7 +21,8 @@ from .biogate_man import update_d_gate, GatesJsonFile
 try:
     from . import biogate as biogate
 except ImportError:
-    update_d_gate()
+    # TODO: implement update-when-needed
+    # update_d_gate()
     try:
         from . import biogate as biogate
     except ImportError:

@@ -4,6 +4,8 @@ import json
 import filelock
 import tempfile
 import logging
+import warnings
+import multiprocessing
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
@@ -15,16 +17,26 @@ logger = logging.getLogger('biohub.conf')
 CONFIG_ENVIRON = 'BIOHUB_CONFIG_PATH'
 LOCK_FILE_PATH = os.path.join(tempfile.gettempdir(), 'biohub.config.lock')
 
+# Field mapping for biohub settings
+# Format: dest_name -> (org_name, default)
 mapping = {
     'DEFAULT_DATABASE': ('DATABASE', dict),
     'BIOHUB_PLUGINS': ('PLUGINS', list),
     'TIMEZONE': ('TIMEZONE', 'UTC'),
-    'UPLOAD_DIR': ('UPLOAD_DIR',
-                   lambda: os.path.join(tempfile.gettempdir(), 'biohub')),
-    'REDIS_URI': ('REDIS_URI', '')
+    'UPLOAD_DIR': ('UPLOAD_DIR', lambda: os.path.join(tempfile.gettempdir(), 'biohub')),
+    'REDIS_URI': ('REDIS_URI', ''),
+    'SECRET_KEY': ('SECRET_KEY', ''),
+    'BIOHUB_MAX_TASKS': ('MAX_TASKS', lambda: multiprocessing.cpu_count() * 5),
+    'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180),
+    'EMAIL': ('EMAIL', dict)
 }
 
 valid_settings_keys = tuple(mapping.values())
+
+
+class BiohubSettingsWarning(RuntimeWarning):
+
+    pass
 
 
 class Settings(object):
@@ -75,7 +87,7 @@ class Settings(object):
                 value = default_value() if callable(default_value) \
                     else default_value
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             setattr(self, dest_name, value)
 
@@ -90,7 +102,7 @@ class Settings(object):
 
             value = getattr(self, dest_name)
 
-            value = self._validate(org_name, value)
+            value = self._validate(dest_name, value)
 
             result[org_name] = value
 
@@ -102,13 +114,66 @@ class Settings(object):
         """
         return unique(value)
 
+    def validate_redis_uri(self, value):
+
+        if not value:
+            warnings.warn(
+                'No redis configuration provided, redis-based services '
+                'will be disabled.', BiohubSettingsWarning)
+
+        return value
+
+    def validate_secret_key(self, value):
+
+        if not value:
+            warnings.warn(
+                'No secret key provided, default value used instead.',
+                BiohubSettingsWarning)
+
+        return value
+
+    def validate_biohub_max_tasks(self, value):
+
+        assert isinstance(value, int) and value > 0, \
+            "'MAX_TASKS' should be positive integer."
+
+        return value
+
+    def validate_biohub_task_max_timeout(self, value):
+
+        assert isinstance(value, (int, float)) and value > 0, \
+            "'TASK_MAX_TIMEOUT' should be positive float."
+
+        return value
+
     def validate_upload_dir(self, value):
+
         if value.startswith(tempfile.gettempdir()):
-            logger.warn(
-                'Your UPLOAD_DIR was under the temporary directory, all '
-                'files will be erased once system reboots.')
+            warnings.warn(
+                'Your UPLOAD_DIR is within the temporary directory. All '
+                'files will be erased once system reboots.',
+                BiohubSettingsWarning)
 
         return os.path.abspath(value)
+
+    def validate_email(self, value):
+
+        if not isinstance(value, dict):
+            raise TypeError("'EMAIL' should be a dict, got type %r." % type(type(value)))
+
+        required = 'HOST HOST_USER HOST_PASSWORD PORT'.split()
+
+        missing = set(required) - set(value)
+
+        if missing:
+            warnings.warn(
+                'Fields %s not found in EMAIL, which may affect email related services.'
+                % ', '.join(missing), BiohubSettingsWarning)
+
+            for field in missing:
+                value[field] = ''
+
+        return value
 
     def __delattr__(self, name):
         """
@@ -155,8 +220,6 @@ class LazySettings(LazyObject):
         if val is None:
             val = getattr(self._wrapped, name)
 
-        self.__dict__[name] = val
-
         return val
 
     def __setattr__(self, name, value):
@@ -180,6 +243,10 @@ class SettingsManager(object):
         self._settings_object = settings_object
         self._file_lock = filelock.FileLock(LOCK_FILE_PATH)
         self._store_settings = []
+
+    @property
+    def locking(self):
+        return self._file_lock.is_locked
 
     def _resolve_config_path(self, config_path=None):
         """
@@ -245,7 +312,7 @@ class SettingsManager(object):
 
         path = self._resolve_config_path(path)
 
-        locking = self._file_lock.is_locked
+        locking = self.locking
 
         with self._file_lock:
 

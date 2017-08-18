@@ -1,16 +1,15 @@
 language: python
+sudo: required
 python:
   - "3.6"
-install: "pip install -r requirements/dev.txt"
-before_install:
-  - mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
-  - python biohub/biocircuit/compile-espresso.py
-script: "DJANGO_SETTINGS_MODULE=tests.settings biohub/manage.py test"
 services:
   - mysql
   - redis-server
-before_script:
-  - bash .travis-install
 notifications:
   email: false
-cache: pip
+cache:
+  pip: true
+  directories:
+    - tmp
+install: "bash .travis-install"
+script: "biohub/manage.py test"

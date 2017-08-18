@@ -46,17 +46,16 @@ INSTALLED_APPS = [
     'biohub.notices',
     'biohub.core.files',
     'biohub.core.plugins',
-
     'haystack',
     'biohub.biobrick',
     'biohub.biocircuit',
+    'biohub.forum',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -95,18 +94,9 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    # },
+    {
+        'NAME': 'biohub.accounts.validators.PasswordValidator'
+    }
 ]
 
 # Overwrite default User model.
@@ -140,7 +130,9 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-    'PAGE_SIZE': 30
+    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
+    'PAGE_SIZE': 30,
+    'DEFAULT_AUTHENTICATION_CLASSES': ('biohub.utils.rest.authentication.NoCSRFAuthentication',)
 }
 
 CHANNEL_LAYERS = {
@@ -154,18 +146,29 @@ CHANNEL_LAYERS = {
     }
 }
 
+EMAIL_USE_SSL = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBakend'
+EMAIL_TIMEOUT = 10
+
 # Extra configurations
 
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
 
 DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
-INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS
+INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS[:]
 TIME_ZONE = biohub_settings.TIMEZONE
 MEDIA_ROOT = biohub_settings.UPLOAD_DIR
+
+if biohub_settings.SECRET_KEY:
+    SECRET_KEY = SECRET_KEY
 
 if biohub_settings.REDIS_URI:
     CHANNEL_LAYERS['default']['CONFIG']['hosts'].append(
         biohub_settings.REDIS_URI)
+    CHANNEL_LAYERS['default']['TEST_CONFIG'] = {
+        'hosts': [biohub_settings.REDIS_URI],
+        'symmetric_encryption_keys': [SECRET_KEY],
+    }
 
     CACHES = {
         "default": {
@@ -182,6 +185,16 @@ if biohub_settings.REDIS_URI:
 else:
     CHANNEL_LAYERS['default']['BACKEND'] = 'asgiref.inmemory.ChannelLayer'
     del CHANNEL_LAYERS['default']['CONFIG']
+
+if biohub_settings.EMAIL:
+    mail_conf = biohub_settings.EMAIL
+
+    EMAIL_HOST = mail_conf['HOST']
+    EMAIL_HOST_USER = mail_conf['HOST_USER']
+    EMAIL_HOST_PASSWORD = mail_conf['HOST_PASSWORD']
+    EMAIL_PORT = mail_conf['PORT']
+
+    del mail_conf
 
 del biohub_settings
 

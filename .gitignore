@@ -103,3 +103,9 @@ ENV/
 
 # biocircuit
 biogate.py
+
+# editor configs
+.vscode/
+
+/abacus_server/config.json
+/experiences_list.txt

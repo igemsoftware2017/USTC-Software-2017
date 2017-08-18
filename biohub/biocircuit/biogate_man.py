@@ -1,11 +1,11 @@
 __author__ = 'E-Neo <e-neo@qq.com>'
 
-import simplejson
+import json
 import os
 
 dirname = os.path.dirname(os.path.abspath(__file__))
-GatesJsonFile = dirname + '/gates_lizhi.json'
-GatesPyFile = dirname + '/biogate.py'
+GatesJsonFile = os.path.join(dirname, 'gates_lizhi.json')
+GatesPyFile = os.path.join(dirname, 'biogate.py')
 
 
 def get_d_gate(lizhi_json):
@@ -21,7 +21,7 @@ def get_d_gate(lizhi_json):
     d_gate_d : dict
         Record the 4 parameters.
     """
-    lizhi = simplejson.loads(lizhi_json)
+    lizhi = json.loads(lizhi_json)
     g_and = {}
     g_not = {}
     g_or = {}

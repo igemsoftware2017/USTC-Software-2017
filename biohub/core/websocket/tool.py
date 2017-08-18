@@ -1,8 +1,10 @@
+from functools import wraps
+
 from channels import Group
-from django.utils.lru_cache import lru_cache
+
+from . import parsers
 
 
-@lru_cache(maxsize=None)
 def get_group(name):
     """
     A shortcut to get and cache a Group object.
@@ -10,25 +12,62 @@ def get_group(name):
     return Group(name)
 
 
-def broadcast(data):
+def group_send(handler_name, group_name, data):
+    """
+    To send message to a specific group.
+    """
+    return get_group(group_name).send(parsers.encode(handler_name, data))
+
+
+def broadcast(handler_name, data):
     """
     To make a global broadcasting.
     """
-    return get_group('broadcast').send(data)
+    return group_send(handler_name, 'broadcast', data)
 
 
-def broadcast_user(user, data):
+def broadcast_user(handler_name, user, data):
     """
     To broadcast to specified user.
     """
-    return get_group('user_%s' % user.id).send(data)
+    return group_send(handler_name, 'user_%s' % user.id, data)
 
 
-def broadcast_users(users, data):
+def broadcast_users(handler_name, users, data):
     """
     To broadcast to specified users.
     """
     return [
-        get_group('user_%s' % user.id).send(data)
+        broadcast_user(handler_name, user, data)
         for user in users
     ]
+
+
+BROADCAST_FUNCTION_NAMES = (
+    'group_send', 'broadcast', 'broadcast_user', 'broadcast_users'
+)
+
+
+def _method_proxy(name):
+    """
+    Searches a function in the global scope with the given name and wraps it
+    into a Broadcaster instance method.
+    """
+
+    target_function = globals()[name]
+
+    @wraps(target_function)
+    def _proxy(self, *args, **kwargs):
+        return target_function(self.handler_name, *args, **kwargs)
+
+    return _proxy
+
+
+Broadcaster = type(
+    'Broadcaster',
+    (),
+    dict(
+        __init__=lambda self, name: setattr(self, 'handler_name', name),
+        __doc__="A helper class to broadcast websocket message.",
+        **{name: _method_proxy(name) for name in BROADCAST_FUNCTION_NAMES})
+)

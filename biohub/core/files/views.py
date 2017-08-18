@@ -13,12 +13,15 @@ def upload(request):
 
     store_db = request.GET.get('store_db', False)
 
+    if isinstance(store_db, str) and store_db.lower() in ('false', 'no'):
+        store_db = False
+
     if store_db:
         instance = handle_permanent_file(request, 'file')
         data = FileSerializer(instance).data
     else:
         name, mime_type = store_file(request.FILES['file'])
         data = dict(file=default_storage.url(name),
-                    mime_typ=mime_type)
+                    mime_type=mime_type)
 
     return Response(data)

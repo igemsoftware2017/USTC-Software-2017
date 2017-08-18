@@ -106,7 +106,7 @@ class PluginManager(object):
         """
         Returns a bool indicating whether plugin list is mutating.
         """
-        return self._install_lock.locked
+        return self._install_lock.locked()
 
     @property
     def migrating(self):
@@ -114,7 +114,7 @@ class PluginManager(object):
         Returns a bool indicating whether there are any plugins migrating their
         models.
         """
-        return self._db_lock.locked
+        return self._db_lock.locked()
 
     @property
     def available_plugins(self):
@@ -202,11 +202,26 @@ class PluginManager(object):
 
             apps.ready = True
 
+    def reload_plugins(self):
+        """
+        To accord plugins installed with BIOHUB_PLUGINS.
+
+        This function is usually called after config file renewed.
+        """
+
+        new = set(self.available_plugins) - set(self.plugin_infos)
+        missing = set(self.plugin_infos) - set(self.available_plugins)
+
+        self.remove(missing, populate=False)
+        self.install(new, populate=False)
+
+        self.populate_plugins()
+
     def populate_plugins(self):
         """
         Update plugins storage after new plugins installed.
         """
-        self._invalidate_websocket_handlers()
+        self._invalidate_components()
 
         self.plugin_infos = OrderedDict()
         self.plugin_configs = OrderedDict()
@@ -236,7 +251,7 @@ class PluginManager(object):
         Filter and wipe out existing plugins.
         """
         plugin_names = [plugin for plugin in plugin_names
-                        if plugin not in self.available_plugins]
+                        if plugin not in self.installed_apps]
 
         for name in plugin_names:
 
@@ -255,13 +270,27 @@ class PluginManager(object):
 
         return plugin_names
 
+    def _invalidate_components(self):
+        """
+        Reloads essential modules or variables in each plugin.
+        """
+        self._invalidate_urlconf()
+        self._invalidate_websocket_handlers()
+        self._invalidate_tasks_registry()
+
     def _invalidate_websocket_handlers(self):
         """
         To invalidate websocket handlers registration.
         """
-        from biohub.core.websocket.signals import ws_received
-        ws_received.receivers.clear()
-        module_util.autodiscover_modules('ws_handlers')
+        from biohub.core.websocket.registry import cache_clear
+        cache_clear()
+
+    def _invalidate_tasks_registry(self):
+        """
+        To invalidate tasks registration.
+        """
+        from biohub.core.tasks.registry import cache_clear
+        cache_clear()
 
     def _invalidate_urlconf(self):
         """
@@ -271,8 +300,8 @@ class PluginManager(object):
 
          + invalidate resolver's LRU cache (use `.cache_clear` provided by
             `lru_cache`)
-         + reload main urlconf module and biohub url patterns registration
-            module
+         + reload main urlconf module and clear cache in biohub url patterns
+            registration module
          + reload `urls.py` in each app, using a force-reload version of
             `autodiscover_module`
          + override default resolver's `urlconf_module` and `url_patterns`
@@ -285,21 +314,19 @@ class PluginManager(object):
 
         try:
             get_resolver.cache_clear()
-
-            importlib.reload(biohub.core.routes)
+            biohub.core.routes.cache_clear()
             main_urls = importlib.reload(biohub.main.urls)
-            module_util.autodiscover_modules('urls')
 
             resolver = get_resolver()
             resolver.urlconf_module = main_urls
-            resolver.url_patterns = getattr(
-                main_urls, "urlpatterns", main_urls)
+            resolver.url_patterns = getattr(main_urls, "urlpatterns")
 
         except Exception as e:
             raise exceptions.URLConfError(e)
 
     def remove(self, plugin_names,
                update_config=False,
+               populate=True,
                invalidate_urlconf=True):
         """
         Remove a list of plugins specified by `plugin_names`.
@@ -315,10 +342,8 @@ class PluginManager(object):
 
             self._remove_apps(removed)
 
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
-
-            self.populate_plugins()
+            if populate:
+                self.populate_plugins()
 
             if update_config:
                 dump_config()
@@ -327,7 +352,7 @@ class PluginManager(object):
 
     def install(self, plugin_names,
                 update_config=False,
-                invalidate_urlconf=True,
+                populate=True,
                 migrate_database=False, migrate_options=None):
         """
         Install a list of plugins specified by `plugin_names`.
@@ -357,15 +382,12 @@ class PluginManager(object):
 
             self._add_apps(plugin_names)
 
-            # Invalidate URLConf
-            if invalidate_urlconf:
-                self._invalidate_urlconf()
-
             # Migrate database
             if migrate_database:
                 self.prepare_database(plugin_names, **(migrate_options or {}))
 
-            self.populate_plugins()
+            if populate:
+                self.populate_plugins()
 
             if update_config:
                 dump_config()
