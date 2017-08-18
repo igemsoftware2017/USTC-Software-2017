@@ -8,14 +8,16 @@ from ..models import Activity, ActivityParam
 from collections import Mapping, OrderedDict
 from rest_framework.utils.serializer_helpers import BindingDict
 
+
 @bind_model(ActivityParam)
 class ActivityParamSerializer(ModelSerializer):
 
     # serializer_field_mapping = ModelSerializer.serializer_field_mapping
     # serializer_field_mapping[models.DecimalField] = serializers.FloatField
 
-    user = serializers.SlugRelatedField(slug_field='username',read_only=True)
+    user = serializers.SlugRelatedField(slug_field='username', read_only=True)
     # override to remove 'lazy' characters
+
     @property
     def fields(self):
         """
@@ -28,7 +30,7 @@ class ActivityParamSerializer(ModelSerializer):
         for key, value in self.get_fields().items():
             self._fields[key] = value
         return self._fields
-    
+
     # override to remove cached property
     @property
     def _readable_fields(self):
@@ -45,15 +47,15 @@ class ActivityParamSerializer(ModelSerializer):
         ret = OrderedDict()
         # modify Meta.exclude:
         if instance.type == 'Experience':
-            self.Meta.exclude = ('id','type', 'score')
+            self.Meta.exclude = ('id', 'type', 'score')
         elif(instance.type == 'Comment'):
-            self.Meta.exclude = ('id','type', 'score')
+            self.Meta.exclude = ('id', 'type', 'score')
         elif instance.type == 'Star':
-            self.Meta.exclude = ('id','type', 'score')
+            self.Meta.exclude = ('id', 'type', 'score')
         elif instance.type == 'Rating':
-            self.Meta.exclude = ('id','type', 'intro')
+            self.Meta.exclude = ('id', 'type', 'intro')
         elif instance.type == 'Watch':
-            self.Meta.exclude = ('id','type', 'expLink', 'score', 'intro')
+            self.Meta.exclude = ('id', 'type', 'expLink', 'score', 'intro')
         fields = self._readable_fields
 
         for field in fields:
@@ -79,14 +81,15 @@ class ActivityParamSerializer(ModelSerializer):
     class Meta:
         model = ActivityParam
         exclude = ('type',)
-        read_only_fields =('user','expLink','score','partName','intro')
+        read_only_fields = ('user', 'expLink', 'score', 'partName', 'intro')
 
 
 @bind_model(Activity)
 class ActivitySerializer(ModelSerializer):
 
     params = ActivityParamSerializer(read_only=True)
+
     class Meta:
         model = Activity
-        exclude = ('user','id')
-        read_only_fields=('type','params','acttime',)
+        exclude = ('user', 'id')
+        read_only_fields = ('type', 'params', 'acttime',)

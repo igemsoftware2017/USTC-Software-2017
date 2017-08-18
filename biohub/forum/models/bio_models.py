@@ -20,7 +20,7 @@ class Article(models.Model):
     The article has no 'name' field, for the name can be specified in text(using markdown)
     """
     text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
-    files = models.ManyToManyField(File,default=None)
+    files = models.ManyToManyField(File, default=None)
 
 
 class Brick(models.Model):
@@ -118,8 +118,8 @@ class Brick(models.Model):
 
 
 class Experience(models.Model):
-    # In fact, a brick's experience consists not only user reviews, 
-    # but also applications of the brick. 
+    # In fact, a brick's experience consists not only user reviews,
+    # but also applications of the brick.
     # This class only contains user reviews
 
     # According to iGem's websites, a user review has no title. We can make this optional.

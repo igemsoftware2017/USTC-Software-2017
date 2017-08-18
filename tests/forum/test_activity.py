@@ -51,23 +51,23 @@ class ActivityParamTest(APITestCase):
         data = json.loads(response.content)
         # publish an experience
         loads2 = {'brick_id': data['id'], 'content': {
-            'text': 'this is a sample text','file_ids':[]}}
+            'text': 'this is a sample text', 'file_ids': []}}
         response = client.post('/api/forum/experiences/', loads2, format='json')
         self.assertEqual(response.status_code, 201)
         exp_id = (json.loads(response.content))['id']
         # rate a brick
-        response = client.post('/api/forum/bricks/'+str(data['id'])+'/rate/',{'score':2.9})
-        self.assertEqual(response.status_code, 200)        
+        response = client.post('/api/forum/bricks/' + str(data['id']) + '/rate/', {'score': 2.9})
+        self.assertEqual(response.status_code, 200)
         # comment a experience
-        response = client.post('/api/forum/posts/',{'experience_id':exp_id,'content':'Uhhh...what you wrote is holly shit!'},format='json')
+        response = client.post('/api/forum/posts/', {'experience_id': exp_id, 'content': 'Uhhh...what you wrote is holly shit!'}, format='json')
         self.assertEqual(response.status_code, 201)
         # star an experience
         client.logout()
-        client.login(username='another',password='hahaha')
-        response = client.post('/api/forum/experiences/'+str(exp_id)+'/up_vote/')
+        client.login(username='another', password='hahaha')
+        response = client.post('/api/forum/experiences/' + str(exp_id) + '/up_vote/')
         self.assertEqual(response.status_code, 200)
         # watch a brick
-        response = client.post('/api/forum/bricks/'+str(data['id'])+'/watch/')
+        response = client.post('/api/forum/bricks/' + str(data['id']) + '/watch/')
         self.assertEqual(response.status_code, 200)
         exp_set = Experience.objects.all()
         # examine activities
@@ -76,7 +76,7 @@ class ActivityParamTest(APITestCase):
         data_set = act_serializer.data
 
         response = client.get('/api/forum/activities/')
-        with open(os.path.join(tempfile.gettempdir(),'activities_data.txt'),'wb') as f:
+        with open(os.path.join(tempfile.gettempdir(), 'activities_data.txt'), 'wb') as f:
             f.write(response.content)
         pass
 

@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'biohub.notices',
     'biohub.core.files',
     'biohub.core.plugins',
+    'haystack',
+    'biohub.biobrick',
+    'biohub.biocircuit',
     'biohub.forum',
 ]
 
@@ -194,3 +197,13 @@ if biohub_settings.EMAIL:
     del mail_conf
 
 del biohub_settings
+
+# tmp
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'products',
+        'INCLUDE_SPELLING': True,
+    },
+}
