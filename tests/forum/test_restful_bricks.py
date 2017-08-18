@@ -125,9 +125,10 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data['author_name'], 'igem2010 UT-Tokyo ')
-        content_url = data['content']
-        response = self.client.get(content_url)
-        self.assertEqual(response.status_code, 200)
+        # there is no content url anylonger
+        # content_url = data['content']
+        # response = self.client.get(content_url)
+        # self.assertEqual(response.status_code, 200)
 
     def test_retrieve_using_id(self):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)

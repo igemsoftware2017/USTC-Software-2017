@@ -50,7 +50,7 @@ class ActivityParamTest(APITestCase):
         response = client.get('/api/forum/bricks/B0032/')
         data = json.loads(response.content)
         # publish an experience
-        loads2 = {'brick_id': data['id'], 'content_data': {
+        loads2 = {'brick_id': data['id'], 'content': {
             'text': 'this is a sample text','file_ids':[]}}
         response = client.post('/api/forum/experiences/', loads2, format='json')
         self.assertEqual(response.status_code, 201)
