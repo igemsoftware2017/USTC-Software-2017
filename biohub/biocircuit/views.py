@@ -22,7 +22,7 @@ try:
     from . import biogate as biogate
 except ImportError:
     # TODO: implement update-when-needed
-    # update_d_gate()
+    update_d_gate()
     try:
         from . import biogate as biogate
     except ImportError:
