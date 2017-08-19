@@ -30,4 +30,7 @@ else:
     print('Unsupported OS!')
     sys.exit(1)
 
-sys.exit(os.system(' '.join(part.format(**globals()) for part in commands)))
+if __name__ == '__main__':
+    sys.exit(
+        os.system(' '.join(part.format(**globals()) for part in commands))
+    )
