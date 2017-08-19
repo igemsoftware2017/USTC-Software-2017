@@ -3,6 +3,8 @@ __author__ = 'E-Neo <e-neo@qq.com>'
 import json
 import os
 import logging
+import filelock
+import tempfile
 
 from django.utils.functional import SimpleLazyObject
 
@@ -12,6 +14,10 @@ logger = logging.getLogger(__name__)
 dirname = os.path.dirname(os.path.abspath(__file__))
 GatesJsonFile = os.path.join(dirname, 'gates_lizhi.json')
 GatesPyFile = os.path.join(dirname, 'biogate.py')
+
+gates_updating_lock = filelock.FileLock(
+    os.path.join(tempfile.gettempdir(), 'biohub.biocircuit.gates.updating.lock')
+)
 
 
 def get_d_gate(lizhi):
@@ -59,12 +65,18 @@ def get_d_gate(lizhi):
 
 
 def update_d_gate():
-    logging.info('Updating the gates from %s.' % GatesJsonFile)
+    locked = gates_updating_lock.is_locked
 
-    d_gate = get_d_gate(load_gates_json())
+    with gates_updating_lock:
+        if locked:
+            return
 
-    with open(GatesPyFile, 'w') as fp:
-        fp.write('d_gate = {}'.format(d_gate))
+        logging.info('Updating the gates from %s.' % GatesJsonFile)
+
+        d_gate = get_d_gate(load_gates_json())
+
+        with open(GatesPyFile, 'w') as fp:
+            fp.write('d_gate = {}'.format(d_gate))
 
 
 def load_gates_json():
