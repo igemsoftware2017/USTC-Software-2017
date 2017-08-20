@@ -17,6 +17,17 @@ class ExperienceViewSet(viewsets.ModelViewSet):
     spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
+    # override this function to provide "request" as "None"
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            'request': None,
+            'format': self.format_kwarg,
+            'view': self
+        }
+
     def get_queryset(self):
         author = self.request.query_params.get('author', None)
         if author is not None:
@@ -52,7 +63,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
                     return Response('Unable to update data of this experience!',
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = ExperienceSerializer(experience, context={
-            'request': request
+            'request': None
         })
         return Response(serializer.data)
 
@@ -64,7 +75,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             serializer = ExperienceSerializer(page, fields=(
                 'api_url', 'id', 'title', 'author_name', 'author', 'brick'),
                                               many=True, context={
-                'request': request
+                'request': None
             })
             return self.get_paginated_response(serializer.data)
         return super(ExperienceViewSet, self).list(request=request, *args, **kwargs)
@@ -95,7 +106,7 @@ class ExperiencesOfBricksListView(generics.ListAPIView):
             page = self.paginate_queryset(self.get_queryset())
             serializer = ExperienceSerializer(page, fields=(
                 'api_url', 'id', 'title', 'author_name', 'author'), many=True, context={
-                'request': request
+                'request': None
             })
             return self.get_paginated_response(serializer.data)
         return super(ExperiencesOfBricksListView, self).get(request=request, *args, **kwargs)

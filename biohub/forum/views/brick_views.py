@@ -25,6 +25,17 @@ class BrickViewSet(mixins.ListModelMixin,
     experience_spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
+    # override this function to provide "request" as "None"
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            'request': None,
+            'format': self.format_kwarg,
+            'view': self
+        }
+
     @staticmethod
     def has_brick_in_database(brick_name):
         try:
@@ -101,17 +112,18 @@ class BrickViewSet(mixins.ListModelMixin,
     def watched_bricks(self, request, *args, **kwargs):
         username = self.request.query_params.get('username', None)
         if username is not None:
-            queryset = User.objects.get(username=username).bricks_watched.all().order_by('name', 'id')
+            queryset = User.objects.get(
+                username=username).bricks_watched.all().order_by('name', 'id')
             short = self.request.query_params.get('short', None)
             pagination_class = self.pagination_class
             page = self.paginate_queryset(queryset)
             if short is not None and short.lower() == 'true':
                 serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
-                    'request': request
+                    'request': None
                 })
                 return self.get_paginated_response(serializer.data)
             serializer = BrickSerializer(page, many=True, context={
-                'request': request
+                'request': None
             })
             return self.get_paginated_response(serializer.data)
         return Response('Must specify param \'username\'.', status=status.HTTP_400_BAD_REQUEST)
@@ -131,7 +143,7 @@ class BrickViewSet(mixins.ListModelMixin,
                     return Response('Unable to fetch data of this brick! ',
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = BrickSerializer(brick, context={
-            'request': request
+            'request': None
         })
         return Response(serializer.data)
 
@@ -156,7 +168,7 @@ class BrickViewSet(mixins.ListModelMixin,
             pagination_class = self.pagination_class
             page = self.paginate_queryset(self.get_queryset())
             serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
-                'request': request
+                'request': None
             })
             return self.get_paginated_response(serializer.data)
         return super(BrickViewSet, self).list(request=request, *args, **kwargs)
@@ -179,6 +191,6 @@ def retrieve_brick_by_name(request, brick_name):
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         brick = Brick.objects.get(name=brick_name)
     serializer = BrickSerializer(brick, context={
-        'request': request
+        'request': None
     })
     return Response(serializer.data)

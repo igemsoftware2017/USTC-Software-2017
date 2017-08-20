@@ -12,6 +12,18 @@ class SeqFeatureViewSet(mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = SeqFeatureSerializer
     queryset = SeqFeature.objects.all()
+
+    # override this function to provide "request" as "None"
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            'request': None,
+            'format': self.format_kwarg,
+            'view': self
+        }
+
     # spider = SeqFeatureSpider()
     # UPDATE_DELTA = datetime.timedelta(days=10)
 
