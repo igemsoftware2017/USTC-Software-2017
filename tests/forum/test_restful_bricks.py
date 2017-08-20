@@ -2,7 +2,7 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Brick, Article, Experience, SeqFeature
-import json
+import json, os, tempfile
 # from time import sleep
 
 
@@ -146,8 +146,8 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         # list all bricks
         response = self.client.get('/api/forum/bricks/')
-        # with open("brick_content_list.txt",'wb') as f:
-        #     f.write(response.content)
+        with open(os.path.join(tempfile.gettempdir(),"brick_content_list.txt"),'wb') as f:
+            f.write(response.content)
         data = json.loads(response.content)
         # there ought to be 4 items, including the one in setUp()
         # search bricks beginning with 'I'
@@ -179,7 +179,7 @@ class BrickRestfulAPITest(TestCase):
     def test_api_url_field(self):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         data = json.loads(response.content)
-        self.assertEqual(data['api_url'], 'http://testserver/api/forum/bricks/%d/' % self.brick.id)
+        self.assertEqual(data['api_url'], '/api/forum/bricks/%d/' % self.brick.id)
 
     def test_rate(self):
         user2 = User.objects.create_test_user(username="fff")

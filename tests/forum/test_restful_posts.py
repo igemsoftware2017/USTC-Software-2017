@@ -2,7 +2,7 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Brick
-import json
+import json, os ,tempfile
 
 
 class PostRestfulAPITest(TestCase):
@@ -39,8 +39,8 @@ class PostRestfulAPITest(TestCase):
         })
         self.assertEqual(response.status_code, 201)
         response = client.get('/api/forum/posts/')
-        # with open("posts_content.txt",'wb') as f:
-        #     f.write(response.content)
+        with open(os.path.join(tempfile.gettempdir(),"posts_content.txt"),'wb') as f:
+            f.write(response.content)
         self.assertEqual(response.status_code, 200)
 
     def test_modify_my_post(self):

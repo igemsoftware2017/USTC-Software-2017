@@ -1,4 +1,4 @@
-import json
+import json, tempfile, os
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
@@ -53,7 +53,7 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.content)
         response = self.client.get('/api/forum/experiences/')
-        with open('experiences_list.txt','wb') as f:
+        with open(os.path.join(tempfile.gettempdir(),'experiences_list.txt'),'wb') as f:
             f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 2)
@@ -134,7 +134,7 @@ class ExperienceRestfulAPITest(TestCase):
     def test_api_url_field(self):
         response = self.client.get('/api/forum/experiences/%d/' % self.experience.id)
         data = json.loads(response.content)
-        self.assertEqual(data['api_url'], 'http://testserver/api/forum/experiences/%d/' % self.experience.id)
+        self.assertEqual(data['api_url'], '/api/forum/experiences/%d/' % self.experience.id)
 
     def test_vote(self):
         client = self.client
@@ -149,8 +149,8 @@ class ExperienceRestfulAPITest(TestCase):
         response = client.get('/api/forum/experiences/' + str(other.id) + '/')
         post_detail = json.loads(response.content)
         # response = client.get('/api/forum/experiences/')
-        # with open('experiences_list.txt','wb') as f:
-        #     f.write(response.content)
+        with open(os.path.join(tempfile.gettempdir(),'experiences_list.txt'),'wb') as f:
+            f.write(response.content)
         self.assertEqual(post_detail['up_vote_num'], 1)
         # vote for my experience
         mine = Experience.objects.create(author=self.user1, brick=self.brick, author_name=self.user1.username)
