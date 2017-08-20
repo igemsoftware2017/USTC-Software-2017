@@ -6,8 +6,6 @@ method:get
 """
 __author__ = 'ctyi'
 
-import json
-
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -16,17 +14,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework import status
 
 from . import biocircuit as biocircuit
-from .biogate_man import update_d_gate, GatesJsonFile
-
-try:
-    from . import biogate as biogate
-except ImportError:
-    # TODO: implement update-when-needed
-    update_d_gate()
-    try:
-        from . import biogate as biogate
-    except ImportError:
-        raise ImportError('The biogate.py doesn\'t exist. Updating is inefficient.')
+from .biogate_man import load_gates_json, biogate
 
 
 class BiocircuitView(APIView):
@@ -43,7 +31,7 @@ class BiocircuitView(APIView):
         response: json api_circuit
         """
         try:
-            digit_count = len([c for c in string if c == '0' or c == '1'])
+            digit_count = len([c for c in string if c in ('0', '1')])
             if digit_count < 2:
                 raise ParseError(detail="At least two digits are required.")
             expr = biocircuit.string2expr(string)
@@ -96,12 +84,8 @@ class GatesView(APIView):
 
     def get(self, request):
         try:
-            fp = open(GatesJsonFile, 'r')
-            data = json.load(fp)
-            fp.close()
-            return Response(data)
-        except BaseException as error:
-            # raise
+            return Response(load_gates_json())
+        except Exception as error:
             response = {}
             response["status"] = "failed"
             response["detail"] = error.__doc__

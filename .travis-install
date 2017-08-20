@@ -24,8 +24,8 @@ cat > config.json << EOF
         "PORT": "",
         "TEST": {
             "NAME": "test_biohub_new",
-            "CHARSET": null,
-            "COLLATION": null,
+            "CHARSET": "utf8",
+            "COLLATION": "utf8_general_ci",
             "MIRROR": null
         }
     },
