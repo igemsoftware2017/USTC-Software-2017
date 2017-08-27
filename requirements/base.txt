@@ -4,11 +4,10 @@ django-filter==1.0.4
 rest-condition==1.0.3
 channels==1.1.6
 PyMySQL==0.7.11
-numpy==1.13.1
-scipy==0.19.1
-biopython==1.70
 filelock==2.0.11
 asgi-redis==1.4.2
 cryptography==2.0.2
 django-redis==4.8.0
-requests==2.18.3
+lxml==3.8.0
+requests==2.18.2
+beautifulsoup4==4.6.0

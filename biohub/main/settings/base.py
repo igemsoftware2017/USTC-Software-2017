@@ -46,7 +46,10 @@ INSTALLED_APPS = [
     'biohub.notices',
     'biohub.core.files',
     'biohub.core.plugins',
-    'biohub.abacus'
+    'haystack',
+    'biohub.biobrick',
+    'biohub.biocircuit',
+    'biohub.forum',
 ]
 
 MIDDLEWARE = [
@@ -143,6 +146,10 @@ CHANNEL_LAYERS = {
     }
 }
 
+EMAIL_USE_SSL = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBakend'
+EMAIL_TIMEOUT = 10
+
 # Extra configurations
 
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
@@ -179,4 +186,24 @@ else:
     CHANNEL_LAYERS['default']['BACKEND'] = 'asgiref.inmemory.ChannelLayer'
     del CHANNEL_LAYERS['default']['CONFIG']
 
+if biohub_settings.EMAIL:
+    mail_conf = biohub_settings.EMAIL
+
+    EMAIL_HOST = mail_conf['HOST']
+    EMAIL_HOST_USER = mail_conf['HOST_USER']
+    EMAIL_HOST_PASSWORD = mail_conf['HOST_PASSWORD']
+    EMAIL_PORT = mail_conf['PORT']
+
+    del mail_conf
+
 del biohub_settings
+
+# tmp
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'products',
+        'INCLUDE_SPELLING': True,
+    },
+}

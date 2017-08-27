@@ -2,7 +2,7 @@ from biohub.core.tasks.registry import tasks
 from biohub.core.tasks.exceptions import TaskInterruption
 from biohub.core.tasks.executors import get_executor
 from biohub.core.tasks.payload import TaskPayload
-from biohub.core.tasks.status import get_status
+from biohub.core.tasks.result import AsyncResult
 
 
 class TaskBase(type):
@@ -30,6 +30,8 @@ class Task(object, metaclass=TaskBase):
     Base class of a task.
     """
 
+    async_result_class = AsyncResult
+
     def __init__(self, arg):
         """
         `arg` should be a string or a `TaskPayload` instance. If it's a string,
@@ -50,12 +52,9 @@ class Task(object, metaclass=TaskBase):
                 "'arg' should be either a str or a TaskPayload, got '%r'."
                 % type(arg))
 
-    @property
-    def status(self):
-        """
-        Queries the state of this task.
-        """
-        return get_status(self.task_id)
+    @classmethod
+    def async_result(cls, task_id):
+        return cls.async_result_class(task_id)
 
     def run(self, *args, **kwargs):
         """

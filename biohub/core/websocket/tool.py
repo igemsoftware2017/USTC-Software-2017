@@ -30,7 +30,11 @@ def broadcast_user(handler_name, user, data):
     """
     To broadcast to specified user.
     """
-    return group_send(handler_name, 'user_%s' % user.id, data)
+    if isinstance(user, (int, str)):
+        id = str(user)
+    else:
+        id = user.id
+    return group_send(handler_name, 'user_%s' % id, data)
 
 
 def broadcast_users(handler_name, users, data):

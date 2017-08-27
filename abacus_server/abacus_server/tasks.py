@@ -37,8 +37,24 @@ def add_params(url, **params):
 @app.task(bind=True, base=AbortableTask)
 def run_abacus(self, input_file, callback, output_file, output_file_url):
 
+    # Install signal handler for SIGINT (a bit hacky, but it works)
+    # See: https://stackoverflow.com/questions/45650904/in-celery-how-to-abort-running-tasks-when-workers-are-about-to-shut-down
+    import celery.platforms
+
+    p = None
+
+    def int_handler(signum, frame):
+
+        if p is not None:
+            p.kill()
+            p.wait()
+
+    celery.platforms.signals['INT'] = int_handler
+
+    # Task begins
     task_id = self.request.id
     logger.info('Task %s started.' % task_id)
+    success = True
 
     # Execute ABACUS
     try:
@@ -53,9 +69,19 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
 
         if p.returncode != 0 or b'ENERGY' not in output:
             # ABACUS failed.
-            logger.error('Task %s failed.' % task_id)
+            error_msg = (
+                'Task %s failed.\ncode: %s.\nout: %s.\nerr: %s.'
+                % (
+                    task_id,
+                    p.returncode,
+                    output.decode(),
+                    err.decode()
+                )
+            )
+            logger.error(error_msg)
             callback = add_params(callback, task_id=task_id, error=True)
             default_storage.delete(output_file)
+            success = False
         else:
             callback = add_params(callback, task_id=task_id, output=output_file_url)
     finally:
@@ -68,4 +94,8 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
         logger.error('Fail to fetch %s.\nReason: %s' % (callback, e))
     finally:
         logger.info('Task %s finished.' % task_id)
-        return output_file_url
+
+        if success:
+            return output_file_url
+        else:
+            raise Exception(error_msg)

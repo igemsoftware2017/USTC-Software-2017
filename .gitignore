@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -79,11 +78,10 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# dotenv
+# Environments
 .env
-
-# virtualenv
 .venv
+env/
 venv/
 ENV/
 
@@ -101,9 +99,14 @@ ENV/
 .mypy_cache/
 
 /config.json
-/abacus_server/config.json
+config.json
+/.idea/
 
-# pycharm
-.idea/
-.cache/
-biohub/abacus/storage/
+# biocircuit
+biogate.py
+
+# editor configs
+.vscode/
+
+/abacus_server/config.json
+/experiences_list.txt

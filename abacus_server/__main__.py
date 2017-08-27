@@ -15,7 +15,7 @@ def main(arguments):
     print('Starting celery...')
     celery_process = subprocess.Popen(
         ['celery', '-E', '-A', 'abacus_server', 'worker',
-         '--concurrency', str(arguments.concurrency)],
+         '--concurrency', str(arguments.concurrency), '-l', 'info'],
         cwd=BASE_DIR, stdout=subprocess.PIPE
     )
 
@@ -42,6 +42,14 @@ if __name__ == '__main__':
         main(parser.parse_args())
     except KeyboardInterrupt:
         print('Terminating...')
+        if celery_process is not None:
+            celery_process.wait()
+            celery_process = None
+        print('Celery process terminated!')
+        if server_process is not None:
+            server_process.wait()
+            server_process = None
+        print('Server process terminated!')
     finally:
         if celery_process is not None and celery_process.returncode is None:
             celery_process.terminate()

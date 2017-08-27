@@ -1,5 +1,6 @@
 from rest_framework import viewsets, mixins, permissions
 from rest_framework import decorators
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ValidationError
 
@@ -11,7 +12,7 @@ from biohub.utils.rest import pagination, permissions as p
 from biohub.core.files.utils import store_file
 
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer,\
-    ChangePasswordSerializer
+    ChangePasswordSerializer, PasswordResetRequestSerializer, PasswordResetPerformSerializer
 from .models import User
 
 
@@ -69,6 +70,23 @@ def upload_avatar(request):
     request.user.update_avatar(url)
 
     return Response(url)
+
+
+class PasswordResetView(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        serializer = PasswordResetRequestSerializer(data=request.GET)
+
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.save())
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = PasswordResetPerformSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.save())
 
 
 class UserViewSet(
