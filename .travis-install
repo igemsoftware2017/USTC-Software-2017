@@ -13,6 +13,7 @@ if [ $? -ne 0 ]; then
 fi
 
 pip install -r requirements/dev.txt
+pip install -r requirements/abacus-server.txt
 
 cat > config.json << EOF
 {
@@ -29,7 +30,7 @@ cat > config.json << EOF
             "MIRROR": null
         }
     },
-    "PLUGINS": [],
+    "PLUGINS": ["biohub.abacus"],
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "/tmp/biohub",
     "REDIS_URI": "redis://localhost:6379"
@@ -46,3 +47,24 @@ mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
 biohub/manage.py migrate
 mysql -uroot biohub_new < tmp/biobricks.sql
 biohub/manage.py update_index
+
+cat > biohub/abacus/config.json << EOF2
+{
+    "ABACUS_JAR_PATH": "$PWD/tests/abacus/FakeAbacus/bin/FakeAbacus.jar",
+    "ABACUS_DATABASE_PATH": "$PWD/config.json",
+    "ABACUS_REMOTE_SERVER": "http://localhost:46135/"
+}
+EOF2
+
+cat > abacus_server/config.json << EOF3
+{
+    "ABACUS_JAR_PATH": "$PWD/tests/abacus/FakeAbacus/bin/FakeAbacus.jar",
+    "REDIS_URI": "redis://localhost:6379",
+    "ABACUS_DATABASE_PATH": "$PWD/config.json",
+    "STORAGE_ROOT": "/tmp/abacus_server/"
+}
+EOF3
+
+nohup python -m abacus_server --port 46135 &
+sleep 3
+cat nohup.out

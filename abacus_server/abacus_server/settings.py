@@ -3,15 +3,13 @@ import json
 import subprocess
 
 # Make sure java is available
-devnull = open(os.devnull, 'wb')
-p = subprocess.Popen(['java', '-version'], stdout=devnull, stderr=devnull)
+p = subprocess.Popen(['java', '-version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 p.communicate()
-devnull.close()
 
 if p.returncode != 0:
     raise RuntimeError('Cannot access command `java`, make sure it\'s properly installed.')
 else:
-    del p, subprocess, devnull
+    del p, subprocess
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

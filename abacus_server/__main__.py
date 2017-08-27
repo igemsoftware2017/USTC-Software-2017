@@ -15,7 +15,7 @@ def main(arguments):
     print('Starting celery...')
     celery_process = subprocess.Popen(
         ['celery', '-E', '-A', 'abacus_server', 'worker',
-         '--concurrency', str(arguments.concurrency)],
+         '--concurrency', str(arguments.concurrency), '-l', 'info'],
         cwd=BASE_DIR, stdout=subprocess.PIPE
     )
 

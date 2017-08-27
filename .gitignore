@@ -99,6 +99,7 @@ ENV/
 .mypy_cache/
 
 /config.json
+config.json
 /.idea/
 
 # biocircuit

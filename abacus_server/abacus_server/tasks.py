@@ -54,6 +54,7 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
     # Task begins
     task_id = self.request.id
     logger.info('Task %s started.' % task_id)
+    success = True
 
     # Execute ABACUS
     try:
@@ -68,9 +69,19 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
 
         if p.returncode != 0 or b'ENERGY' not in output:
             # ABACUS failed.
-            logger.error('Task %s failed.' % task_id)
+            error_msg = (
+                'Task %s failed.\ncode: %s.\nout: %s.\nerr: %s.'
+                % (
+                    task_id,
+                    p.returncode,
+                    output.decode(),
+                    err.decode()
+                )
+            )
+            logger.error(error_msg)
             callback = add_params(callback, task_id=task_id, error=True)
             default_storage.delete(output_file)
+            success = False
         else:
             callback = add_params(callback, task_id=task_id, output=output_file_url)
     finally:
@@ -83,4 +94,8 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
         logger.error('Fail to fetch %s.\nReason: %s' % (callback, e))
     finally:
         logger.info('Task %s finished.' % task_id)
-        return output_file_url
+
+        if success:
+            return output_file_url
+        else:
+            raise Exception(error_msg)

@@ -1,8 +1,5 @@
 import enum
 
-from biohub.utils.detect import features
-from biohub.core.tasks.storage import storage
-
 
 class TaskStatus(enum.Enum):
 
@@ -10,35 +7,12 @@ class TaskStatus(enum.Enum):
     PENDING = 'PENDING'
     RUNNING = 'RUNNING'
     TIMEOUT = 'TIMEOUT'
-    DONE = 'DONE'
+    SUCCESS = 'SUCCESS'
+    ERROR = 'ERROR'
+
+    @property
+    def is_ready(self):
+        return self in READY_STATUSES
 
 
-def make_task_status_key(task_id):
-    return task_id + 'status'
-
-
-def set_status(task_id, status):
-
-    status = TaskStatus(status)
-    key = make_task_status_key(task_id)
-
-    if status == TaskStatus.GONE:
-        storage.delete(key)
-    else:
-
-        if status in (TaskStatus.TIMEOUT, TaskStatus.DONE):
-            timeout = 1.5 if features.testing else 2 * 60 * 60
-        else:
-            timeout = None
-        storage.set(key, status, timeout=timeout)
-
-
-def get_status(task_id):
-
-    key = make_task_status_key(task_id)
-    status = storage.get(key)
-
-    if status is None:
-        return TaskStatus.GONE
-    else:
-        return TaskStatus(status)
+READY_STATUSES = (TaskStatus.SUCCESS, TaskStatus.TIMEOUT, TaskStatus.ERROR)

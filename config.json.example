@@ -9,7 +9,9 @@
             "NAME": ""
         }
     },
-    "PLUGINS": [],
+    "PLUGINS": [
+        "biohub.abacus"
+    ],
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "",
     "REDIS_URI": "",

@@ -6,8 +6,8 @@ from biohub.core.tasks.storage import storage
 
 class MyTask(Task):
 
-    def run(self, a, b, key):
-        storage.set(key, a + b)
+    def run(self, a, b):
+        return a + b
 
 
 class LongTimeTask(Task):
@@ -21,3 +21,9 @@ class LongTimeTask(Task):
 
     def before_interrupt(self):
         storage.set(self._key, 'shutdowned')
+
+
+class ErrorTask(Task):
+
+    def run(self):
+        raise KeyError('123')

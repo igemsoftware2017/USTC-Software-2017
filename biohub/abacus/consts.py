@@ -1,0 +1,2 @@
+LOCAL = 'local'
+REMOTE = 'remote'
