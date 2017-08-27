@@ -110,7 +110,7 @@ class BrickSpider:
         if div.table.tr.td.text == 'None':
             brick.parameters = ''
         else:
-            print(div.table.tr.td.text)
+            # print(div.table.tr.td.text)
             for entry in div.table.find_all('tr'):
                 parameters.append(
                     [element.text for element in entry.find_all('td')])

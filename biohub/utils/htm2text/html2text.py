@@ -293,7 +293,7 @@ class HTML2Text(HTMLParser.HTMLParser):
 
         self.outtext = self.outtext.join(self.outtextlist)
         if self.unicode_snob:
-            nbsp = unichr(name2cp('nbsp'))
+            nbsp = chr(name2cp('nbsp'))
         else:
             nbsp = u' '
         self.outtext = self.outtext.replace(u'&nbsp_place_holder;', nbsp)
@@ -656,7 +656,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                 if not self.list:
                     bq += "    "
                 # else: list content is already partially indented
-                for i in xrange(len(self.list)):
+                for i in range(len(self.list)):
                     bq += "    "
                 data = data.replace("\n", "\n" + bq)
 

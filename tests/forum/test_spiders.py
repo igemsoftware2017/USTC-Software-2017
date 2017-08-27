@@ -54,6 +54,7 @@ class BrickSpiderTests(TestCase):
         ''' test a page with no sequence feature panel'''
         spiders.BrickSpider().fill_from_page(brick_name='B1003')
         brick = Brick.objects.get(name='B1003')
+        spiders.BrickSpider().fill_from_page(brick_name='J23106')
         pass
 
 
