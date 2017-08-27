@@ -81,14 +81,6 @@ TEMPLATES = [
             'autoescape': False,
             'builtins': ['biohub.notices.template.filters']
         }
-    },
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'NAME': 'abacus',
-        'OPTIONS': {
-            'autoescape': False,
-            'builtins': ['biohub.abacus.template.filters']
-        }
     }
 ]
 
