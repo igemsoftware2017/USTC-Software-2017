@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DIRNAME=`dirname $0`
+
+cd $DIRNAME/src
+javac ./**/*.java ./*.java
+
+if [ $? -eq 0 ]; then
+    jar cevf FakeAbacus ../bin/FakeAbacus.jar ./**/*.class ./*.class
+else
+    exit 1
+fi
+
+find . -name '*.class' -delete

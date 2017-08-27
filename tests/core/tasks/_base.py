@@ -1,7 +1,7 @@
 from unittest import skipIf
 from weakref import WeakValueDictionary
 
-from django.test import TestCase
+from rest_framework.test import APITestCase
 
 from channels.test import ChannelLiveServerTestCase
 
@@ -9,7 +9,7 @@ from biohub.utils.detect import features
 
 
 @skipIf(not features.redis, 'Task tests require redis.')
-class TaskTestCase(TestCase):
+class TaskTestCase(APITestCase):
 
     def setUp(self):
         from biohub.core.tasks import tasks, storage
@@ -30,5 +30,5 @@ class TaskTestCase(TestCase):
         storage.clear_keys()
 
 
-class TaskLiveTestCase(TaskTestCase, ChannelLiveServerTestCase):
+class TaskLiveTestCase(ChannelLiveServerTestCase, TaskTestCase):
     pass

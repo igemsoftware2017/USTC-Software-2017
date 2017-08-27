@@ -1,20 +1,19 @@
-from django.utils.crypto import get_random_string
+from uuid import uuid4
 
 from channels import Channel
 
 from biohub.core.conf import settings as biohub_settings
 from biohub.core.tasks.registry import tasks
 from biohub.core.tasks.payload import TaskPayload
-from biohub.core.tasks.storage import storage
 from biohub.core.tasks.data_structures import Queue, Set
-from biohub.core.tasks.status import set_status
+from biohub.core.tasks.result import AsyncResult
 
 
 def get_task_id(task_name):
     """
     Generates a random and unique id for a specific task instance.
     """
-    return '{}-{}'.format(task_name, get_random_string())
+    return str(uuid4())
 
 
 class Broker(object):
@@ -47,7 +46,7 @@ class Broker(object):
         available to run.
         """
         self._pending_queue.enqueue(task_id)
-        set_status(task_id, 'PENDING')
+        AsyncResult(task_id).pend()
         self._dequeue_task()
 
     def _dequeue_task(self):
@@ -67,7 +66,7 @@ class Broker(object):
         set and sending the id to a channel worker.
         """
         self._running_set.add(task_id)
-        set_status(task_id, 'RUNNING')
+        AsyncResult(task_id).run()
 
         Channel('task').send({'task_id': task_id})
 
@@ -80,7 +79,6 @@ class Broker(object):
         should be set by the caller since there're multiple reasons for a
         task's finishing (timeout, success or error, etc.).
         """
-        storage.delete(task_id)
         self._running_set.remove(task_id)
         self._pending_queue.rdel(task_id)
 
@@ -130,7 +128,7 @@ class Broker(object):
             task_class = task
         else:
             raise TypeError(
-                "`task` should either be a str or a subclass of Task ,"
+                "`task` should either be a str or a subclass of Task,"
                 " got '%s'."
                 % type(task))
 
@@ -141,7 +139,7 @@ class Broker(object):
 
         self._enqueue_task(task_id)
 
-        return task_class(task_id)
+        return task_class.async_result(task_id)
 
     def run_task(self, task_id):
         """

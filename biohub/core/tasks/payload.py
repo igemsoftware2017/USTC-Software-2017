@@ -1,5 +1,5 @@
 from biohub.core.tasks.exceptions import TaskInstanceNotExists
-from biohub.core.tasks.storage import storage
+from biohub.core.tasks.result import AsyncResult
 
 
 class TaskPayload(object):
@@ -9,7 +9,7 @@ class TaskPayload(object):
     """
 
     __slots__ = ['task_name', 'task_id', 'args', 'kwargs', 'options',
-                 'packed_data']
+                 'packed_data', '_async_result']
 
     def __init__(self, task_name, task_id, args, kwargs, options):
         self.task_name = task_name
@@ -18,12 +18,13 @@ class TaskPayload(object):
         self.kwargs = kwargs or {}
         self.options = options
         self.packed_data = (task_name, task_id, args, kwargs, options)
+        self._async_result = AsyncResult(task_id)
 
     def store(self):
         """
         To store the information into redis.
         """
-        storage.set(self.task_id, self.packed_data)
+        self._async_result._set_payload(self.packed_data)
 
     @classmethod
     def from_packed_data(cls, packed_data):
@@ -37,7 +38,7 @@ class TaskPayload(object):
         """
         A factory function to fetch task payload through a given task_id.
         """
-        packed_data = storage.get(task_id)
+        packed_data = AsyncResult(task_id).payload
 
         if packed_data is None:
             raise TaskInstanceNotExists(task_id)

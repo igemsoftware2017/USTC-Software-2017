@@ -82,6 +82,6 @@ class QueryView(View):
             'status': result_object.state
         }
         if result_object.successful():
-            response['result'] = result_object.result
+            response['output'] = result_object.result
 
         return JsonResponse(response)

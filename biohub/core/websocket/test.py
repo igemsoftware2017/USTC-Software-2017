@@ -17,6 +17,12 @@ class BiohubWSClient(WSClient):
     def disconnect(self, path='/ws/'):
         return self.send_and_consume('websocket.disconnect', path=path)
 
+    @classmethod
+    def from_user(cls, user):
+        instance = cls()
+        instance.force_login(user)
+        return instance
+
 
 class WSTestCase(ChannelTestCase):
     """
