@@ -1,23 +1,20 @@
-from django.core.signing import Signer, BadSignature
+from functools import partial
+
+from django.core.signing import dumps
 from django.utils.crypto import get_random_string
 
-signer = Signer(salt='Salt for abacus.')
+sign = partial(dumps, salt='Salt for abacus.', compress=True)
 
 
 def signature():
     """
     Generates a random signature.
     """
-    return signer.sign(get_random_string())
+    return sign(get_random_string())
 
 
-def validate_signature(signature):
+def validate_signature(async_result, signature):
     """
     Validates if the signature is correct.
     """
-    try:
-        signer.unsign(signature)
-    except BadSignature:
-        return False
-    else:
-        return True
+    return async_result.signature == signature

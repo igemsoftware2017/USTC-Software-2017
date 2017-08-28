@@ -3,7 +3,9 @@ from django.urls import reverse
 
 from biohub.utils.url import add_params
 from .conf import settings
-from .security import signature
+from . import security
+
+__all__ = ['start', 'query']
 
 
 def _ensure_success(response):
@@ -16,14 +18,17 @@ def _ensure_success(response):
 
 def start(request):
     """
-    Uploads the file to remote server and returns the task id.
+    Uploads the file to remote server.
+
+    Returns a tuple (task_id, signature).
     """
+    signature = security.signature()
     response = requests.post(
         settings.ABACUS_REMOTE_SERVER,
         params={
             'callback': add_params(
                 request.build_absolute_uri(reverse('api:abacus:remote-callback')),
-                s=signature()
+                s=signature
             ),
         },
         files={
@@ -31,7 +36,7 @@ def start(request):
         }
     )
     _ensure_success(response)
-    return response.json()['task_id']
+    return response.json()['task_id'], signature
 
 
 def query(task_id):

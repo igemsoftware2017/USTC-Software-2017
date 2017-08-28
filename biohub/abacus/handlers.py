@@ -55,7 +55,9 @@ class RemoteHandler(BaseHandler):
     ident = consts.REMOTE
 
     def _perform_start_task(self):
-        return remote.start(self._request)
+        task_id, signature = remote.start(self._request)
+        AbacusAsyncResult(task_id)._set_signature(signature)
+        return task_id
 
 
 def get_handler_class():

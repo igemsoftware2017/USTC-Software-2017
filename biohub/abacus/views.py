@@ -30,10 +30,11 @@ class CallbackView(views.APIView):
         raise ValidationError(detail)
 
     def get(self, request):
-        if not validate_signature(request.GET.get('s', '')):
+        async_result = AbacusAsyncResult(request.GET.get('task_id', ''))
+
+        if not validate_signature(async_result, request.GET.get('s', '')):
             self.fail('Bad signature.')
 
-        async_result = AbacusAsyncResult(request.GET.get('task_id', ''))
         if async_result._get_field('status') is None:
             self.fail('Task not exists.')
 

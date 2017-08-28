@@ -14,7 +14,7 @@ remote_status_mapping = dict(
 
 class AbacusAsyncResult(AsyncResult):
 
-    properties = ['ident', 'user']
+    properties = ['ident', 'user', 'signature']
 
     def _after_ready(self, status, result):
         """
