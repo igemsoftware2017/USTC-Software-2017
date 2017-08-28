@@ -27,7 +27,7 @@ class Executor(object):
         To execute the task concurrently.
         """
         loop = asyncio.new_event_loop()
-        executor = self.executor_class()
+        executor = self.executor_class(max_workers=1)
         loop.set_default_executor(executor)
 
         try:
