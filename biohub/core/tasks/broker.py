@@ -1,3 +1,4 @@
+import threading
 from uuid import uuid4
 
 from channels import Channel
@@ -141,9 +142,9 @@ class Broker(object):
 
         return task_class.async_result(task_id)
 
-    def run_task(self, task_id):
+    def _run_task(self, task_id):
         """
-        To actually run a task in current process.
+        To actually run a task.
 
         This function is called by channel handlers and not suggested to be
         called manually.
@@ -156,6 +157,11 @@ class Broker(object):
         finally:
             self._task_done(task_class, task_id)
 
+    def run_task(self, task_id):
+        """
+        Starts a supervisor thread to execute _run_task.
+        """
+        threading.Thread(target=self._run_task, args=(task_id,)).start()
 
 broker = Broker('default')
 
