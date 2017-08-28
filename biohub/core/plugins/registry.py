@@ -449,7 +449,7 @@ class PluginManager(object):
 
             if p.returncode != 0:
                 raise exceptions.DatabaseError(
-                    'Migration processreturns non-zero exit code.')
+                    'Migration process returns non-zero exit code.')
         else:
             call_command(
                 'migrateplugin', plugin_name,
