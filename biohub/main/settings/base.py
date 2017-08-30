@@ -147,7 +147,7 @@ CHANNEL_LAYERS = {
 }
 
 EMAIL_USE_SSL = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBakend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_TIMEOUT = 10
 
 # Extra configurations
