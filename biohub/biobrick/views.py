@@ -49,7 +49,7 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
 
             if 'highlight' in querydict:
                 queryset = queryset.highlight(
-                    pre_tags=['<class="highlight">'], post_tags=['</class>']
+                    pre_tags=['<div class="highlight">'], post_tags=['</div>']
                 )
 
         else:

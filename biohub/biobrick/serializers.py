@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from haystack.models import SearchResult
+from haystack.utils.highlighting import Highlighter
 
 # Create your serializers here.
 from biohub.utils.rest.serializers import bind_model, ModelSerializer
@@ -29,8 +30,12 @@ class BiobrickSerializer(ModelSerializer):
     def to_representation(self, obj):
         ret = super(BiobrickSerializer, self).to_representation(obj)
         if isinstance(obj, SearchResult):
-            if obj.highlighted is not None:
+            querydict = self.context['request'].query_params
+            if 'highlight' in querydict:
                 ret['short_desc'] = obj.highlighted[0]
+                highlighter = Highlighter(querydict.get('q', ''),
+                                          html_tag='div', css_class='highlight')
+                ret['part_name'] = highlighter.highlight(ret['part_name'])
             else:
                 ret['short_desc'] = obj.text
         return ret
