@@ -45,7 +45,6 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
 
             suggestion = queryset.spelling_suggestion(q)
             if suggestion != q.lower():
-                context['hint'] = 'You may have misspell the keyword.'
                 context['suggestion'] = suggestion
 
             if 'highlight' in querydict:
@@ -55,7 +54,6 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
 
         else:
             queryset = EmptySearchQuerySet()
-            context['hint'] = 'You have specified no query.'
 
         page = self.paginate_queryset(queryset)
         if page is not None:
