@@ -29,6 +29,7 @@ class BiobrickSerializer(ModelSerializer):
 
     def to_representation(self, obj):
         ret = super(BiobrickSerializer, self).to_representation(obj)
+
         if isinstance(obj, SearchResult):
 
             querydict = self.context['request'].query_params
