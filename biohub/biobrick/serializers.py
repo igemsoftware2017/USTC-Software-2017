@@ -9,14 +9,11 @@ from .models import Biobrick
 @bind_model(Biobrick)
 class BiobrickSerializer(ModelSerializer):
     urlset = serializers.SerializerMethodField()
-    highlighted = serializers.ListField(
-        child=serializers.CharField(), required=False
-    )
 
     class Meta:
         model = Biobrick
         fields = ('part_name', 'sequence', 'short_desc', 'description', 'uses',
-                  'urlset', 'highlighted')
+                  'urlset')
         read_only_fields = ['__all__']
 
     def get_urlset(self, obj):
@@ -32,5 +29,8 @@ class BiobrickSerializer(ModelSerializer):
     def to_representation(self, obj):
         ret = super(BiobrickSerializer, self).to_representation(obj)
         if isinstance(obj, SearchResult):
-            ret['short_desc'] = obj.text
+            if obj.highlighted is not None:
+                ret['short_desc'] = obj.highlighted[0]
+            else:
+                ret['short_desc'] = obj.text
         return ret

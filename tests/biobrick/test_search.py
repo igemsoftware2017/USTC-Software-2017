@@ -21,15 +21,15 @@ class TestSearch(APITestCase):
         self.assertGreaterEqual(len(resp.data['results']), 1)
         self.assertIn('promoter', resp.data['results'][0]['short_desc'])
 
-    def test_q_name(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'J63006'})
-        self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertEqual(resp.data['results'][0]['part_name'], 'BBa_J63006')
-
     def test_highlight(self):
         resp = self.client.get(reverse('api:biobrick:biobrick-search'),
                                {'q': 'promoter', 'highlight': None})
         self.assertGreaterEqual(len(resp.data['results']), 1)
         self.assertIn('<class="highlight">promoter</class>',
-                      resp.data['results'][0]['highlighted'][0])
+                      resp.data['results'][0]['short_desc'])
+
+    def test_q_name(self):
+        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
+                               {'q': 'J63006'})
+        self.assertGreaterEqual(len(resp.data['results']), 1)
+        self.assertEqual(resp.data['results'][0]['part_name'], 'BBa_J63006')
