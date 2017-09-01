@@ -12,5 +12,6 @@ class Test(SimpleTestCase):
         self.connection = mail.get_connection('django.core.mail.backends.smtp.EmailBackend')
 
     def test_send_real_mail(self):
-        m = mail.EmailMessage('title', 'body', to=['hsfzxjy@163.com'], connection=self.connection)
+        m = mail.EmailMessage('title', '<b>body</b>', to=['hsfzxjy@163.com'], connection=self.connection)
+        m.content_subtype = 'html'
         m.send()
