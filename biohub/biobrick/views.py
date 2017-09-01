@@ -36,10 +36,10 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
         context = OrderedDict()
 
         if querydict.get('advanced') is not None:
-            query1 = SQ(part_name__contains=querydict['name'])\
-                if querydict.get('name') else None
-            query2 = SQ(short_desc__contains=querydict['desc'])\
-                if querydict.get('desc') else None
+            query1 = SQ(part_name__contains=querydict['part_name'])\
+                if querydict.get('part_name') else None
+            query2 = SQ(short_desc__contains=querydict['short_desc'])\
+                if querydict.get('short_desc') else None
 
             if query1 is not None and query2 is not None:
                 if querydict.get('and') is not None:
