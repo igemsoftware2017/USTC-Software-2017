@@ -32,7 +32,7 @@ class TestSearch(APITestCase):
         resp = self.client.get(reverse('api:biobrick:biobrick-search'),
                                {'q': 'J63006'})
         self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertEqual(resp.data['results'][0]['part_name'], 'BBa_J63006')
+        self.assertIsNone(resp.data['results'][0]['part_name'], ('BBa_J63006', 'BBa_S05148'))
 
     def test_highlight_name(self):
         resp = self.client.get(reverse('api:biobrick:biobrick-search'),
