@@ -29,8 +29,8 @@ class BiobrickSerializer(ModelSerializer):
 
         return urlset
 
-    def get_representation(self, instance):
-        ret = super(BiobrickSerializer, self).get_representation(instance)
-        if isinstance(instance, SearchResult):
-            self.part_name = instance.text
+    def to_representation(self, obj):
+        ret = super(BiobrickSerializer, self).to_representation(obj)
+        if isinstance(obj, SearchResult):
+            ret['short_desc'] = obj.text
         return ret
