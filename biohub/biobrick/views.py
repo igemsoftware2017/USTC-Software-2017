@@ -66,3 +66,22 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
             response = Response(serializer.data)
         response.data.update(context)
         return response
+
+    def paginate_queryset(self, queryset):
+        if self.paginator is None:
+            return None
+        else:
+            return self.paginator.paginate_queryset(queryset, self.request, view=self)
+
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+                self._paginator.page_size = 20
+                self._paginator.max_page_size = 50
+                self._paginator.page_size_query_param = 'pagesize'
+
+        return self._paginator
