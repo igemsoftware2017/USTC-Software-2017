@@ -2,34 +2,24 @@ from django.core.urlresolvers import reverse
 
 from rest_framework.test import APITestCase
 
-from biohub.biobrick.models import Biobrick
-
-# from biohub.biobrick.models import Biobrick
-
 
 class TestRetrieve(APITestCase):
     # To test the list rest-api
 
-    def setUp(self):
-        self.bbk = Biobrick.objects.create(
-            part_name='asga',
-            sequence='asdfahg',
-            short_desc='sdgaga'
-        )
-        self.bbk_dict = {
-            'part_name': 'asga',
-            'sequence': 'asdfahg',
-            'short_desc': 'sdgaga'
-        }
-
     def test_retrieve(self):
+        bbk7284 = {
+            'part_name': 'BBa_J52025',
+            'uses': 0,
+            "short_desc": "rLUC"
+        }
         resp = self.client.get(
-            reverse('api:biobrick:biobrick-detail', args=(self.bbk.pk,)))
+            reverse('api:biobrick:biobrick-detail', args=(7284,))
+        )
         self.assertEqual(resp.status_code, 200)
-        self.assertDictContainsSubset(self.bbk_dict, resp.data)
+        self.assertDictContainsSubset(bbk7284, resp.data)
 
     def test_no_result(self):
         resp = self.client.get(
-            reverse('api:biobrick:biobrick-detail', args=(self.bbk.pk + 1,)))
+            reverse('api:biobrick:biobrick-detail', args=(100,)))
         self.assertEqual(resp.status_code, 404)
         self.assertDictContainsSubset({'detail': 'Not found.'}, resp.data)

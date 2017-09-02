@@ -68,3 +68,7 @@ EOF3
 nohup python -m abacus_server --port 46135 &
 sleep 3
 cat nohup.out
+
+# For testing
+mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS test_biohub_new;'
+mysql -uroot test_biohub_new < tmp/biobricks.sql

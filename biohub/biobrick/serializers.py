@@ -62,6 +62,12 @@ class BiobrickSerializer(ModelSerializer):
                 ])
             ret.update(self._cached_dict)
 
+            # To get short_desc, which is stored as text in the index
+            if obj.highlighted is not None and len(obj.highlighted) > 0:
+                ret['short_desc'] = obj.highlighted[0]
+            else:
+                ret['short_desc'] = obj.text
+
             # To set highlight
             querydict = self.context['request'].query_params
             if 'highlight' in querydict:
@@ -69,7 +75,5 @@ class BiobrickSerializer(ModelSerializer):
                                                 html_tag='div',
                                                 css_class='highlight')
                 ret['part_name'] = highlighter.highlight(ret['part_name'])
-            if obj.highlighted is not None and len(obj.highlighted) > 0:
-                ret['short_desc'] = obj.highlighted[0]
 
         return ret

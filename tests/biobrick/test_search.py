@@ -17,15 +17,15 @@ class TestSearch(APITestCase):
 
     def test_q_desc(self):
         resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'promoter'})
+                               {'q': 'RBS'})
         self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertIn('promoter', resp.data['results'][0]['short_desc'])
+        self.assertIn('RBS', resp.data['results'][0]['short_desc'])
 
     def test_highlight_desc(self):
         resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'promoter', 'highlight': None})
+                               {'q': 'RBS', 'highlight': None})
         self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertIn('<div class="highlight">promoter</div>',
+        self.assertIn('<div class="highlight">RBS</div>',
                       resp.data['results'][0]['short_desc'])
 
     def test_q_name(self):
