@@ -1,11 +1,9 @@
-import os
-
-from unittest import skipIf
+from biohub.utils.test import skip_if_no_environ
 from django.test import SimpleTestCase
 from django.core import mail
 
 
-@skipIf(not os.environ.get('TEST_REAL_EMAIL', 0), '')
+@skip_if_no_environ('TEST_REAL_EMAIL')
 class Test(SimpleTestCase):
 
     def setUp(self):

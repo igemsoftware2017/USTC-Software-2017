@@ -1,5 +1,6 @@
 import time
 import requests
+from biohub.utils.test import skip_if_no_environ
 
 from rest_framework.test import APILiveServerTestCase
 from biohub.core.websocket.test import BiohubWSClient
@@ -7,6 +8,7 @@ from channels.test.base import ChannelTestCaseMixin
 from biohub.abacus.conf import settings
 
 
+@skip_if_no_environ('TEST_ABACUS')
 class BaseTest(APILiveServerTestCase):
 
     def setUp(self):

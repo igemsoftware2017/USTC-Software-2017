@@ -1,13 +1,17 @@
 #!/bin/bash
 
+# Install a specific version of elasticsearch
 wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.deb -O es.deb
 sudo dpkg -i --force-confnew es.deb
 sudo service elasticsearch start
 
+# Compile espresso
+# Since python3.6 on travis server has no .lib file, python3.4, which is the default
+# version, should be used for compilation
 python3.4 biohub/biocircuit/compile-espresso.py
 
+# Check if compilation succeeded.abort if not
 python -c "import os;os.chdir('biohub/biocircuit');from espresso import espresso"
-
 if [ $? -ne 0 ]; then
     exit 1
 fi
@@ -37,16 +41,26 @@ cat > config.json << EOF
 }
 EOF
 
+# Ensure biobricks.sql is ready
 if [ ! -f tmp/biobricks.sql ]; then
     mkdir tmp
     wget http://parts.igem.org/partsdb/download.cgi?type=parts_sql -O tmp/biobricks.sql.gz
     gunzip tmp/biobricks.sql.gz
 fi
 
+# Database preparation
+
+# The line below is necessary as test command needs production database to be existed
 mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
+
+# The line below is a hacky way to create and preserve test database
+biohub/manage.py test test_send_real_mail.py
+mysql -uroot test_biohub_new < tmp/biobricks.sql
+
 biohub/manage.py migrate
 mysql -uroot biohub_new < tmp/biobricks.sql
 biohub/manage.py update_index
+
 
 cat > biohub/abacus/config.json << EOF2
 {
@@ -65,10 +79,7 @@ cat > abacus_server/config.json << EOF3
 }
 EOF3
 
+# Start up abacus remote server
 nohup python -m abacus_server --port 46135 &
 sleep 3
 cat nohup.out
-
-# For testing
-mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS test_biohub_new;'
-mysql -uroot test_biohub_new < tmp/biobricks.sql
