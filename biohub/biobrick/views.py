@@ -43,6 +43,8 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
             if (querydict.get('order') in order_choices):
                 queryset = queryset.order_by(querydict['order'])
 
+            queryset = queryset.load_all()
+
             suggestion = queryset.spelling_suggestion(q)
             if suggestion != q.lower():
                 context['suggestion'] = suggestion

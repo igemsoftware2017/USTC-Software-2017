@@ -8,8 +8,6 @@ class BiobrickIndex(indexes.SearchIndex, indexes.Indexable):
                              document=True, indexed=True)
     part_name = indexes.CharField(model_attr='part_name', null=True,
                                   indexed=True, boost=1.25)
-    description = indexes.CharField(model_attr='description', null=True)
-    sequence = indexes.CharField(model_attr='sequence', null=True)
     uses = indexes.IntegerField(model_attr='uses', null=True)
 
     def get_model(self):

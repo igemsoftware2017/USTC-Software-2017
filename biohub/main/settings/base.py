@@ -198,7 +198,7 @@ if biohub_settings.EMAIL:
 
 del biohub_settings
 
-# tmp
+# For searching engine in bbk manager
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
