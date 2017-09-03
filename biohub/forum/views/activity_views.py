@@ -14,9 +14,13 @@ class ActivityViewSet(viewsets.GenericViewSet,
 
     def get_queryset(self):
         user = self.request.query_params.get('user', None)
+        type = self.request.query_params.get('type', None)
+
+        query_set = Activity.objects.all()
         if user is not None:
-            query_set = Activity.objects.filter(
+            query_set = query_set.filter(
                 user=User.objects.get(username=user))
-        else:
-            query_set = Activity.objects.all()
+        if type is not None:
+            query_set = query_set.filter(type__in=type.split(','))
+
         return query_set.order_by('-acttime')

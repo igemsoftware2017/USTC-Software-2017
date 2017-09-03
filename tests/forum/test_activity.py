@@ -93,3 +93,26 @@ class ActivityParamTest(APITestCase):
         data = json.loads(response.content)
         # print(response.content)
         self.assertEqual(len(data['results']), 3)
+
+    def test_fetching_specific_type_activities(self):
+        client = APIClient()
+
+        brick = Brick.objects.create(name='emmm')
+        Experience.objects.create(brick=brick, author=self.user)
+        self.assertIs(brick.watch(self.user), True)
+        Experience.objects.create(brick=brick, author=self.another_user)
+        self.assertIs(brick.watch(self.another_user), True)
+        self.assertIs(brick.rate(2.3, self.user), True)
+
+        response = client.get('/api/forum/activities/?user=abc&type=Rating')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['type'], 'Rating')
+
+        response = client.get('/api/forum/activities/?user=abc&type=Rating,Watch')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 2)
+        self.assertEqual(
+            set(x['type'] for x in response.data['results']),
+            {'Rating', 'Watch'}
+        )
