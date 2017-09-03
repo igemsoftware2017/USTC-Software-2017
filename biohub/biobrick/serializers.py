@@ -48,6 +48,7 @@ class BiobrickSerializer(ModelSerializer):
 
         cached_dict = {
             'description': _getattr('description'),
+            'sequence': _getattr('sequence'),
             'ac': json.loads(_getattr('ac') or 'null'),
             'ruler': json.loads(_getattr('ruler') or 'null')
         }
