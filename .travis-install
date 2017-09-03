@@ -63,6 +63,7 @@ fi
 
 biohub/manage.py migrate
 mysql -uroot biohub_new < tmp/biobricks.sql
+biohub/biobrick/bin/fixtures.py biohub_new -f -c 1000
 biohub/manage.py update_index
 
 
