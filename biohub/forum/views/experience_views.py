@@ -74,7 +74,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             page = self.paginate_queryset(self.get_queryset())
             serializer = ExperienceSerializer(page, fields=(
                 'api_url', 'id', 'title', 'author_name', 'author', 'brick'),
-                                              many=True, context={
+                many=True, context={
                 'request': None
             })
             return self.get_paginated_response(serializer.data)

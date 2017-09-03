@@ -115,7 +115,6 @@ class BrickViewSet(mixins.ListModelMixin,
             queryset = User.objects.get(
                 username=username).bricks_watched.all().order_by('name', 'id')
             short = self.request.query_params.get('short', None)
-            pagination_class = self.pagination_class
             page = self.paginate_queryset(queryset)
             if short is not None and short.lower() == 'true':
                 serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
@@ -165,7 +164,6 @@ class BrickViewSet(mixins.ListModelMixin,
     def list(self, request, *args, **kwargs):
         short = self.request.query_params.get('short', None)
         if short is not None and short.lower() == 'true':
-            pagination_class = self.pagination_class
             page = self.paginate_queryset(self.get_queryset())
             serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
                 'request': None

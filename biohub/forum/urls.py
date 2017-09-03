@@ -14,7 +14,7 @@ router.register(r'articles', ArticleViewSet, base_name='article')
 router.register(r'bricks', BrickViewSet, base_name='brick')
 router.register(r'experiences', ExperienceViewSet, base_name='experience')
 router.register(r'seq_features', SeqFeatureViewSet, base_name='seq_feature')
-router.register(r'activities',ActivityViewSet, base_name='activity')
+router.register(r'activities', ActivityViewSet, base_name='activity')
 
 register_api(r'^forum/', [
     url(r'^experiences/(?P<experience_id>\d+)/posts/$', PostsOfExperiencesListView.as_view()),

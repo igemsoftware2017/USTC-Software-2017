@@ -1,1 +1,1 @@
-from . import db, warnings, redis  # noqa
+from . import db, warnings, redis, py2  # noqa

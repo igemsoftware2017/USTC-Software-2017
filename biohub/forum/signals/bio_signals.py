@@ -15,6 +15,7 @@ def delete_article_attached_if_brick_is_deleted(instance, **kwargs):
 def delete_article_attached_if_experience_is_deleted(instance, **kwargs):
     instance.content.delete()
 
+
 forum_dispatcher = Dispatcher('Forum')
 
 

@@ -17,4 +17,4 @@ rating_brick_signal = Signal(providing_args=('rating_score', 'curr_score',
 up_voting_experience_signal = Signal(providing_args=('instance', 'user_up_voting',
                                                      'curr_up_vote_num'))
 
-watching_brick_signal = Signal(providing_args=('instance','user'))
+watching_brick_signal = Signal(providing_args=('instance', 'user'))

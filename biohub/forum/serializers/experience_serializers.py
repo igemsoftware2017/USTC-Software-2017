@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from biohub.utils.rest.serializers import bind_model,\
     ModelSerializer
-from ..models import Experience, Brick, Article
+from ..models import Experience, Brick
 from biohub.accounts.serializers import UserSerializer
 from ..serializers import ArticleSerializer
 

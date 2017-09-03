@@ -163,6 +163,7 @@ class Broker(object):
         """
         threading.Thread(target=self._run_task, args=(task_id,)).start()
 
+
 broker = Broker('default')
 
 apply_async = broker.apply_async

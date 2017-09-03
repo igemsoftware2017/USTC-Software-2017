@@ -6,7 +6,7 @@ class ActivityParam(models.Model):
     type = models.CharField(default='', max_length=20)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
-    expLink = models.CharField(default='',blank=True,max_length=100)
+    expLink = models.CharField(default='', blank=True, max_length=100)
     score = models.DecimalField(
         max_digits=2, decimal_places=1, default=0)  # eg: 3.7
     partName = models.CharField(default='', max_length=15)
