@@ -67,12 +67,6 @@ class BiobrickViewSet(viewsets.ReadOnlyModelViewSet):
         response.data.update(context)
         return response
 
-    def paginate_queryset(self, queryset):
-        if self.paginator is None:
-            return None
-        else:
-            return self.paginator.paginate_queryset(queryset, self.request, view=self)
-
     @property
     def paginator(self):
         if not hasattr(self, '_paginator'):
