@@ -8,7 +8,7 @@ from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from .models import Biobrick
 from .highlighter import SimpleHighlighter
 
-SEARCH_RESULT_TIMEOUT = None
+SEARCH_RESULT_TIMEOUT = 240
 
 
 def bbk_search_result_cache_key(pk):
