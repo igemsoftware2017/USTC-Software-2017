@@ -55,6 +55,8 @@ class Biobrick(models.Model):
     temp_3 = models.IntegerField(null=True, blank=True)
     temp4 = models.IntegerField(null=True, blank=True)
     rating = models.IntegerField(null=True, default=0)
+    ac = models.TextField(null=True)
+    ruler = models.TextField(null=True)
 
     class Meta:
         db_table = 'parts'
