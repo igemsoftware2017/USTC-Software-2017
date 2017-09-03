@@ -22,13 +22,20 @@ ac_re = re.compile(
 
 
 def _display_error(exc, abort=True):
+    """
+    Displays error message of `exc`.
+    If `abort` was set to `True`, the script will be aborted.
+    """
     print(exc.args[1])
     if abort:
         sys.exit(1)
 
 
 def _check_error(exc, detail):
-
+    """
+    Check if error code of `exc` equals to constant `pymysql.constants.ER.<detail>`.
+    If yes, displays error message and aborts the script.
+    """
     if exc.args[0] == getattr(pymysql.constants.ER, detail):
         _display_error(exc)
 
@@ -41,6 +48,11 @@ connection = None
 
 
 def make_connection(args):
+    """
+    Factory function to create and return a connection object.
+
+    `args` is the parsed result from main arguments parser.
+    """
 
     try:
         return pymysql.connect(
@@ -57,6 +69,9 @@ def make_connection(args):
 
 
 def prepare_table_structure():
+    """
+    The function is to make sure fields `ruler`, `ac` exist in table `parts`.
+    """
 
     with connection.cursor() as cursor:
         try:
@@ -78,10 +93,14 @@ def prepare_table_structure():
 
 
 def iterate_table(chunk, force):
+    """
+    The generator fetches and yields `chunk` rows at a time, until the result set exhausts.
+
+    If `force` was set to `True`, fields `ruler` and `ac` will not be fetched.
+    """
 
     SQL = """
-    SELECT `part_id`, `seq_edit_cache` {} FROM parts
-    ORDER BY `part_id`
+    SELECT `part_id`, `seq_edit_cache` {} FROM parts ORDER BY `part_id`
     """.format(', `ruler`, `ac`' if not force else '')
 
     with connection.cursor() as cursor:
@@ -115,7 +134,15 @@ def build_ac(items):
 
 
 def process(data, force, connection):
+    """
+    The function iterates, parses each row specified in `data`, and stores the
+    processed results back.
 
+    If `force` was set to `False`, processed rows will be skipped.
+
+    `connection` will be used to update table and should not be identical as the
+    one used for fetching.
+    """
     if not data:
         return
 
@@ -156,13 +183,47 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='The script iterates table `parts`, parses `seq_edit_cache` of '
+        'each row and stores the results in `ruler` and `ac` fields.'
+    )
     parser.add_argument('database')
-    parser.add_argument('--host', dest='host', default='localhost')
-    parser.add_argument('--port', '-p', dest='port', type=int, default=3306)
-    parser.add_argument('--user', '-u', dest='user', default='root')
-    parser.add_argument('--password', '-pw', dest='password', default='')
-    parser.add_argument('--chunk', '-c', dest='chunk', type=int, default=300)
-    parser.add_argument('--force', '-f', dest='force', action='store_true', default=False)
+    parser.add_argument(
+        '--host',
+        dest='host',
+        default='localhost',
+        help='host of database, default to "localhost"'
+    )
+    parser.add_argument(
+        '--port', '-p',
+        dest='port',
+        type=int, default=3306,
+        help='port of database, default to 3306'
+    )
+    parser.add_argument(
+        '--user', '-u',
+        dest='user',
+        default='root',
+        help='user name of database, default to "root"'
+    )
+    parser.add_argument(
+        '--password', '-pw',
+        dest='password',
+        default='',
+        help='password of database, default to empty string'
+    )
+    parser.add_argument(
+        '--chunk', '-c',
+        dest='chunk',
+        type=int, default=300,
+        help='numbers of items fetched from database at a time, default to 300'
+    )
+    parser.add_argument(
+        '--force', '-f',
+        dest='force',
+        action='store_true', default=False,
+        help='if set, the script will parse all rows, otherwise it will skip '
+        'processed rows'
+    )
 
     main(parser.parse_args())
