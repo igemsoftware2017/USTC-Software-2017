@@ -57,7 +57,7 @@ mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new;'
 biohub/manage.py test test_send_real_mail.py
 mysql -uroot test_biohub_new < tmp/biobricks.sql
 biohub/biobrick/bin/fixtures.py test_biohub_new -f -c 1000
-if [$? -ne 0]; then
+if [ $? -ne 0 ]; then
     exit 1
 fi
 
