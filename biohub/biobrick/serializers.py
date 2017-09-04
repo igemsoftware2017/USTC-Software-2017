@@ -1,19 +1,11 @@
 import json
 
-from django.core.cache import cache
 from rest_framework import serializers
 from haystack.models import SearchResult
 
 from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from .models import Biobrick
 from .highlighter import SimpleHighlighter
-
-SEARCH_RESULT_TIMEOUT = 240
-CACHE_PREFIX = "biobrick:search:results"
-
-
-def bbk_search_result_cache_key(pk):
-    return "%s:%s" % (CACHE_PREFIX, pk)
 
 
 @bind_model(Biobrick)
@@ -36,36 +28,19 @@ class BiobrickSerializer(ModelSerializer):
 
         return urlset
 
-    def _get_cached_dict(self):
-        cached_result = cache.get(self._cache_key)
-        if isinstance(cached_result, dict):
-            self._cached_dict = cached_result
-            return True
-        else:
-            return False
+    def to_representation(self, obj):
+        ret = super(BiobrickSerializer, self).to_representation(obj)
 
-    def _set_cached_dict(self, obj):
-        _getattr = lambda name: getattr(obj, name, None)  # noqa
-
-        cached_dict = {
+        raw_obj = obj if isinstance(obj, Biobrick) else obj.object
+        _getattr = lambda name: getattr(raw_obj, name, None)  # noqa
+        ret.update({
             'description': _getattr('description'),
             'sequence': _getattr('sequence'),
             'ac': json.loads(_getattr('ac') or 'null'),
             'ruler': json.loads(_getattr('ruler') or 'null')
-        }
+        })
 
-        cache.set(self._cache_key, cached_dict, timeout=SEARCH_RESULT_TIMEOUT)
-        self._cached_dict = cached_dict
-
-    def to_representation(self, obj):
-        ret = super(BiobrickSerializer, self).to_representation(obj)
         if isinstance(obj, SearchResult):
-
-            # To get a fields dict from cache or set a new cache
-            self._cache_key = bbk_search_result_cache_key(obj.pk)
-            if not self._get_cached_dict():
-                self._set_cached_dict(obj.object)
-            ret.update(self._cached_dict)
 
             # To get short_desc, which is stored as text in the index
             if obj.highlighted is not None and len(obj.highlighted) > 0:
@@ -80,11 +55,5 @@ class BiobrickSerializer(ModelSerializer):
                                                 html_tag='div',
                                                 css_class='highlight')
                 ret['part_name'] = highlighter.highlight(ret['part_name'])
-        elif isinstance(obj, Biobrick):
-
-            self._cache_key = bbk_search_result_cache_key(obj.pk)
-            if not self._get_cached_dict():
-                self._set_cached_dict(obj)
-            ret.update(self._cached_dict)
 
         return ret
