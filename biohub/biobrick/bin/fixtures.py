@@ -81,6 +81,13 @@ def prepare_table_structure():
             no_table(e)
 
         fields = {'ruler', 'ac'}
+        wrong_types = [x['Field'] for x in structures if x['Field'] in fields and x['Type'] != 'longtext']
+
+        if wrong_types:
+            print("Fields %s have wrong types, dropping..." % ', '.join(wrong_types))
+            for field in wrong_types:
+                cursor.execute('ALTER TABLE parts DROP COLUMN %s' % field)
+
         missing = fields - set(x['Field'] for x in structures)
 
         if missing:
