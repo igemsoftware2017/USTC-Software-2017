@@ -128,7 +128,7 @@ def build_seq_features(string):
 
 def build_sub_parts(strings):
     return [
-        dict(zip('id short_name nick_name'.split(), eval(item)))
+        dict(zip('id short_name nick_name icon_url'.split(), eval(item)))
         for item in strings
     ]
 
@@ -166,7 +166,8 @@ def process(data, force, connection):
                 'seq_features': build_seq_features(
                     (seq_features_re.findall(html) or [''])[0]
                 ),
-                'sub_parts': build_sub_parts(sub_part_re.findall(html))
+                'sub_parts': build_sub_parts(sub_part_re.findall(html)),
+                'part_id': item['part_id']
             }
             ac = build_ac(ac_re.findall(html))
 

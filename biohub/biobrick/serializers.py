@@ -9,10 +9,11 @@ from .models import Biobrick
 from .highlighter import SimpleHighlighter
 
 SEARCH_RESULT_TIMEOUT = 240
+CACHE_PREFIX = "biobrick:search:results"
 
 
 def bbk_search_result_cache_key(pk):
-    return "biobrick:search:results:%s" % pk
+    return "%s:%s" % (CACHE_PREFIX, pk)
 
 
 @bind_model(Biobrick)
