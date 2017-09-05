@@ -111,7 +111,7 @@ class User(AbstractBaseUser):
     def api_url(self):
         from django.urls import reverse
 
-        return reverse('api:accounts:user-detail', kwargs={'pk': self.id})
+        return reverse('api:accounts:user-detail', kwargs={'user_pk': self.id})
 
     def follow(self, target_user):
         """

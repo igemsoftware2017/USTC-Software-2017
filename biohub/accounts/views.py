@@ -96,6 +96,7 @@ class UserViewSet(
         BaseUserViewSetMixin):
 
     lookup_value_regex = re_user_lookup_value
+    lookup_url_kwarg = 'user_pk'
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
