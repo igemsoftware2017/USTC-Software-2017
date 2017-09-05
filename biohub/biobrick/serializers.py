@@ -29,31 +29,26 @@ class BiobrickSerializer(ModelSerializer):
         return urlset
 
     def to_representation(self, obj):
-        ret = super(BiobrickSerializer, self).to_representation(obj)
-
-        raw_obj = obj if isinstance(obj, Biobrick) else obj.object
-        _getattr = lambda name: getattr(raw_obj, name, None)  # noqa
-        ret.update({
-            'description': _getattr('description'),
-            'sequence': _getattr('sequence'),
-            'ac': json.loads(_getattr('ac') or 'null'),
-            'ruler': json.loads(_getattr('ruler') or 'null')
-        })
-
         if isinstance(obj, SearchResult):
+            ret = super(BiobrickSerializer, self).to_representation(obj.object)
 
-            # To get short_desc, which is stored as text in the index
+            # To get highlight
             if obj.highlighted is not None and len(obj.highlighted) > 0:
                 ret['short_desc'] = obj.highlighted[0]
-            else:
-                ret['short_desc'] = obj.text
 
-            # To set highlight
             querydict = self.context['request'].query_params
             if 'highlight' in querydict:
                 highlighter = SimpleHighlighter(querydict.get('q', ''),
                                                 html_tag='div',
                                                 css_class='highlight')
                 ret['part_name'] = highlighter.highlight(ret['part_name'])
+
+        else:
+            ret = super(BiobrickSerializer, self).to_representation(obj)
+
+        ret.update({
+            'ac': json.loads(ret.get('ac', 'null')),
+            'ruler': json.loads(ret.get('ruler', 'null'))
+        })
 
         return ret
