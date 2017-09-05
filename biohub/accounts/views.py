@@ -1,4 +1,4 @@
-from rest_framework import viewsets, mixins, permissions
+from rest_framework import mixins, permissions
 from rest_framework import decorators
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +6,6 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.core.files.storage import default_storage
-from django.shortcuts import get_object_or_404
 
 from biohub.utils.rest import pagination, permissions as p
 from biohub.core.files.utils import store_file
@@ -14,6 +13,7 @@ from biohub.core.files.utils import store_file
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer,\
     ChangePasswordSerializer, PasswordResetRequestSerializer, PasswordResetPerformSerializer
 from .models import User
+from .mixins import BaseUserViewSetMixin, re_user_lookup_value
 
 
 def make_view(serializer_cls):
@@ -93,9 +93,9 @@ class UserViewSet(
         mixins.RetrieveModelMixin,
         mixins.ListModelMixin,
         mixins.UpdateModelMixin,
-        viewsets.GenericViewSet):
+        BaseUserViewSetMixin):
 
-    lookup_value_regex = r'\d+|me|n:[\da-zA-Z_]{4,15}'
+    lookup_value_regex = re_user_lookup_value
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -105,21 +105,7 @@ class UserViewSet(
     filter_fields = ('username',)
 
     def get_object(self):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        lookup = self.kwargs[lookup_url_kwarg]
-
-        if lookup == 'me':
-
-            if not self.request.user.is_authenticated():
-                raise NotFound
-
-            return self.request.user
-        elif lookup.startswith('n:'):
-
-            return get_object_or_404(User, username=lookup[2:])
-
-        return super(UserViewSet, self).get_object()
+        return self.get_user_object()
 
     @decorators.detail_route(['GET'])
     def followers(self, request, *args, **kwargs):
