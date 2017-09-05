@@ -166,14 +166,24 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 403)
         self.client.force_authenticate(self.user)
         response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
+        self.assertEqual(
+            self.client.get('/api/forum/bricks/%d/starred_users/' % self.brick.id).data['count'],
+            1
+        )
+        self.assertEqual(self.client.get('/api/users/me/starred_bricks/').data['count'], 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.star_users.filter(pk=self.user.id).count(), 1)
+        self.brick.refresh_from_db()
+        self.assertEqual(self.brick.stars, 1)
 
     def test_unstar(self):
         self.test_star()
         response = self.client.post('/api/forum/bricks/%d/unstar/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.star_users.filter(pk=self.user.id).count(), 0)
+        self.brick.refresh_from_db()
+        self.assertEqual(self.brick.stars, 0)
+        self.assertEqual(self.client.get('/api/users/me/starred_bricks/').data['count'], 0)
 
     def test_watch_a_brick(self):
         self.assertEqual(self.brick.watch_users.all().count(), 0)
@@ -181,6 +191,11 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertIs(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
+        self.assertEqual(
+            self.client.get('/api/forum/bricks/%d/watched_users/' % self.brick.id).data['count'],
+            1
+        )
+        self.assertEqual(self.client.get('/api/users/me/watched_bricks/').data['count'], 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.watch_users.all().count(), 1)
 
@@ -191,6 +206,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertIs(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
+        self.assertEqual(self.client.get('/api/users/me/watched_bricks/').data['count'], 0)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.brick.watch_users.all().count(), 0)
 
@@ -215,6 +231,10 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
             'score': 3
         })
+        self.assertEqual(
+            self.client.get('/api/forum/bricks/%d/rated_users/' % self.brick.id).data['count'], 1
+        )
+        self.assertEqual(self.client.get('/api/users/me/rated_bricks/').data['count'], 1)
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         self.assertEqual(response.status_code, 200)

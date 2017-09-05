@@ -11,7 +11,7 @@ from .models import User
 class UserPaginationMixin(object):
 
     def paginate_user_queryset(self, queryset):
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(queryset.order_by('id'))
         if page is not None:
             serializer = UserSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
@@ -28,9 +28,7 @@ class BaseUserViewSetMixin(viewsets.GenericViewSet):
     user_lookup_value_regex = re_user_lookup_value
 
     def get_user_object(self):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        lookup = self.kwargs[lookup_url_kwarg]
+        lookup = self.kwargs['user_pk']
 
         if lookup == 'me':
 
@@ -46,4 +44,5 @@ class BaseUserViewSetMixin(viewsets.GenericViewSet):
 
     @classmethod
     def add_to_router(cls, router):
-        router.register(r'users/%s' % cls.user_lookup_value_regex, cls)
+        router.register(r'users/(?P<user_pk>%s)' % cls.user_lookup_value_regex, cls)
+        return router

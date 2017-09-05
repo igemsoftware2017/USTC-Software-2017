@@ -1,12 +1,13 @@
 from rest_framework import viewsets, status, decorators, mixins
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, NotFound
 from django.db.models.query import QuerySet
 from biohub.utils.rest import pagination, permissions
 from ..serializers import BrickSerializer
 from ..models import Brick
 from biohub.accounts.models import User
+from biohub.accounts.mixins import UserPaginationMixin, BaseUserViewSetMixin
 from ..spiders import BrickSpider, ExperienceSpider
 from django.utils import timezone
 import datetime
@@ -15,12 +16,19 @@ import requests
 import logging
 
 
-class BrickViewSet(mixins.ListModelMixin,
-                   mixins.RetrieveModelMixin,
-                   viewsets.GenericViewSet):
+class BaseBrickViewSet(object):
+
     serializer_class = BrickSerializer
     pagination_class = pagination.factory('PageNumberPagination')
     queryset = Brick.objects.all().order_by('name')
+
+
+class BrickViewSet(mixins.ListModelMixin,
+                   mixins.RetrieveModelMixin,
+                   UserPaginationMixin,
+                   BaseBrickViewSet,
+                   viewsets.GenericViewSet):
+
     brick_spider = BrickSpider()
     experience_spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
@@ -85,6 +93,18 @@ class BrickViewSet(mixins.ListModelMixin,
                 return Response('iGEM has it.', status=status.HTTP_200_OK)
             return Response('iGEM does not have it', status=status.HTTP_404_NOT_FOUND)
         return Response('Must specify param \'name\'.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['GET'])
+    def watched_users(self, *args, **kwargs):
+        return self.paginate_user_queryset(self.get_object().watch_users.all())
+
+    @decorators.detail_route(methods=['GET'])
+    def rated_users(self, *args, **kwargs):
+        return self.paginate_user_queryset(self.get_object().rate_users.all())
+
+    @decorators.detail_route(methods=['GET'])
+    def starred_users(self, *args, **kwargs):
+        return self.paginate_user_queryset(self.get_object().star_users.all())
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def watch(self, *args, **kwargs):
@@ -182,6 +202,33 @@ class BrickViewSet(mixins.ListModelMixin,
             })
             return self.get_paginated_response(serializer.data)
         return super(BrickViewSet, self).list(request=request, *args, **kwargs)
+
+
+class UserBrickViewSet(mixins.ListModelMixin, BaseBrickViewSet, BaseUserViewSetMixin):
+
+    allowed_actions = {
+        'watched_bricks': 'bricks_watched',
+        'starred_bricks': 'bricks_starred',
+        'rated_bricks': 'bricks_rated'
+    }
+
+    def get_queryset(self):
+        try:
+            return getattr(self.get_user_object(), self.allowed_actions[self.action]).order_by('name')
+        except KeyError:
+            raise NotFound
+
+    @decorators.list_route(methods=['GET'])
+    def watched_bricks(self, *args, **kwargs):
+        return self.list(*args, **kwargs)
+
+    @decorators.list_route(methods=['GET'])
+    def starred_bricks(self, *args, **kwargs):
+        return self.list(*args, **kwargs)
+
+    @decorators.list_route(methods=['GET'])
+    def rated_bricks(self, *args, **kwargs):
+        return self.list(*args, **kwargs)
 
 
 @api_view(['GET'])
