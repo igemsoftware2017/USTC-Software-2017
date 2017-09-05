@@ -2,7 +2,7 @@ import decimal
 from datetime import date
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 from biohub.core.files.models import File
 from biohub.forum.user_defined_signals import rating_brick_signal, \
@@ -96,9 +96,10 @@ class Brick(models.Model):
 
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
-            self.watch_users.add(user)
-            watching_brick_signal.send(sender=self.__class__, instance=self, user=user)
-            return True
+            with transaction.atomic():
+                self.watch_users.add(user)
+                watching_brick_signal.send(sender=self.__class__, instance=self, user=user)
+                return True
         return False
 
     def cancel_watch(self, user):
@@ -109,9 +110,10 @@ class Brick(models.Model):
 
     def star(self, user):
         if not self.star_users.filter(pk=user.id).exists():
-            self.star_users.add(user)
-            self.stars += 1
-            self.save()
+            with transaction.atomic():
+                self.star_users.add(user)
+                self.stars += 1
+                self.save()
 
             return True
 
@@ -129,13 +131,14 @@ class Brick(models.Model):
 
     def rate(self, rate, user):
         if not self.rate_users.filter(pk=user.id).exists():
-            self.rate_score = (self.rate_score *
-                               self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
-            self.rate_num += 1
-            self.rate_users.add(user)
-            self.save()
-            rating_brick_signal.send(sender=self.__class__, user_rating=user, instance=self,
-                                     rating_score=rate, curr_score=self.rate_score)
+            with transaction.atomic():
+                self.rate_score = (self.rate_score *
+                                   self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
+                self.rate_num += 1
+                self.rate_users.add(user)
+                self.save()
+                rating_brick_signal.send(sender=self.__class__, user_rating=user, instance=self,
+                                         rating_score=rate, curr_score=self.rate_score)
             return True
         return False
 
@@ -178,19 +181,21 @@ class Experience(models.Model):
         if self.author is not None and self.author.id == user.id:
             return False
         if not self.up_vote_users.filter(pk=user.id).exists():
-            self.up_vote_num += 1
-            self.up_vote_users.add(user)
-            self.save()
-            up_voting_experience_signal.send(sender=self.__class__, instance=self,
-                                             user_up_voting=user, curr_up_vote_num=self.up_vote_num)
+            with transaction.atomic():
+                self.up_vote_num += 1
+                self.up_vote_users.add(user)
+                self.save()
+                up_voting_experience_signal.send(sender=self.__class__, instance=self,
+                                                 user_up_voting=user, curr_up_vote_num=self.up_vote_num)
             return True
         return False
 
     def cancel_up_vote(self, user):
         if self.up_vote_users.filter(pk=user.id).exists():
-            self.up_vote_users.remove(user)
-            self.up_vote_num -= 1
-            self.save()
+            with transaction.atomic():
+                self.up_vote_users.remove(user)
+                self.up_vote_num -= 1
+                self.save()
             return True
         return False
 
