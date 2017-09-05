@@ -2,11 +2,14 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Brick, Article, Experience, SeqFeature
-import json, os, tempfile
+import json
+import os
+import tempfile
 # from time import sleep
 
 
 class BrickRestfulAPITest(TestCase):
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_test_user(username="abc")
@@ -146,7 +149,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         # list all bricks
         response = self.client.get('/api/forum/bricks/')
-        with open(os.path.join(tempfile.gettempdir(),"brick_content_list.txt"),'wb') as f:
+        with open(os.path.join(tempfile.gettempdir(), "brick_content_list.txt"), 'wb') as f:
             f.write(response.content)
         data = json.loads(response.content)
         # there ought to be 4 items, including the one in setUp()
@@ -156,6 +159,21 @@ class BrickRestfulAPITest(TestCase):
         data = json.loads(response.content)
         # there ought to be 2 items
         self.assertEqual(len(data['results']), 2)
+
+    def test_star(self):
+        self.assertEqual(self.brick.star_users.all().count(), 0)
+        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
+        self.assertEqual(response.status_code, 403)
+        self.client.force_authenticate(self.user)
+        response = self.client.post('/api/forum/bricks/%d/star/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.star_users.filter(pk=self.user.id).count(), 1)
+
+    def test_unstar(self):
+        self.test_star()
+        response = self.client.post('/api/forum/bricks/%d/unstar/' % self.brick.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.brick.star_users.filter(pk=self.user.id).count(), 0)
 
     def test_watch_a_brick(self):
         self.assertEqual(self.brick.watch_users.all().count(), 0)

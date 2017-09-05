@@ -31,4 +31,4 @@ class BrickSerializer(ModelSerializer):
                             'use_num', 'twin_num', 'document',
                             'assembly_compatibility', 'parameters', 'categories',
                             'sequence_a', 'sequence_b', 'sub_parts', 'watch_users',
-                            'rate_score', 'rate_num', 'rate_users',)
+                            'rate_score', 'rate_num', 'rate_users', 'star_users', 'stars')

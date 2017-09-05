@@ -90,6 +90,9 @@ class Brick(models.Model):
     # add records for users mark down who has already rated
     rate_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_rated')
+    star_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='bricks_starred')
+    stars = models.PositiveIntegerField(default=0)
 
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
@@ -102,6 +105,26 @@ class Brick(models.Model):
         if self.watch_users.filter(pk=user.id).exists():
             self.watch_users.remove(user)
             return True
+        return False
+
+    def star(self, user):
+        if not self.star_users.filter(pk=user.id).exists():
+            self.star_users.add(user)
+            self.stars += 1
+            self.save()
+
+            return True
+
+        return False
+
+    def unstar(self, user):
+        if self.star_users.filter(pk=user.id).exists():
+            self.star_users.remove(user)
+            self.stars -= 1
+            self.save()
+
+            return True
+
         return False
 
     def rate(self, rate, user):

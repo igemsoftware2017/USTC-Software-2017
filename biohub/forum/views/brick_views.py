@@ -108,6 +108,18 @@ class BrickViewSet(mixins.ListModelMixin,
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def star(self, request, *args, **kwargs):
+        if self.get_object().star(self.request.user):
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
+    def unstar(self, request, *args, **kwargs):
+        if self.get_object().unstar(self.request.user):
+            return Response('OK')
+        return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
+
     @decorators.list_route(methods=['GET'])
     def watched_bricks(self, request, *args, **kwargs):
         username = self.request.query_params.get('username', None)
