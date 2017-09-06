@@ -6,4 +6,4 @@
 -r biobrick-base.txt
 -r biocircuit-base.txt
 
-coloredlogs==7.0
+coloredlogs==7.3
