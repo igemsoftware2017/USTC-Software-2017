@@ -31,21 +31,21 @@ class ExperienceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         author = self.request.query_params.get('author', None)
         if author is not None:
-            query_set = Experience.objects.filter(
+            queryset = Experience.objects.filter(
                 author=User.objects.get(username=author))
         else:
-            query_set = Experience.objects.all()
-        return query_set.order_by('-pub_time', '-update_time')
+            queryset = Experience.objects.all()
+        return queryset.order_by('-pub_time', '-update_time')
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def up_vote(self, request, *args, **kwargs):
-        if self.get_object().up_vote(User.objects.get(username=request.user)) is True:
+        if self.get_object().up_vote(request.user):
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def cancel_up_vote(self, request, *args, **kwargs):
-        if self.get_object().cancel_up_vote(User.objects.get(username=request.user)) is True:
+        if self.get_object().cancel_up_vote(request.user):
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
@@ -95,8 +95,10 @@ class ExperiencesOfBricksListView(generics.ListAPIView):
         brick = self.kwargs['brick_id']
         author = self.request.query_params.get('author', None)
         if author is not None:
-            return Experience.objects.filter(brick=brick,
-                                             author=User.objects.get(username=author))
+            return Experience.objects.filter(
+                brick=brick,
+                author=User.objects.only('pk').get(username=author)
+            )
         return Experience.objects.filter(brick=brick)
 
     def get(self, request, *args, **kwargs):

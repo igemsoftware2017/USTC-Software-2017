@@ -11,11 +11,15 @@ class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    brick = serializers.HyperlinkedRelatedField(view_name='api:forum:brick-detail',
-                                                read_only=True)
+    brick = serializers.HyperlinkedRelatedField(
+        view_name='api:forum:brick-detail',
+        read_only=True
+    )
     brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())
-    post_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
-                                                   view_name='api:forum:post-detail')
+    post_set = serializers.HyperlinkedRelatedField(
+        read_only=True, many=True,
+        view_name='api:forum:post-detail'
+    )
     up_vote_users = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
 
     class Meta:

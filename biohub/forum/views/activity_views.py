@@ -18,8 +18,7 @@ class ActivityViewSet(viewsets.GenericViewSet,
 
         query_set = Activity.objects.all()
         if user is not None:
-            query_set = query_set.filter(
-                user=User.objects.get(username=user))
+            query_set = query_set.filter(user=User.objects.only('pk').get(username=user))
         if type is not None:
             query_set = query_set.filter(type__in=type.split(','))
 

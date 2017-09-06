@@ -8,9 +8,13 @@ from biohub.accounts.serializers import UserSerializer
 @bind_model(Post)
 class PostSerializer(ModelSerializer):
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    experience_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Experience.objects.all())
-    experience = serializers.HyperlinkedRelatedField(read_only=True,
-                                                     view_name='api:forum:experience-detail')
+    experience_id = serializers.PrimaryKeyRelatedField(
+        write_only=True, queryset=Experience.objects.all()
+    )
+    experience = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        view_name='api:forum:experience-detail'
+    )
 
     class Meta:
         model = Post

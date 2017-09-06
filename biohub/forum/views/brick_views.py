@@ -147,15 +147,20 @@ class BrickViewSet(mixins.ListModelMixin,
             short = self.request.query_params.get('short', None)
             page = self.paginate_queryset(queryset)
             if short is not None and short.lower() == 'true':
-                serializer = BrickSerializer(page, fields=('api_url', 'id', 'name'), many=True, context={
-                    'request': None
-                })
+                serializer = BrickSerializer(
+                    page,
+                    fields=('api_url', 'id', 'name'),
+                    many=True,
+                    context={
+                        'request': None
+                    }
+                )
                 return self.get_paginated_response(serializer.data)
             serializer = BrickSerializer(page, many=True, context={
                 'request': None
             })
             return self.get_paginated_response(serializer.data)
-        return Response('Must specify param \'username\'.', status=status.HTTP_400_BAD_REQUEST)
+        return Response("Must specify param 'username'.", status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
         brick = self.get_object()

@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 from biohub.forum.models import Brick, Article
 from biohub.utils.htm2text import html2text
 
+GENE_MAP = {'a': 't', 't': 'a', 'c': 'g', 'g': 'c'}
+
 
 class BrickSpider:
     base_site = 'http://parts.igem.org/'
@@ -16,17 +18,7 @@ class BrickSpider:
 
     @staticmethod
     def reverse_sequence(sequence_a):
-        sequence_b = ''
-        for char in list(sequence_a):
-            if char == 'a':
-                sequence_b += 't'
-            if char == 't':
-                sequence_b += 'a'
-            if char == 'c':
-                sequence_b += 'g'
-            if char == 'g':
-                sequence_b += 'c'
-        return sequence_b
+        return ''.join(GENE_MAP.get(char, '') for char in sequence_a)
 
     def fill_from_page(self, brick_name, brick=None):
         """
@@ -217,7 +209,7 @@ class ExperienceSpider:
             content = None
             experience = None
             for para in beginning.find_next_siblings('p'):
-                if re.match('\s*igem.{1,60}$', para.text, re.IGNORECASE):
+                if re.match(r'\s*igem.{1,60}$', para.text, re.IGNORECASE):
                     # save previous collected content
                     # change images' URLs to absolute ones
                     if content and experience:

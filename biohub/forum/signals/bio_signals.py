@@ -30,8 +30,11 @@ def notice_watching_user_when_new_experience_is_posted(instance, created, **kwar
             experience_url = reverse('api:forum:experience-detail', kwargs={'pk': instance.id})
             brick = instance.brick
             brick_url = reverse('api:forum:brick-detail', kwargs={'pk': brick.id})
-            forum_dispatcher.send(user, 'New experience (Title: '
-                                        '{{experience.title|url:experience_url}}) was published '
-                                        'under brick BBA_{{brick.name|url:brick_url}}.',
-                                  experience=instance, experience_url=experience_url,
-                                  brick=brick, brick_url=brick_url)
+            forum_dispatcher.send(
+                user,
+                'New experience (Title: '
+                '{{experience.title|url:experience_url}}) was published '
+                'under brick BBA_{{brick.name|url:brick_url}}.',
+                experience=instance, experience_url=experience_url,
+                brick=brick, brick_url=brick_url
+            )

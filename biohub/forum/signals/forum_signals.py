@@ -28,15 +28,21 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
         if author.id == instance.author.id:
             return
         experience_url = reverse(
-            'api:forum:experience-detail', kwargs={'pk': experience.id})
+            'api:forum:experience-detail', kwargs={'pk': experience.id}
+        )
         post_author_url = instance.author.api_url
-        brick_url = reverse('api:forum:brick-detail',
-                            kwargs={'pk': experience.brick.id})
-        forum_dispatcher.send(author, '{{instance.author.username|url:post_author_url}} commented on '
-                                      'your experience (Title: {{ experience.title|url:experience_url }})'
-                                      ' of brick BBA_{{experience.brick.name|url:brick_url}}.',
-                              instance=instance, experience=experience, brick_url=brick_url,
-                              post_author_url=post_author_url, experience_url=experience_url)
+        brick_url = reverse(
+            'api:forum:brick-detail',
+            kwargs={'pk': experience.brick.id}
+        )
+        forum_dispatcher.send(
+            author,
+            '{{instance.author.username|url:post_author_url}} commented on '
+            'your experience (Title: {{ experience.title|url:experience_url }})'
+            ' of brick BBA_{{experience.brick.name|url:brick_url}}.',
+            instance=instance, experience=experience, brick_url=brick_url,
+            post_author_url=post_author_url, experience_url=experience_url
+        )
 
 
 @receiver(post_save, sender=Experience)
@@ -44,8 +50,12 @@ def add_creating_experience_activity(instance, created, **kwargs):
     # do nothing when it's from iGEM's website
     if instance.author:
         if created:
-            activityparam = ActivityParam(type='Experience', user=instance.author, partName=instance.brick.name, expLink=reverse(
-                'api:forum:experience-detail', kwargs={'pk': instance.id}))
+            activityparam = ActivityParam(
+                type='Experience', user=instance.author,
+                partName=instance.brick.name, expLink=reverse(
+                    'api:forum:experience-detail', kwargs={'pk': instance.id}
+                )
+            )
             activityparam.save()
             Activity.objects.create(
                 type='Experience', user=instance.author, params=activityparam)
@@ -53,8 +63,10 @@ def add_creating_experience_activity(instance, created, **kwargs):
 
 @receiver(post_save, sender=Post)
 def add_creating_post_activity(instance, created, **kwargs):
-    activityparam = ActivityParam(type='Comment', user=instance.author, partName=instance.experience.brick.name,
-                                  expLink=reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id}))
+    activityparam = ActivityParam(
+        type='Comment', user=instance.author, partName=instance.experience.brick.name,
+        expLink=reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
+    )
     activityparam.save()
     Activity.objects.create(
         type='Comment', user=instance.author, params=activityparam)
@@ -73,8 +85,7 @@ def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
     activityparam = ActivityParam(type='Rating', user=user_rating, expLink=reverse(
         'api:forum:brick-detail', kwargs={'pk': instance.id}), score=rating_score, partName=instance.name)
     activityparam.save()
-    Activity.objects.create(
-        type='Rating', user=user_rating, params=activityparam)
+    Activity.objects.create(type='Rating', user=user_rating, params=activityparam)
 
 
 @receiver(watching_brick_signal, sender=Brick)
@@ -96,11 +107,14 @@ def send_notice_to_experience_author_on_up_voting(instance, user_up_voting,
         'api:forum:experience-detail', kwargs={'pk': instance.id})
     brick_url = reverse('api:forum:brick-detail', kwargs={'pk': brick.id})
     user_up_voting_url = user_up_voting.api_url
-    forum_dispatcher.send(author, '{{user_up_voting.username|url:user_up_voting_url}}'
-                                  ' voted for your experience '
-                                  '(Title: {{ experience.title|url:experience_url }})'
-                                  ' of brick BBA_{{brick.name|url:brick_url}}. '
-                                  'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
-                          experience=instance, brick_url=brick_url, experience_url=experience_url,
-                          user_up_voting=user_up_voting, user_up_voting_url=user_up_voting_url,
-                          brick=brick, curr_up_vote_num=curr_up_vote_num)
+    forum_dispatcher.send(
+        author,
+        '{{user_up_voting.username|url:user_up_voting_url}}'
+        ' voted for your experience '
+        '(Title: {{ experience.title|url:experience_url }})'
+        ' of brick BBA_{{brick.name|url:brick_url}}. '
+        'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
+        experience=instance, brick_url=brick_url, experience_url=experience_url,
+        user_up_voting=user_up_voting, user_up_voting_url=user_up_voting_url,
+        brick=brick, curr_up_vote_num=curr_up_vote_num
+    )
