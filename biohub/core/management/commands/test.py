@@ -36,9 +36,18 @@ class Command(BaseCommand):
 
     def handle(self, files, recreate, capture_stdout, *args, **options):
         if files:
-            tests = filter(
-                os.path.exists,
-                map(lambda f: os.path.join(TESTS_PATH, f), files))
+            real_paths = [os.path.join(TESTS_PATH, f) for f in files]
+            missing = [f for f in real_paths if not os.path.exists(f)]
+
+            if missing:
+                self.stdout.write(
+                    'The path(s) below can not be accessed:\n%s' % '\n'.join(missing),
+                    self.style.WARNING
+                )
+                self.stdout.write('Tests aborted.', self.style.ERROR)
+                sys.exit(1)
+
+            tests = real_paths
         else:
             tests = [TESTS_PATH]
 
