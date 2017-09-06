@@ -11,7 +11,7 @@ class BrickSpiderTests(TestCase):
     def test1(self):
         ''' test with page: http://parts.igem.org/Part:BBa_I718017  '''
         brickspider = spiders.BrickSpider()
-        brick_id = brickspider.fill_from_page(brick_name='I718017')
+        brickspider.fill_from_page(brick_name='I718017')
         brick = Brick.objects.get(name='I718017')
         self.assertEqual(brick.designer, 'Eimad Shotar')
         self.assertEqual(brick.group_name, 'iGEM07_Paris')
@@ -27,7 +27,7 @@ class BrickSpiderTests(TestCase):
     def test2(self):
         ''' test with page: http://parts.igem.org/Part:BBa_B0015'''
         brickspider = spiders.BrickSpider()
-        brick_id = brickspider.fill_from_page(brick_name='B0015')
+        brickspider.fill_from_page(brick_name='B0015')
         brick = Brick.objects.get(name='B0015')
         self.assertEqual(brick.designer, 'Reshma Shetty')
         self.assertEqual(brick.group_name, 'Antiquity')
@@ -46,14 +46,14 @@ class BrickSpiderTests(TestCase):
         '''
         brickspider = spiders.BrickSpider()
         brickspider.fill_from_page(brick_name='I6084')
-        brick = Brick.objects.get(name='I6084')
+        Brick.objects.get(name='I6084')
 
     def test4(self):
         ''' test with page: BBa_K314110'''
-        brick = spiders.BrickSpider().fill_from_page(brick_name='K314110')
+        spiders.BrickSpider().fill_from_page(brick_name='K314110')
         ''' test a page with no sequence feature panel'''
         spiders.BrickSpider().fill_from_page(brick_name='B1003')
-        brick = Brick.objects.get(name='B1003')
+        Brick.objects.get(name='B1003')
         spiders.BrickSpider().fill_from_page(brick_name='J23106')
         pass
 
@@ -64,7 +64,7 @@ class ExperienceSpiderTests(TestCase):
     def test1(self):
         ''' test with page: http://parts.igem.org/Part:BBa_B0015:Experience '''
         brickspider = spiders.BrickSpider()
-        brick_id = brickspider.fill_from_page(brick_name='B0015')
+        brickspider.fill_from_page(brick_name='B0015')
         experiencespider = spiders.ExperienceSpider()
         experiencespider.fill_from_page(brick_name='B0015')
         brick = Brick.objects.get(name='B0015')

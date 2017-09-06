@@ -2,10 +2,13 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Brick
-import json, os ,tempfile
+import json
+import os
+import tempfile
 
 
 class PostRestfulAPITest(TestCase):
+
     def setUp(self):
         # don't pass the password on create() method,
         # or the database won't save the hash, but only the raw password.
@@ -32,20 +35,20 @@ class PostRestfulAPITest(TestCase):
 
     def test_authenticated_visitors_can_read_create_post(self):
         client = APIClient()
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         response = client.post('/api/forum/posts/', {
             'experience_id': self.experience.id,
             'content': 'test_test_test',
         })
         self.assertEqual(response.status_code, 201)
         response = client.get('/api/forum/posts/')
-        with open(os.path.join(tempfile.gettempdir(),"posts_content.txt"),'wb') as f:
+        with open(os.path.join(tempfile.gettempdir(), "posts_content.txt"), 'wb') as f:
             f.write(response.content)
         self.assertEqual(response.status_code, 200)
 
     def test_modify_my_post(self):
         client = APIClient()
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         my_post = Post.objects.create(author=self.user1, content='dgfl', experience=self.experience)
         response = client.patch('/api/forum/posts/' + str(my_post.id) + '/', {
             'content': 'sdgfhfghgjgj'
@@ -54,7 +57,7 @@ class PostRestfulAPITest(TestCase):
 
     def test_modify_posts_of_others(self):
         client = APIClient()
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         other_post = Post.objects.create(author=self.user2, content='lll', experience=self.experience)
         response = client.patch('/api/forum/posts/' + str(other_post.id) + '/', {
             'content': 'wawawawa'
@@ -72,7 +75,7 @@ class PostRestfulAPITest(TestCase):
         response = client.get('/api/forum/posts/?author=abc')
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 0)
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         response = client.get('/api/forum/posts/?author=abc')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)

@@ -1,12 +1,14 @@
-import json, tempfile, os
+import json
+import tempfile
+import os
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Brick, Article
-# from time import sleep
 
 
 class ExperienceRestfulAPITest(TestCase):
+
     def setUp(self):
         self.brick = Brick.objects.create(name='emmmm')
         self.article = Article.objects.create(text='aha?')
@@ -31,11 +33,12 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 0)
-        response = self.client.get('/api/forum/experiences/?author=' + self.user1.username
-                                   + '&short=true')
+        response = self.client.get(
+            '/api/forum/experiences/?author=' + self.user1.username + '&short=true'
+        )
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertIs(data['results'][0].get('content'), None)
+        self.assertIsNone(data['results'][0].get('content'))
 
     def test_post_experiences(self):
         payloads = {
@@ -48,12 +51,12 @@ class ExperienceRestfulAPITest(TestCase):
         }
         response = self.client.post('/api/forum/experiences/', payloads, format='json')
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(self.client.login(username='abc', password='abc546565132'))
         response = self.client.post('/api/forum/experiences/', payloads, format='json')
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.content)
         response = self.client.get('/api/forum/experiences/')
-        with open(os.path.join(tempfile.gettempdir(),'experiences_list.txt'),'wb') as f:
+        with open(os.path.join(tempfile.gettempdir(), 'experiences_list.txt'), 'wb') as f:
             f.write(response.content)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 2)
@@ -100,21 +103,6 @@ class ExperienceRestfulAPITest(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
-    # def test_auto_updating_experience_from_igem(self):
-    #     """
-    #     To run this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1).
-    #     Same reason as it is in test_restful_bricks.py
-    #     """
-    #     brick = Brick.objects.create(name='I718017')
-    #     experience = Experience.objects.create(brick=brick, author_name='igem2010 UT-Tokyo ')
-    #     self.assertEqual(experience.content, None)
-    #     sleep(5)
-    #     response = self.client.get('/api/forum/experiences/%d/' % experience.id)
-    #     sleep(5)
-    #     self.assertEqual(response.status_code, 200)
-    #     data = json.loads(response.content)
-    #     self.assertNotEqual(data['content'], None)
-
     def test_fetch_posts_of_particular_experience(self):
         response = self.client.get('/api/forum/experiences/%d/posts/' % self.experience.id)
         self.assertEqual(response.status_code, 200)
@@ -142,14 +130,14 @@ class ExperienceRestfulAPITest(TestCase):
         response = client.post('/api/forum/experiences/' + str(self.post1.id) + '/up_vote/')
         self.assertEqual(response.status_code, 403)
         # vote for others
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         other = Experience.objects.create(brick=self.brick)
         response = client.post('/api/forum/experiences/' + str(other.id) + '/up_vote/')
         self.assertEqual(response.status_code, 200)
         response = client.get('/api/forum/experiences/' + str(other.id) + '/')
         post_detail = json.loads(response.content)
         # response = client.get('/api/forum/experiences/')
-        with open(os.path.join(tempfile.gettempdir(),'experiences_list.txt'),'wb') as f:
+        with open(os.path.join(tempfile.gettempdir(), 'experiences_list.txt'), 'wb') as f:
             f.write(response.content)
         self.assertEqual(post_detail['up_vote_num'], 1)
         # vote for my experience
@@ -160,7 +148,7 @@ class ExperienceRestfulAPITest(TestCase):
     def test_cancel_vote(self):
         client = self.client
         other = Experience.objects.create(author=self.user2, brick=self.brick)
-        self.assertIs(client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(client.login(username='abc', password='abc546565132'))
         # test cancel a vote which does not exist
         response = client.post('/api/forum/experiences/9999999999999999999999999999999/cancel_up_vote/')
         self.assertEqual(response.status_code, 404)

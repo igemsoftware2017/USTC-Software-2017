@@ -24,10 +24,8 @@ class ArticleRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/articles/')
         self.assertEqual(response.status_code, 404)
         response = self.client.get('/api/forum/articles/%d/' % self.article.id)
-        # with open("articledata.txt",'wb') as f:
-        #     f.write(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.get('/api/forum/articles/')
         self.assertEqual(response.status_code, 404)
 
@@ -36,32 +34,20 @@ class ArticleRestfulAPITest(TestCase):
             'text': 'jjjjjjjjjjj'
         })
         self.assertEqual(response.status_code, 405)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
             'text': 'jjjjjjjjjjj'
         })
         self.assertEqual(response.status_code, 405)
-        # response = self.client.get('/api/forum/articles/%d/' % self.article.id)
-        # self.assertEqual(json.loads(response.content)['text'], 'jjjjjjjjjjj')
-        # user_other = User.objects.create_test_user(username="ddd")
-        # user_other.set_password("123456000+")
-        # user_other.save()
-        # self.article = Article.objects.create(text="124651321")
-        # response = self.client.patch('/api/forum/articles/%d/' % self.article.id, {
-        #     'text': 'jjjjjjjjjjj'
-        # })
-        # self.assertEqual(response.status_code, 405)
 
     def test_unable_to_change_files(self):
         with open(os.path.join(tempfile.gettempdir(), 'for_test2.txt'), "w") as f:
             pass
         with open(os.path.join(tempfile.gettempdir(), 'for_test2.txt'), "r") as f:
             file = File.objects.create_from_file(f)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.put('/api/forum/articles/%d/' % self.article.id, {
             'text': 'jjjjjjjjjjj',
             'file_ids': [file.id]
         })
         self.assertEqual(response.status_code, 405)
-        # self.assertEqual(self.article.files.count(), 1)
-        # self.article.files.get(pk=file.id)

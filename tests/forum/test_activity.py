@@ -25,18 +25,16 @@ class ActivityParamTest(APITestCase):
             type='Experience', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
 
         param_serializer = ActivityParamSerializer(self.param)
-        data = param_serializer.data
-        # self.assertEqual(len(data),4)
-        param2 = ActivityParam.objects.create(
+        param_serializer.data
+        ActivityParam.objects.create(
             type='Comment', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
-        param3 = ActivityParam.objects.create(
+        ActivityParam.objects.create(
             type='Star', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
-        param4 = ActivityParam.objects.create(
+        ActivityParam.objects.create(
             type='Rating', user=self.user, partName='B0015', expLink='/api/foorum/experiences/15', score=3.7)
         set_serializer = ActivityParamSerializer(
             ActivityParam.objects.all(), many=True)
-        data_set = set_serializer.data
-        pass
+        set_serializer.data
 
     def test_simulation(self):
         client = APIClient()
@@ -45,7 +43,7 @@ class ActivityParamTest(APITestCase):
         ActivityParam.objects.all().delete()
         set_serializer = ActivityParamSerializer(
             ActivityParam.objects.all(), many=True)
-        data_set = set_serializer.data
+        set_serializer.data
         # fetch some bricks and experiences
         response = client.get('/api/forum/bricks/B0032/')
         data = json.loads(response.content)
@@ -69,29 +67,26 @@ class ActivityParamTest(APITestCase):
         # watch a brick
         response = client.post('/api/forum/bricks/' + str(data['id']) + '/watch/')
         self.assertEqual(response.status_code, 200)
-        exp_set = Experience.objects.all()
         # examine activities
         act_serializer = ActivitySerializer(
             Activity.objects.all(), many=True)
-        data_set = act_serializer.data
+        act_serializer.data
 
         response = client.get('/api/forum/activities/')
         with open(os.path.join(tempfile.gettempdir(), 'activities_data.txt'), 'wb') as f:
             f.write(response.content)
-        pass
 
     def test_only_fetching_one_user_activities(self):
         client = APIClient()
         brick = Brick.objects.create(name='emmm')
         Experience.objects.create(brick=brick, author=self.user)
-        self.assertIs(brick.watch(self.user), True)
+        self.assertTrue(brick.watch(self.user))
         Experience.objects.create(brick=brick, author=self.another_user)
-        self.assertIs(brick.watch(self.another_user), True)
-        self.assertIs(brick.rate(2.3, self.user), True)
+        self.assertTrue(brick.watch(self.another_user))
+        self.assertTrue(brick.rate(2.3, self.user))
         response = client.get('/api/forum/activities/?user=abc')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        # print(response.content)
         self.assertEqual(len(data['results']), 3)
 
     def test_fetching_specific_type_activities(self):
@@ -99,10 +94,10 @@ class ActivityParamTest(APITestCase):
 
         brick = Brick.objects.create(name='emmm')
         Experience.objects.create(brick=brick, author=self.user)
-        self.assertIs(brick.watch(self.user), True)
+        self.assertTrue(brick.watch(self.user))
         Experience.objects.create(brick=brick, author=self.another_user)
-        self.assertIs(brick.watch(self.another_user), True)
-        self.assertIs(brick.rate(2.3, self.user), True)
+        self.assertTrue(brick.watch(self.another_user))
+        self.assertTrue(brick.rate(2.3, self.user))
 
         response = client.get('/api/forum/activities/?user=abc&type=Rating')
         self.assertEqual(response.status_code, 200)

@@ -19,41 +19,6 @@ class BrickRestfulAPITest(TestCase):
         self.brick = Brick.objects.create(name='K314110', group_name='well',
                                           document=self.document)
 
-    # def test_checking_whether_database_has_brick(self):
-    #     response = self.client.get('/api/forum/bricks/check_database/?name=ADD')
-    #     self.assertEqual(response.status_code, 404)
-    #     response = self.client.get('/api/forum/bricks/check_database/')
-    #     self.assertEqual(response.status_code, 400)
-    #     brick = Brick.objects.create(name='lalala')
-    #     response = self.client.get('/api/forum/bricks/check_database/?name=lalala')
-    #     self.assertEqual(response.status_code, 200)
-    #
-    # def test_checking_whether_igem_has_brick(self):
-    #     response = self.client.get('/api/forum/bricks/check_igem/?name=ADD')
-    #     self.assertEqual(response.status_code, 404)
-    #     response = self.client.get('/api/forum/bricks/check_igem/')
-    #     self.assertEqual(response.status_code, 400)
-    #     response = self.client.get('/api/forum/bricks/check_igem/?name=K314110')
-    #     self.assertEqual(response.status_code, 200)
-
-    # def test_automatically_update_bricks_when_retrieving(self):
-    #     brick = Brick(name='I718017')
-    #     brick.group_name = 'emmm'
-    #     brick.save()
-    #     self.assertEqual(brick.experience_set.all().count(), 0)
-    #     # Because auto_now is set to True in Brick model, update_time is impossible to be set manually.
-    #     # To use this test, please set UPDATE_DELTA = datetime.timedelta(seconds=1) in views.
-    #     sleep(5)
-    #     response = self.client.get('/api/forum/bricks/%d/' % brick.id)
-    #     sleep(5)
-    #     self.assertEqual(response.status_code, 200)
-    #     data = json.loads(response.content)
-    #     self.assertEqual(data['group_name'], 'iGEM07_Paris')
-    #     self.assertGreater(brick.experience_set.all().count(), 0)
-    #     brick2 = Brick.objects.create(name='a')
-    #     response = self.client.get('/api/forum/bricks/%d/' % brick2.id)
-    #     self.assertEqual(response.status_code, 500)
-
     def test_list_data_with_and_without_param_short(self):
         response = self.client.get('/api/forum/bricks/')
         data = json.loads(response.content)
@@ -71,12 +36,6 @@ class BrickRestfulAPITest(TestCase):
             'name': 'haha'
         })
         self.assertEqual(response.status_code, 405)
-
-    # def test_visiting_igem_fails_returns_500(self):
-    #     # Note: Run this test without network and
-    #     # comment test_checking_whether_igem_has_brick test at the same time.
-    #     response = self.client.get('/api/forum/bricks/check_igem/?name=K314110')
-    #     self.assertEqual(response.status_code, 500)
 
     def test_fetch_experiences_of_particular_brick(self):
         brick = Brick.objects.create(name='test')
@@ -100,7 +59,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 1)
-        self.assertIs('pub_time' in data['results'][0], False)
+        self.assertFalse('pub_time' in data['results'][0])
         # test: can not post experiences
         self.assertEqual(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/experiences/' % brick.id, {})
@@ -189,7 +148,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(self.brick.watch_users.all().count(), 0)
         response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
         self.assertEqual(
             self.client.get('/api/forum/bricks/%d/watched_users/' % self.brick.id).data['count'],
@@ -200,11 +159,11 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(self.brick.watch_users.all().count(), 1)
 
     def test_cancel_watch_a_brick(self):
-        self.assertIs(self.brick.watch(self.user), True)
+        self.assertTrue(self.brick.watch(self.user))
         self.assertEqual(self.brick.watch_users.all().count(), 1)
         response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.post('/api/forum/bricks/%d/cancel_watch/' % self.brick.id)
         self.assertEqual(self.client.get('/api/users/me/watched_bricks/').data['count'], 0)
         self.assertEqual(response.status_code, 200)
@@ -225,7 +184,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(data['rate_score'], '0.0')
         response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='fff', password='1593562120'), True)
+        self.assertTrue(self.client.login(username='fff', password='1593562120'))
         response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id)
         self.assertEqual(response.status_code, 400)
         response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
@@ -247,7 +206,7 @@ class BrickRestfulAPITest(TestCase):
         user3 = User.objects.create_test_user(username='bbb')
         user3.set_password('1010101010')
         user3.save()
-        self.assertIs(self.client.login(username='bbb', password='1010101010'), True)
+        self.assertTrue(self.client.login(username='bbb', password='1010101010'))
         response = self.client.post('/api/forum/bricks/%d/rate/' % self.brick.id, {
             'score': 4
         })
@@ -263,7 +222,7 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
         data = json.loads(response.content)
         self.assertEqual(len(data['results']), 0)
-        self.assertIs(self.client.login(username='abc', password='123456000+'), True)
+        self.assertTrue(self.client.login(username='abc', password='123456000+'))
         response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
