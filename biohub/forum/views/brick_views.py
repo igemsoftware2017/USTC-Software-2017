@@ -76,7 +76,6 @@ class BrickViewSet(mixins.ListModelMixin,
         except Exception as e:
             raise e
 
-    # @decorators.list_route(methods=['GET'])
     def check_database(self, *args, **kwargs):
         brick_name = self.request.query_params.get('name', None)
         if brick_name is not None:
@@ -85,7 +84,6 @@ class BrickViewSet(mixins.ListModelMixin,
             return Response('Database does not have it', status=status.HTTP_404_NOT_FOUND)
         return Response('Must specify param \'name\'.', status=status.HTTP_400_BAD_REQUEST)
 
-    # @decorators.list_route(methods=['GET'])
     def check_igem(self, *args, **kwargs):
         brick_name = self.request.query_params.get('name', None)
         if brick_name is not None:
@@ -182,8 +180,6 @@ class BrickViewSet(mixins.ListModelMixin,
         ''' enable searching via URL parameter: 'name', not including 'BBa_' '''
         name_begin_with = self.request.query_params.get('name', None)
         if name_begin_with:
-            # query_string = '%'.join(name_begin_with)
-            # Brick.objects.raw('SELECT * FROM forum_brick WHERE name LIKE '+query_string)
             return Brick.objects.filter(name__icontains=name_begin_with).order_by('name')
         else:
             # from REST framework's src code:

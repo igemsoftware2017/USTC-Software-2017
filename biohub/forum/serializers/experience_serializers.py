@@ -9,11 +9,8 @@ from ..serializers import ArticleSerializer
 @bind_model(Experience)
 class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
-    # content = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail',
-    #                                               read_only=True)
     content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    # content_data = ArticleSerializer(write_only=True)
     brick = serializers.HyperlinkedRelatedField(view_name='api:forum:brick-detail',
                                                 read_only=True)
     brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())

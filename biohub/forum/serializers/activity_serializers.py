@@ -11,9 +11,6 @@ from rest_framework.utils.serializer_helpers import BindingDict
 @bind_model(ActivityParam)
 class ActivityParamSerializer(ModelSerializer):
 
-    # serializer_field_mapping = ModelSerializer.serializer_field_mapping
-    # serializer_field_mapping[models.DecimalField] = serializers.FloatField
-
     user = serializers.SlugRelatedField(slug_field='username', read_only=True)
     # override to remove 'lazy' characters
 

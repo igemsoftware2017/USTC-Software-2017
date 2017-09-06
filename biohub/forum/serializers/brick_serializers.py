@@ -11,7 +11,6 @@ from ..models import Brick
 class BrickSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(
         view_name='api:forum:brick-detail')
-    # document = serializers.HyperlinkedRelatedField(view_name='api:forum:article-detail', read_only=True)
     document = ArticleSerializer(read_only=True)
     watch_users = UserSerializer(
         fields=('id', 'username'), read_only=True, many=True)
@@ -20,8 +19,6 @@ class BrickSerializer(ModelSerializer):
     experience_set = serializers.HyperlinkedRelatedField(read_only=True, many=True,
                                                          view_name='api:forum:experience-detail')
     seqFeatures = SeqFeatureSerializer(read_only=True, many=True)
-    # seqFeatures = serializers.HyperlinkedRelatedField(read_only=True, many=True,
-    #                                                   view_name='api:forum:seq_feature-detail')
 
     class Meta:
         model = Brick

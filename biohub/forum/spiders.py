@@ -45,7 +45,6 @@ class BrickSpider:
         # fill name
         brick.name = brick_name
         # fetch Designer
-        # brick.save()
         brick.designer = re.search('Designed by:\s*(.*?)\s*&nbsp', raw_html) and re.search(
             'Designed by:\s*(.*?)\s*&nbsp', raw_html).group(1) or ''
         brick.group_name = re.search('Group:\s*(.*?)\s*&nbsp', raw_html) and re.search(
@@ -63,8 +62,6 @@ class BrickSpider:
             brick.sequence_a = re.search(
                 'String\(\'(.*?)\'\)', raw_bioinfo) and re.search('String\(\'(.*?)\'\)', raw_bioinfo).group(1) or ''
             brick.sequence_b = BrickSpider.reverse_sequence(brick.sequence_a)
-        # dna_position = re.search(
-        #     'new Array\(.*?\'dna\',(\d+,\d+).*?\)', raw_bioinfo).group(1)
         # add char field with the suitable validator eg: "23,435" done!
             sub_parts_data = re.search('subParts.*?new Array\s*\((.+?)\);', raw_bioinfo) and re.search(
                 'subParts.*?new Array\s*\((.+?)\);', raw_bioinfo).group(1) or ''
@@ -110,7 +107,6 @@ class BrickSpider:
         if div.table.tr.td.text == 'None':
             brick.parameters = ''
         else:
-            # print(div.table.tr.td.text)
             for entry in div.table.find_all('tr'):
                 parameters.append(
                     [element.text for element in entry.find_all('td')])
@@ -144,7 +140,7 @@ class BrickSpider:
         article = Article.objects.create(text=markdown)  # attach no files
         brick.document = article
         brick.save()
-    # this must be executed after the brick has been saved
+        # this must be executed after the brick has been saved
         if(fetch_here):
             if(re.search(
                     'seqFeatures.*?new Array\s*\((.+?)\)', raw_bioinfo)):
@@ -170,12 +166,6 @@ class BrickSpider:
             subpart_set = [subpart.name.text[4:] for subpart in subparts]
             brick.sub_parts = ','.join(subpart_set)
             brick.save()
-        # except Exception as e:
-        #     self.logger.error('Error during parsing contents.')
-        #     self.logger.error(e)
-        #     return False
-            # If errors occur during parsing contents,
-            # logging and quiting rather than saving false data may be better
 
         return True
 
@@ -190,9 +180,6 @@ class ExperienceSpider:
     def fill_from_page(self, brick_name):
 
         brick = Brick.objects.get(name=brick_name)
-        # if experience is None:
-        #     experience = Experience(title='Part: ' + brick_name + ': Experience',
-        #                             brick=Brick.objects.get(name=brick_name))
         raw_response = requests.get(
             ExperienceSpider.base_site + 'Part:BBa_' + brick_name + ':Experience')
         if raw_response.status_code == 404:
@@ -265,16 +252,3 @@ class ExperienceSpider:
 
             pass
         return True
-
-
-# class SeqFeatureSpider:
-#     """
-#     Before using the spider, the brick witch the seq_feature is attached to should exist in database.
-#     """
-
-#     def fill_from_page(self, brick_name, seq_feature=None):
-#         if seq_feature is None:
-#             seq_feature = SeqFeature(brick=Brick.objects.get(name=brick_name))
-
-#         seq_feature.save()
-#         return True
