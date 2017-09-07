@@ -3,7 +3,8 @@ from biohub.utils.rest.serializers import bind_model,\
     ModelSerializer
 from ..models import Experience, Brick
 from biohub.accounts.serializers import UserSerializer
-from ..serializers import ArticleSerializer
+from .article_serializers import ArticleSerializer
+from .brick_serializers import BrickSerializer
 
 
 @bind_model(Experience)
@@ -11,10 +12,7 @@ class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    brick = serializers.HyperlinkedRelatedField(
-        view_name='api:forum:brick-detail',
-        read_only=True
-    )
+    brick = BrickSerializer(read_only=True, fields=('id', 'api_url', 'name', 'type'))
     brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())
     post_set = serializers.HyperlinkedRelatedField(
         read_only=True, many=True,

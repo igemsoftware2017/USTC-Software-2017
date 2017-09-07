@@ -1,7 +1,3 @@
-import json
-import os
-import tempfile
-
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
@@ -46,13 +42,13 @@ class ActivityParamTest(APITestCase):
         set_serializer.data
         # fetch some bricks and experiences
         response = client.get('/api/forum/bricks/B0032/')
-        data = json.loads(response.content)
+        data = response.data
         # publish an experience
         loads2 = {'brick_id': data['id'], 'content': {
             'text': 'this is a sample text', 'file_ids': []}}
         response = client.post('/api/forum/experiences/', loads2, format='json')
         self.assertEqual(response.status_code, 201)
-        exp_id = (json.loads(response.content))['id']
+        exp_id = response.data['id']
         # rate a brick
         response = client.post('/api/forum/bricks/' + str(data['id']) + '/rate/', {'score': 2.9})
         self.assertEqual(response.status_code, 200)
@@ -72,9 +68,7 @@ class ActivityParamTest(APITestCase):
             Activity.objects.all(), many=True)
         act_serializer.data
 
-        response = client.get('/api/forum/activities/')
-        with open(os.path.join(tempfile.gettempdir(), 'activities_data.txt'), 'wb') as f:
-            f.write(response.content)
+        client.get('/api/forum/activities/')
 
     def test_only_fetching_one_user_activities(self):
         client = APIClient()
@@ -86,8 +80,7 @@ class ActivityParamTest(APITestCase):
         self.assertTrue(brick.rate(2.3, self.user))
         response = client.get('/api/forum/activities/?user=abc')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 3)
+        self.assertEqual(len(response.data['results']), 3)
 
     def test_fetching_specific_type_activities(self):
         client = APIClient()

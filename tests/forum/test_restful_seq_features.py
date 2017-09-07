@@ -2,9 +2,6 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Brick, Article, Experience, SeqFeature
-import json
-import os
-import tempfile
 
 
 class SeqFeatureRestfulAPITest(TestCase):
@@ -30,7 +27,4 @@ class SeqFeatureRestfulAPITest(TestCase):
     def test_retrieve_seq_feature(self):
         response = self.client.get('/api/forum/seq_features/%d/' % self.seq_feature.id)
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(data['feature_type'], 'ha')
-        with open(os.path.join(tempfile.gettempdir(), "sequenceFeature_content.txt"), 'wb') as f:
-            f.write(response.content)
+        self.assertEqual(response.data['feature_type'], 'ha')

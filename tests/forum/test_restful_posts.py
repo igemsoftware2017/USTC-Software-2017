@@ -2,9 +2,6 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Brick
-import json
-import os
-import tempfile
 
 
 class PostRestfulAPITest(TestCase):
@@ -42,8 +39,6 @@ class PostRestfulAPITest(TestCase):
         })
         self.assertEqual(response.status_code, 201)
         response = client.get('/api/forum/posts/')
-        with open(os.path.join(tempfile.gettempdir(), "posts_content.txt"), 'wb') as f:
-            f.write(response.content)
         self.assertEqual(response.status_code, 200)
 
     def test_modify_my_post(self):
@@ -70,13 +65,10 @@ class PostRestfulAPITest(TestCase):
         self.post1.save()
         response = client.get('/api/forum/posts/')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(len(response.data['results']), 1)
         response = client.get('/api/forum/posts/?author=abc')
-        data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 0)
+        self.assertEqual(len(response.data['results']), 0)
         self.assertTrue(client.login(username='abc', password='abc546565132'))
         response = client.get('/api/forum/posts/?author=abc')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(len(response.data['results']), 1)

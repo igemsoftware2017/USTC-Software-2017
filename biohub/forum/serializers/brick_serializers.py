@@ -2,8 +2,8 @@ from rest_framework import serializers
 from biohub.utils.rest.serializers import bind_model,\
     ModelSerializer
 from biohub.accounts.serializers import UserSerializer
-from biohub.forum.serializers import ArticleSerializer,\
-    SeqFeatureSerializer
+from .article_serializers import ArticleSerializer
+from .seq_feature_serializers import SeqFeatureSerializer
 from ..models import Brick
 
 
