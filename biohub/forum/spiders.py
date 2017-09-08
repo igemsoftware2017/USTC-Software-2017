@@ -92,7 +92,7 @@ class BrickSpider:
                         start_loc=int(each[1]),
                         end_loc=int(each[2]),
                         name=each[3],
-                        reserve=bool(int(each[4] or '0')),
+                        reverse=bool(int(each[4] or '0')),
                     )
                     for each in seqFeatureList
                 ]
@@ -109,7 +109,7 @@ class BrickSpider:
                     start_loc=int(feature.startpos.text),
                     end_loc=int(feature.endpos.text),
                     name=feature.title.text,
-                    reserve=feature.direction.text == 'reverse',
+                    reverse=feature.direction.text == 'reverse',
                 )
                 for feature in feature_set
             ]
