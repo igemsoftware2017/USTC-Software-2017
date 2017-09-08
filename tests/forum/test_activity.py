@@ -2,11 +2,11 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 from biohub.accounts.models import User
-from biohub.forum.models import Activity, ActivityParam, Experience, Brick
-from biohub.forum.serializers import ActivityParamSerializer, ActivitySerializer
+from biohub.forum.models import Activity, Experience, Brick
+from biohub.forum.serializers import ActivitySerializer
 
 
-class ActivityParamTest(APITestCase):
+class ActivityTest(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_test_user(username='abc')
@@ -16,30 +16,10 @@ class ActivityParamTest(APITestCase):
         self.another_user.save()
         self.user.save()
 
-    def test_param_serialization(self):
-        self.param = ActivityParam.objects.create(
-            type='Experience', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
-
-        param_serializer = ActivityParamSerializer(self.param)
-        param_serializer.data
-        ActivityParam.objects.create(
-            type='Comment', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
-        ActivityParam.objects.create(
-            type='Star', user=self.user, partName='B0015', expLink='/api/forum/experiences/15', intro='')
-        ActivityParam.objects.create(
-            type='Rating', user=self.user, partName='B0015', expLink='/api/foorum/experiences/15', score=3.7)
-        set_serializer = ActivityParamSerializer(
-            ActivityParam.objects.all(), many=True)
-        set_serializer.data
-
     def test_simulation(self):
         client = APIClient()
         response = client.login(username='abc', password='123456000+')
 
-        ActivityParam.objects.all().delete()
-        set_serializer = ActivityParamSerializer(
-            ActivityParam.objects.all(), many=True)
-        set_serializer.data
         # fetch some bricks and experiences
         response = client.get('/api/forum/bricks/B0032/')
         data = response.data

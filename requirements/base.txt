@@ -11,4 +11,4 @@ django-redis==4.8.0
 lxml==3.8.0
 requests==2.18.4
 beautifulsoup4==4.6.0
-git+https://github.com/aaronsw/html2text.git
+html2text==2016.9.19

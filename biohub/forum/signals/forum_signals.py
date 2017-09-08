@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience, Brick
-from biohub.forum.models import Activity, ActivityParam
+from biohub.forum.models import Activity
 from biohub.forum.user_defined_signals import up_voting_experience_signal, rating_brick_signal, watching_brick_signal
 from biohub.notices.tool import Dispatcher
 
@@ -49,51 +49,63 @@ def add_creating_experience_activity(instance, created, **kwargs):
     # do nothing when it's from iGEM's website
     if instance.author:
         if created:
-            activityparam = ActivityParam.objects.create(
-                type='Experience', user=instance.author,
-                partName=instance.brick.name, expLink=reverse(
-                    'api:forum:experience-detail', kwargs={'pk': instance.id}
-                )
-            )
             Activity.objects.create(
-                type='Experience', user=instance.author, params=activityparam)
+                type='Experience', user=instance.author,
+                params={
+                    'partName': instance.brick.name,
+                    'expLink': reverse(
+                        'api:forum:experience-detail', kwargs={'pk': instance.id}
+                    )
+                }
+            )
 
 
 @receiver(post_save, sender=Post)
 def add_creating_post_activity(instance, created, **kwargs):
-    activityparam = ActivityParam.objects.create(
-        type='Comment', user=instance.author, partName=instance.experience.brick.name,
-        expLink=reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
-    )
     Activity.objects.create(
-        type='Comment', user=instance.author, params=activityparam)
+        type='Comment', user=instance.author,
+        params={
+            'partName': instance.experience.brick.name,
+            'expLink': reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
+        }
+    )
 
 
 @receiver(up_voting_experience_signal, sender=Experience)
 def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
-    activityparam = ActivityParam.objects.create(
-        type='Star', user=user_up_voting, partName=instance.brick.name, expLink=reverse(
-            'api:forum:experience-detail', kwargs={'pk': instance.id}
-        )
-    )
     Activity.objects.create(
-        type='Star', user=user_up_voting, params=activityparam
+        type='Star', user=user_up_voting,
+        params={
+            'partName': instance.brick.name,
+            'expLink': reverse(
+                'api:forum:experience-detail', kwargs={'pk': instance.id}
+            )
+        }
     )
 
 
 @receiver(rating_brick_signal, sender=Brick)
 def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
-    activityparam = ActivityParam(type='Rating', user=user_rating, expLink=reverse(
-        'api:forum:brick-detail', kwargs={'pk': instance.id}), score=rating_score, partName=instance.name)
-    activityparam.save()
-    Activity.objects.create(type='Rating', user=user_rating, params=activityparam)
+    Activity.objects.create(
+        type='Rating', user=user_rating,
+        params={
+            'score': rating_score,
+            'partName': instance.name,
+            'expLink': reverse(
+                'api:forum:brick-detail', kwargs={'pk': instance.id}
+            )
+        }
+    )
 
 
 @receiver(watching_brick_signal, sender=Brick)
 def add_watching_brick_activity(instance, user, **kwargs):
-    activityparam = ActivityParam.objects.create(
-        type='Watch', user=user, partName=instance.name)
-    Activity.objects.create(type='Watch', user=user, params=activityparam)
+    Activity.objects.create(
+        type='Watch', user=user,
+        params={
+            'partName': instance.name
+        }
+    )
 
 
 @receiver(up_voting_experience_signal, sender=Experience)
