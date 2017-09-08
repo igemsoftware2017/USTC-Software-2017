@@ -24,10 +24,10 @@ class Article(models.Model):
 
 
 class Brick(models.Model):
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True, db_index=True)
     designer = models.CharField(max_length=200, default='')
     group_name = models.CharField(max_length=200, default='')
-    part_type = models.CharField(max_length=100, default='')  # eg: Signalling
+    part_type = models.CharField(max_length=100, default='', db_index=True)  # eg: Signalling
     nickname = models.CharField(max_length=100, default='')  # eg: f1 ori
 
     part_status = models.CharField(
@@ -175,14 +175,14 @@ class Experience(models.Model):
     class Meta:
         ordering = ('pub_time', 'id')
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' % self.title
 
 
 class SeqFeature(models.Model):
     brick = models.ForeignKey(
         Brick, on_delete=models.CASCADE, related_name='seqFeatures')
-    feature_type = models.CharField(max_length=15, default='')
+    feature_type = models.CharField(max_length=15, default='', db_index=True)
     start_loc = models.PositiveIntegerField(default=0)
     end_loc = models.PositiveIntegerField(default=0)
     name = models.CharField(max_length=15, default='')
