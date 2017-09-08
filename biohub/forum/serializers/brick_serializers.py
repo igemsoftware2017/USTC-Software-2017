@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from biohub.utils.rest.serializers import bind_model,\
-    ModelSerializer
+
+from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from biohub.accounts.serializers import UserSerializer
 from .article_serializers import ArticleSerializer
 from .seq_feature_serializers import SeqFeatureSerializer

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from biohub.utils.rest.serializers import ModelSerializer
 from biohub.utils.rest.serializers import bind_model
 from biohub.forum.models import Post, Experience
@@ -13,9 +14,7 @@ class PostSerializer(ModelSerializer):
     experience_id = serializers.PrimaryKeyRelatedField(
         write_only=True, queryset=Experience.objects.all()
     )
-    experience = ExperienceSerializer(
-        read_only=True,
-    )
+    experience = ExperienceSerializer(read_only=True)
 
     class Meta:
         model = Post

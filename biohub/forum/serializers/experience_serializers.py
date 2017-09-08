@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from biohub.utils.rest.serializers import bind_model,\
-    ModelSerializer
-from ..models import Experience, Brick
+
+from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from biohub.accounts.serializers import UserSerializer
+from ..models import Experience, Brick
 from .article_serializers import ArticleSerializer
 from .brick_serializers import BrickSerializer
 
@@ -12,8 +12,10 @@ class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username'), read_only=True)
-    brick = BrickSerializer(read_only=True, fields=('id', 'api_url', 'name', 'type'))
-    brick_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Brick.objects.all())
+    brick = BrickSerializer(read_only=True, fields=('id', 'api_url', 'name', 'part_type'))
+    brick_id = serializers.PrimaryKeyRelatedField(
+        write_only=True, queryset=Brick.objects.only('id', 'name', 'part_type')
+    )
     post_set = serializers.HyperlinkedRelatedField(
         read_only=True, many=True,
         view_name='api:forum:post-detail'
@@ -33,9 +35,11 @@ class ExperienceSerializer(ModelSerializer):
         # In these two methods, use .create() and .update() directly without verifying.
         # Because the data validation will be accomplished by the Experience serializer.
         content = content_serializer.create(content_data)
-        experience = Experience.objects.create(brick=brick, content=content,
-                                               author_name=validated_data['author'].username,
-                                               **validated_data)
+        experience = Experience.objects.create(
+            brick=brick, content=content,
+            author_name=validated_data['author'].username,
+            **validated_data
+        )
         return experience
 
     def update(self, instance, validated_data):
