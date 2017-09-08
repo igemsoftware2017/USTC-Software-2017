@@ -25,17 +25,7 @@ class ArticleSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         if 'file_ids' in validated_data:
             files = validated_data.pop('file_ids')
-            files_before = instance.files.all()
-            ids_before = [file.id for file in files_before]
-            for file in files:
-                if file.id in ids_before:
-                    # remove the files that will still exist,
-                    # so that only the files that no longer belong to the article will be left
-                    ids_before.remove(file.id)
-                else:
-                    instance.files.add(file)
-            for file_id in ids_before:
-                instance.files.remove(File.objects.get(pk=file_id))
+            instance.files.set(File.objects.only('id').filter(pk__in=files), clear=True)
         instance.text = validated_data.get('text', instance.text)
         instance.save()
         return instance
