@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from biohub.utils.rest.serializers import bind_model,\
-    ModelSerializer
+from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from rest_framework.fields import SkipField
 from rest_framework.relations import PKOnlyObject
 from ..models import Activity, ActivityParam

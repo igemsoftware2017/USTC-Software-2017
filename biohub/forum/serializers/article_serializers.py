@@ -7,8 +7,10 @@ from biohub.core.files.models import File
 
 @bind_model(Article)
 class ArticleSerializer(ModelSerializer):
-    file_ids = serializers.PrimaryKeyRelatedField(many=True, write_only=True,
-                                                  queryset=File.objects.all())
+    file_ids = serializers.PrimaryKeyRelatedField(
+        many=True, write_only=True,
+        queryset=File.objects.all()
+    )
 
     class Meta:
         model = Article

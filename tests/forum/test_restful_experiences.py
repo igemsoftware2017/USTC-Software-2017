@@ -75,11 +75,11 @@ class ExperienceRestfulAPITest(TestCase):
         response = self.client.patch('/api/forum/experiences/%d/' % self.experience.id,
                                      payloads, format='json')
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='fff', password='1593562120'), True)
+        self.assertTrue(self.client.login(username='fff', password='1593562120'))
         response = self.client.patch('/api/forum/experiences/%d/' % self.experience.id,
                                      payloads, format='json')
         self.assertEqual(response.status_code, 403)
-        self.assertIs(self.client.login(username='abc', password='abc546565132'), True)
+        self.assertTrue(self.client.login(username='abc', password='abc546565132'))
         response = self.client.patch('/api/forum/experiences/%d/' % self.experience.id,
                                      payloads, format='json')
         self.assertEqual(response.status_code, 200)
