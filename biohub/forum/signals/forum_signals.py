@@ -10,8 +10,7 @@ from biohub.notices.tool import Dispatcher
 
 @receiver(pre_delete, sender=Experience)
 def hide_attached_posts(instance, **kwargs):
-    for post in instance.post_set.all():
-        post.hide()
+    instance.post_set.update(is_visible=False)
 
 
 forum_dispatcher = Dispatcher('Forum')
@@ -50,34 +49,36 @@ def add_creating_experience_activity(instance, created, **kwargs):
     # do nothing when it's from iGEM's website
     if instance.author:
         if created:
-            activityparam = ActivityParam(
+            activityparam = ActivityParam.objects.create(
                 type='Experience', user=instance.author,
                 partName=instance.brick.name, expLink=reverse(
                     'api:forum:experience-detail', kwargs={'pk': instance.id}
                 )
             )
-            activityparam.save()
             Activity.objects.create(
                 type='Experience', user=instance.author, params=activityparam)
 
 
 @receiver(post_save, sender=Post)
 def add_creating_post_activity(instance, created, **kwargs):
-    activityparam = ActivityParam(
+    activityparam = ActivityParam.objects.create(
         type='Comment', user=instance.author, partName=instance.experience.brick.name,
         expLink=reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
     )
-    activityparam.save()
     Activity.objects.create(
         type='Comment', user=instance.author, params=activityparam)
 
 
 @receiver(up_voting_experience_signal, sender=Experience)
 def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
-    activityparam = ActivityParam.objects.create(type='Star', user=user_up_voting, partName=instance.brick.name, expLink=reverse(
-        'api:forum:experience-detail', kwargs={'pk': instance.id}))
+    activityparam = ActivityParam.objects.create(
+        type='Star', user=user_up_voting, partName=instance.brick.name, expLink=reverse(
+            'api:forum:experience-detail', kwargs={'pk': instance.id}
+        )
+    )
     Activity.objects.create(
-        type='Star', user=user_up_voting, params=activityparam)
+        type='Star', user=user_up_voting, params=activityparam
+    )
 
 
 @receiver(rating_brick_signal, sender=Brick)
