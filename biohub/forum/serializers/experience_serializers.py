@@ -30,7 +30,7 @@ class ExperienceSerializer(ModelSerializer):
         brick = validated_data.pop('brick_id')
         content_data = validated_data.pop('content')
         content_serializer = ArticleSerializer(data=content_data)
-        # In these two method, use .create() and .update() directly without verifying.
+        # In these two methods, use .create() and .update() directly without verifying.
         # Because the data validation will be accomplished by the Experience serializer.
         content = content_serializer.create(content_data)
         experience = Experience.objects.create(brick=brick, content=content,
