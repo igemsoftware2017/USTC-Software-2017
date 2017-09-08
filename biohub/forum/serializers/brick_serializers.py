@@ -13,10 +13,6 @@ class BrickSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(
         view_name='api:forum:brick-detail')
     document = ArticleSerializer(read_only=True)
-    watch_users = UserSerializer(
-        fields=('id', 'username'), read_only=True, many=True)
-    rate_users = UserSerializer(
-        fields=('id', 'username'), read_only=True, many=True)
     experience_set = serializers.HyperlinkedRelatedField(
         read_only=True, many=True,
         view_name='api:forum:experience-detail'
@@ -26,9 +22,11 @@ class BrickSerializer(ModelSerializer):
     class Meta:
         model = Brick
         exclude = ('update_time',)
-        read_only_fields = ('id', 'name', 'designer', 'group_name', 'part_type',
-                            'nickname', 'part_status', 'sample_status', 'experience_status',
-                            'use_num', 'twin_num', 'document',
-                            'assembly_compatibility', 'parameters', 'categories',
-                            'sequence_a', 'sequence_b', 'sub_parts', 'watch_users',
-                            'rate_score', 'rate_num', 'rate_users', 'star_users', 'stars')
+        read_only_fields = (
+            'id', 'name', 'designer', 'group_name', 'part_type',
+            'nickname', 'part_status', 'sample_status', 'experience_status',
+            'use_num', 'twin_num', 'document',
+            'assembly_compatibility', 'parameters', 'categories',
+            'sequence_a', 'sequence_b', 'sub_parts',
+            'rate_score', 'rate_num', 'stars'
+        )
