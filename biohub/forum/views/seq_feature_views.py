@@ -1,7 +1,9 @@
 from rest_framework import viewsets, mixins, generics
+
+from biohub.utils.rest import pagination
+
 from ..serializers import SeqFeatureSerializer
 from ..models import SeqFeature
-from biohub.utils.rest import pagination
 
 
 class SeqFeatureViewSet(mixins.RetrieveModelMixin,

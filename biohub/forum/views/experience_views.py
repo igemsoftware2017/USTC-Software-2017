@@ -1,12 +1,14 @@
+import datetime
+
+from django.utils import timezone
 from rest_framework import viewsets, status, decorators, generics
 from rest_framework.response import Response
+
 from biohub.forum.serializers import ExperienceSerializer
 from biohub.utils.rest import pagination, permissions
+
 from ..models import Experience
 from ..spiders import ExperienceSpider
-from biohub.accounts.models import User
-from django.utils import timezone
-import datetime
 
 
 class ExperienceViewSet(viewsets.ModelViewSet):
@@ -17,7 +19,6 @@ class ExperienceViewSet(viewsets.ModelViewSet):
     spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
-    # override this function to provide "request" as "None"
     def get_serializer_context(self):
         """
         Extra context provided to the serializer class.
@@ -32,7 +33,8 @@ class ExperienceViewSet(viewsets.ModelViewSet):
         author = self.request.query_params.get('author', None)
         if author is not None:
             queryset = Experience.objects.filter(
-                author=User.objects.get(username=author))
+                author__username=author
+            )
         else:
             queryset = Experience.objects.all()
         return queryset.order_by('-pub_time', '-update_time')
@@ -97,18 +99,22 @@ class ExperiencesOfBricksListView(generics.ListAPIView):
         if author is not None:
             return Experience.objects.filter(
                 brick=brick,
-                author=User.objects.only('pk').get(username=author)
+                author__username=author
             )
         return Experience.objects.filter(brick=brick)
 
     def get(self, request, *args, **kwargs):
         # ?short=true will return only fields of (id, title, author_name)
-        short = self.request.query_params.get('short', None)
-        if short is not None and short.lower() == 'true':
+        short = self.request.query_params.get('short', '')
+        if short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
-            serializer = ExperienceSerializer(page, fields=(
-                'api_url', 'id', 'title', 'author_name', 'author'), many=True, context={
-                'request': None
-            })
+            serializer = ExperienceSerializer(
+                page,
+                fields=('api_url', 'id', 'title', 'author_name', 'author'),
+                many=True,
+                context={
+                    'request': None
+                }
+            )
             return self.get_paginated_response(serializer.data)
         return super(ExperiencesOfBricksListView, self).get(request=request, *args, **kwargs)

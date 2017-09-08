@@ -1,19 +1,24 @@
+import re
+import logging
+import datetime
+import requests
+
+from django.utils import timezone
+from django.db.models.query import QuerySet
 from rest_framework import viewsets, status, decorators, mixins
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, NotFound
-from django.db.models.query import QuerySet
+
 from biohub.utils.rest import pagination, permissions
-from ..serializers import BrickSerializer
-from ..models import Brick
 from biohub.accounts.models import User
 from biohub.accounts.mixins import UserPaginationMixin, BaseUserViewSetMixin
+
+from ..serializers import BrickSerializer
+from ..models import Brick
 from ..spiders import BrickSpider, ExperienceSpider
-from django.utils import timezone
-import datetime
-import re
-import requests
-import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BaseBrickViewSet(object):
@@ -33,10 +38,10 @@ class BrickViewSet(mixins.ListModelMixin,
     experience_spider = ExperienceSpider()
     UPDATE_DELTA = datetime.timedelta(days=10)
 
-    # override this function to provide "request" as "None"
     def get_serializer_context(self):
         """
         Extra context provided to the serializer class.
+        Override this function to provide "request" as None.
         """
         return {
             'request': None,
@@ -46,11 +51,7 @@ class BrickViewSet(mixins.ListModelMixin,
 
     @staticmethod
     def has_brick_in_database(brick_name):
-        try:
-            Brick.objects.get(name=brick_name)
-        except Brick.DoesNotExist:
-            return False
-        return True
+        return Brick.objects.filter(name=brick_name).exists()
 
     @staticmethod
     def has_brick_in_igem(brick_name):
@@ -58,15 +59,15 @@ class BrickViewSet(mixins.ListModelMixin,
         try:
             raw_data = requests.get(url).text
         except Exception as e:
-            logger = logging.getLogger(__name__)
             logger.error('Unable to visit url:' + url)
             logger.error(e)
             raise APIException
-        if re.search(r'(?i)<ERROR>Part name not found.*</ERROR>', raw_data) is None \
-                and re.search(r'(?i)<\s*part_list\s*/\s*>', raw_data) is None \
-                and re.search(r'(?i)<\s*part_list\s*>\s*<\s*/\s*part_list\s*>', raw_data) is None:
-            return True
-        return False
+        return re.search(
+            r'(?i)<ERROR>Part name not found.*</ERROR>|'
+            r'<\s*part_list\s*/\s*>|'
+            r'<\s*part_list\s*>\s*<\s*/\s*part_list\s*>',
+            raw_data
+        ) is None
 
     @staticmethod
     def update_brick(brick_name, brick):
@@ -106,13 +107,13 @@ class BrickViewSet(mixins.ListModelMixin,
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def watch(self, *args, **kwargs):
-        if self.get_object().watch(self.request.user) is True:
+        if self.get_object().watch(self.request.user):
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
     def cancel_watch(self, *args, **kwargs):
-        if self.get_object().cancel_watch(self.request.user) is True:
+        if self.get_object().cancel_watch(self.request.user):
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 
@@ -120,9 +121,11 @@ class BrickViewSet(mixins.ListModelMixin,
     def rate(self, request, *args, **kwargs):
         score = request.data.get('score', None)
         if score is None:
-            return Response('Must upload your rating score.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        if self.get_object().rate(score, self.request.user) is True:
+            return Response(
+                'Must upload your rating score.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if self.get_object().rate(score, self.request.user):
             return Response('OK')
         return Response('Fail.', status=status.HTTP_400_BAD_REQUEST)
 

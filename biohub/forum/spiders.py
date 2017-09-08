@@ -3,10 +3,11 @@ import logging
 import re
 
 import requests
+import html2text
 from bs4 import BeautifulSoup
+from django.db import transaction
 
 from biohub.forum.models import Brick, Article, SeqFeature
-from biohub.utils.htm2text import html2text
 
 GENE_MAP = {'a': 't', 't': 'a', 'c': 'g', 'g': 'c'}
 
@@ -29,6 +30,11 @@ class BrickSpider:
         return ''.join(GENE_MAP.get(char, '') for char in sequence_a)
 
     def fill_from_page(self, brick_name, brick=None):
+
+        with transaction.atomic():
+            return self._fill_from_page(brick_name, brick)
+
+    def _fill_from_page(self, brick_name, brick=None):
         """
         Brick: class from models.Model
         brick_name: like 'K314110'
@@ -172,10 +178,9 @@ class BrickSpider:
         # restore images by supplementing URLs
         newdoc = re.sub(r'="/(.*?")', '="' +
                         BrickSpider.base_site + r'\1', str(soup))
-        soup2 = BeautifulSoup(newdoc, "lxml")
         h = html2text.HTML2Text()
         h.body_width = 1000  # must not break one line into multiple lines
-        markdown = h.handle(str(soup2))
+        markdown = h.handle(str(newdoc))
         article = Article.objects.create(text=markdown)  # attach no files
         brick.document = article
         brick.save()
@@ -196,6 +201,10 @@ class ExperienceSpider:
     logger = logging.getLogger(__name__)
 
     def fill_from_page(self, brick_name):
+        with transaction.atomic():
+            return self._fill_from_page(brick_name)
+
+    def _fill_from_page(self, brick_name):
 
         brick = Brick.objects.get(name=brick_name)
 
