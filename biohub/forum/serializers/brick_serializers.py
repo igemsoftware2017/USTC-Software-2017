@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from biohub.utils.rest.fields import PackedField
-from biohub.accounts.serializers import UserSerializer
 
 from .article_serializers import ArticleSerializer
 from ..models import Brick
