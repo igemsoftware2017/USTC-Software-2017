@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models, transaction
 
 from biohub.core.files.models import File
+from biohub.utils.db import PackedField
 from biohub.forum.user_defined_signals import rating_brick_signal, \
     up_voting_experience_signal, watching_brick_signal
 
@@ -70,6 +71,8 @@ class Brick(models.Model):
     star_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='bricks_starred')
     stars = models.PositiveIntegerField(default=0)
+
+    seq_features = PackedField()
 
     def watch(self, user):
         if not self.watch_users.filter(pk=user.id).exists():
@@ -177,14 +180,3 @@ class Experience(models.Model):
 
     def __str__(self):
         return '%s' % self.title
-
-
-class SeqFeature(models.Model):
-    brick = models.ForeignKey(
-        Brick, on_delete=models.CASCADE, related_name='seqFeatures')
-    feature_type = models.CharField(max_length=15, default='', db_index=True)
-    start_loc = models.PositiveIntegerField(default=0)
-    end_loc = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=15, default='')
-    reserve = models.BooleanField(default=False)
-    update_time = models.DateTimeField('last updated', auto_now=True)

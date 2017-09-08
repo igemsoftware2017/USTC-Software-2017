@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
 from biohub.utils.rest.serializers import bind_model, ModelSerializer
+from biohub.utils.rest.fields import PackedField
 from biohub.accounts.serializers import UserSerializer
+
 from .article_serializers import ArticleSerializer
-from .seq_feature_serializers import SeqFeatureSerializer
 from ..models import Brick
 
 
@@ -20,7 +21,7 @@ class BrickSerializer(ModelSerializer):
         read_only=True, many=True,
         view_name='api:forum:experience-detail'
     )
-    seqFeatures = SeqFeatureSerializer(read_only=True, many=True)
+    seq_features = PackedField()
 
     class Meta:
         model = Brick

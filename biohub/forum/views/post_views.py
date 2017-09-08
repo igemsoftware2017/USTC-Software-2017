@@ -2,7 +2,6 @@ from rest_framework import viewsets, generics
 from biohub.forum.serializers import PostSerializer
 from biohub.utils.rest import pagination, permissions
 from biohub.forum.models import Post
-from biohub.accounts.models import User
 
 
 class PostViewSet(viewsets.ModelViewSet):

@@ -5,6 +5,7 @@ from ..models import Article
 
 
 class ArticleViewSet(viewsets.ReadOnlyModelViewSet):
+
     serializer_class = ArticleSerializer
     queryset = Article.objects.all()
 

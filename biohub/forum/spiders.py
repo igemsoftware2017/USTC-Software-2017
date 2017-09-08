@@ -7,7 +7,7 @@ import html2text
 from bs4 import BeautifulSoup
 from django.db import transaction
 
-from biohub.forum.models import Brick, Article, SeqFeature
+from biohub.forum.models import Brick, Article
 
 GENE_MAP = {'a': 't', 't': 'a', 'c': 'g', 'g': 'c'}
 
@@ -87,7 +87,7 @@ class BrickSpider:
                     result.group(1)
                 )
                 seq_features = [
-                    SeqFeature(
+                    dict(
                         feature_type=each[0],
                         start_loc=int(each[1]),
                         end_loc=int(each[2]),
@@ -104,7 +104,7 @@ class BrickSpider:
             _soup = BeautifulSoup(raw_response.text, "lxml-xml")
             feature_set = _soup.find_all('feature')
             seq_features = [
-                SeqFeature(
+                dict(
                     feature_type=feature.type.text,
                     start_loc=int(feature.startpos.text),
                     end_loc=int(feature.endpos.text),
@@ -183,12 +183,8 @@ class BrickSpider:
         markdown = h.handle(str(newdoc))
         article = Article.objects.create(text=markdown)  # attach no files
         brick.document = article
+        brick.seq_features = seq_features
         brick.save()
-
-        for feature in seq_features:
-            feature.brick = brick
-
-        SeqFeature.objects.bulk_create(seq_features)
 
         return True
 

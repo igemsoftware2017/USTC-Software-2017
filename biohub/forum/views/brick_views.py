@@ -244,8 +244,8 @@ def retrieve_brick_by_name(request, brick_name):
         try:
             BrickViewSet.update_brick(brick_name=brick_name, brick=None)
         except Exception as e:
-            if e.args == 'The part does not exist on iGEM\'s website':
-                return Response('Unable to find this brick! ' + e.args,
+            if e.args == ('The part does not exist on iGEM\'s website',):
+                return Response('Unable to find this brick! ' + e.args[0],
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response('Unable to fetch data of this brick or of the experiences.',

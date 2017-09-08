@@ -1,7 +1,7 @@
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
-from biohub.forum.models import Brick, Article, Experience, SeqFeature
+from biohub.forum.models import Brick, Article, Experience
 
 
 class BrickRestfulAPITest(TestCase):
@@ -60,15 +60,6 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(self.client.login(username='abc', password='123456000+'), True)
         response = self.client.post('/api/forum/bricks/%d/experiences/' % brick.id, {})
         self.assertEqual(response.status_code, 405)
-
-    def test_fetch_seq_features_of_particular_brick(self):
-        SeqFeature.objects.create(brick=self.brick, name='1')
-        SeqFeature.objects.create(brick=self.brick, name='2')
-        b = Brick.objects.create(name='a')
-        SeqFeature.objects.create(brick=b, name='1')
-        response = self.client.get('/api/forum/bricks/%d/seq_features/' % self.brick.id)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 2)
 
     def test_using_name_rather_than_id_to_retrieve_brick(self):
         response = self.client.get('/api/forum/bricks/I718017/')
