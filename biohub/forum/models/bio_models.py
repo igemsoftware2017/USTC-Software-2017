@@ -140,8 +140,7 @@ class Experience(models.Model):
     # If the experience was fetched from the iGEM website,
     # the author_name should be set according to the data fetched.
     author_name = models.CharField(max_length=100, blank=True, default='')
-    update_time = models.DateTimeField(
-        'last updated', auto_now=True)
+    update_time = models.DateTimeField('last updated', auto_now=True)
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
     pub_time = models.DateField('publish time', default=date.today)
@@ -160,8 +159,9 @@ class Experience(models.Model):
                 self.up_vote_num += 1
                 self.up_vote_users.add(user)
                 self.save()
-                up_voting_experience_signal.send(sender=self.__class__, instance=self,
-                                                 user_up_voting=user, curr_up_vote_num=self.up_vote_num)
+                up_voting_experience_signal.send(
+                    sender=self.__class__, instance=self,
+                    user_up_voting=user, curr_up_vote_num=self.up_vote_num)
             return True
         return False
 

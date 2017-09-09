@@ -25,24 +25,21 @@ class BaseBrickViewSet(object):
     queryset = Brick.objects.all().order_by('name')
 
 
-class BrickViewSet(mixins.ListModelMixin,
-                   mixins.RetrieveModelMixin,
-                   UserPaginationMixin,
-                   BaseBrickViewSet,
-                   viewsets.GenericViewSet):
+brick_lookup_regex = r'\d+|(?:BBa_|pSB)[\w-]+'
 
-    brick_spider = BrickSpider()
-    experience_spider = ExperienceSpider()
-    UPDATE_DELTA = datetime.timedelta(days=10)
 
-    # lookup value can either be id or part name
-    loopup_value_regex = r'\d+|(?:BBa_|pSB)[\w-]+'
+class BrickLookupMixin(object):
 
-    def get_lookup_options(self):
+    brick_lookup_value_regex = brick_lookup_regex
+    brick_lookup_url_kwarg = None
+
+    def get_brick_lookup_options(self):
         """
         Parses kwargs and returns corresponding querying keyword arguments.
         """
-        lookup = self.kwargs[self.lookup_url_kwarg or self.lookup_field]
+        lookup = self.kwargs[
+            self.brick_lookup_url_kwarg or self.lookup_url_kwarg or self.lookup_field
+        ]
         options = {}
 
         try:
@@ -52,17 +49,44 @@ class BrickViewSet(mixins.ListModelMixin,
 
         return options
 
-    def get_object(self):
+    def get_brick_object(self, queryset=Brick):
         """
         This function is overrided to support two-way retrieving and caching.
         """
         if hasattr(self, '_object'):
-            return self._object
+            return self._brick_object
 
-        queryset = self.filter_queryset(self.get_queryset())
-        self._object = get_object_or_404(queryset, **self.get_lookup_options())
+        self._brick_object = get_object_or_404(queryset, **self.get_brick_lookup_options())
+        return self._brick_object
 
-        return self._object
+    @classmethod
+    def add_to_router(cls, router, prefix=''):
+        router.register(
+            r'bricks/(?P<{}>{}){}'.format(
+                cls.brick_lookup_url_kwarg, cls.brick_lookup_value_regex,
+                '/' + prefix if prefix else ''
+            ),
+            cls
+        )
+        return router
+
+
+class BrickViewSet(mixins.ListModelMixin,
+                   mixins.RetrieveModelMixin,
+                   UserPaginationMixin,
+                   BaseBrickViewSet,
+                   BrickLookupMixin,
+                   viewsets.GenericViewSet):
+
+    brick_spider = BrickSpider()
+    experience_spider = ExperienceSpider()
+    UPDATE_DELTA = datetime.timedelta(days=10)
+
+    # lookup value can either be id or part name
+    lookup_value_regex = brick_lookup_regex
+
+    def get_object(self):
+        return self.get_brick_object(self.filter_queryset(self.get_queryset()))
 
     def get_queryset(self):
         """
@@ -95,7 +119,7 @@ class BrickViewSet(mixins.ListModelMixin,
            database, and returned if in existence, else looked up from igem
            offical pages
         """
-        lookup_options = self.get_lookup_options()
+        lookup_options = self.get_brick_lookup_options()
 
         try:
             brick = Brick.objects.get(**lookup_options)
@@ -114,10 +138,11 @@ class BrickViewSet(mixins.ListModelMixin,
         if should_fetch:
             try:
                 self.update_brick(brick=brick, brick_name=brick_name)
-            except Exception as e:
-                raise
-
-            brick = self.get_object()
+            except SpiderError as e:
+                if brick is None:
+                    raise e.api_exception
+            else:
+                brick = self.get_object()
 
         serializer = BrickSerializer(brick, context=dict(request=None))
         return Response(serializer.data)
