@@ -70,7 +70,7 @@ class ExperienceViewSet(
         return queryset.order_by('-pub_time', '-update_time')
 
     @decorators.detail_route(methods=['GET'])
-    def up_voted_users(self, request, *args, **kwargs):
+    def voted_users(self, request, *args, **kwargs):
         return self.paginate_user_queryset(self.get_object().up_vote_users.all())
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
