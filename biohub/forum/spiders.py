@@ -44,7 +44,7 @@ class BrickSpider:
             brick = Brick(name=brick_name)
 
         raw_response = requests.get(
-            BrickSpider.base_site + 'Part:BBa_' + brick_name
+            BrickSpider.base_site + 'Part:' + brick_name
         )
         if raw_response.status_code == 404:
             raise Exception('The part does not exist on iGEM\'s website')
@@ -100,7 +100,7 @@ class BrickSpider:
                 seq_features = []
         else:
             raw_response = requests.get(
-                BrickSpider.registry_base_site + 'part=BBa_' + brick_name)
+                BrickSpider.registry_base_site + 'part=' + brick_name)
             _soup = BeautifulSoup(raw_response.text, "lxml-xml")
             feature_set = _soup.find_all('feature')
             seq_features = [
@@ -205,7 +205,7 @@ class ExperienceSpider:
         brick = Brick.objects.get(name=brick_name)
 
         raw_response = requests.get(
-            ExperienceSpider.base_site + 'Part:BBa_' + brick_name + ':Experience')
+            ExperienceSpider.base_site + 'Part:' + brick_name + ':Experience')
         if raw_response.status_code == 404:
             raise Exception('The experience does not exist on iGEM\'s website')
 

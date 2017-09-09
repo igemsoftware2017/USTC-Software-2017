@@ -10,9 +10,8 @@ from biohub.forum.user_defined_signals import rating_brick_signal, \
     up_voting_experience_signal, watching_brick_signal
 
 
-MAX_LEN_FOR_CONTENT = 1000
-MAX_LEN_FOR_THREAD_TITLE = 100
-MAX_LEN_FOR_ARTICLE = 5000
+MAX_LEN_FOR_THREAD_TITLE = 500
+MAX_LEN_FOR_ARTICLE = 50000
 
 
 class Article(models.Model):
@@ -47,7 +46,7 @@ class Brick(models.Model):
         settings.AUTH_USER_MODEL, related_name='bricks_watched',
     )
     # eg: "True,False,False,True,True,True"
-    assembly_compatibility = models.CharField(max_length=40, default='')
+    assembly_compatibility = PackedField(max_length=100, default='')
     parameters = models.TextField(default='')
     categories = models.TextField(default='')
     # private to Part:

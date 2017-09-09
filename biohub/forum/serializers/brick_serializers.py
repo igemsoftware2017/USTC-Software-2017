@@ -17,10 +17,11 @@ class BrickSerializer(ModelSerializer):
         view_name='api:forum:experience-detail'
     )
     seq_features = PackedField()
+    assembly_compatibility = PackedField()
 
     class Meta:
         model = Brick
-        exclude = ('update_time',)
+        exclude = ('update_time', 'watch_users', 'rate_users', 'star_users')
         read_only_fields = (
             'id', 'name', 'designer', 'group_name', 'part_type',
             'nickname', 'part_status', 'sample_status', 'experience_status',

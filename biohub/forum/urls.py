@@ -5,7 +5,6 @@ from biohub.forum.views import PostViewSet, ArticleViewSet, BrickViewSet,\
     ExperienceViewSet, ActivityViewSet, UserBrickViewSet
 from biohub.forum.views.post_views import PostsOfExperiencesListView
 from biohub.forum.views.experience_views import ExperiencesOfBricksListView
-from biohub.forum.views.brick_views import retrieve_brick_by_name
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, base_name='post')
@@ -17,7 +16,6 @@ router.register(r'activities', ActivityViewSet, base_name='activity')
 register_api(r'^forum/', [
     url(r'^experiences/(?P<experience_id>\d+)/posts/$', PostsOfExperiencesListView.as_view()),
     url(r'^bricks/(?P<brick_id>\d+)/experiences/$', ExperiencesOfBricksListView.as_view()),
-    url(r'bricks/(?P<brick_name>[A-Za-z]\d+)/$', retrieve_brick_by_name)
 ] + router.urls, 'forum')
 
 register_api(r'^', UserBrickViewSet.add_to_router(DefaultRouter()).urls)
