@@ -1,8 +1,12 @@
 #!/bin/bash
 
+mkdir tmp
+
 # Install a specific version of elasticsearch
-wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.deb -O es.deb
-sudo dpkg -i --force-confnew es.deb
+if [ ! -f tmp/es.deb ]; then
+    wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.deb -O tmp/es.deb
+fi
+sudo dpkg -i --force-confnew tmp/es.deb
 sudo service elasticsearch start
 
 # Compile espresso
@@ -43,7 +47,6 @@ EOF
 
 # Ensure biobricks.sql is ready
 if [ ! -f tmp/biobricks.sql ]; then
-    mkdir tmp
     wget http://parts.igem.org/partsdb/download.cgi?type=parts_sql -O tmp/biobricks.sql.gz
     gunzip tmp/biobricks.sql.gz
 fi
