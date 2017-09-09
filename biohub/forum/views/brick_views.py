@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from biohub.utils.rest import pagination, permissions
 from biohub.accounts.mixins import UserPaginationMixin, BaseUserViewSetMixin
+from biohub.forum.exceptions import SpiderError
 
 from ..serializers import BrickSerializer
 from ..models import Brick
@@ -147,8 +148,8 @@ class BrickViewSet(mixins.ListModelMixin,
         try:
             BrickViewSet.brick_spider.fill_from_page(brick_name, brick=brick)
             BrickViewSet.experience_spider.fill_from_page(brick_name)
-        except Exception as e:
-            raise e
+        except SpiderError as e:
+            raise e.api_exception
 
     # Magical: dynamically binds functions onto the class
     for view_name, attribute in (

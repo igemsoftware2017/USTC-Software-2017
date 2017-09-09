@@ -12,8 +12,14 @@ class BrickRestfulAPITest(TestCase):
         self.user.set_password("123456000+")
         self.user.save()
         self.document = Article.objects.create(text='aaa')
-        self.brick = Brick.objects.create(name='K314110', group_name='well',
+        self.brick = Brick.objects.create(name='BBa_K314110', group_name='well',
                                           document=self.document)
+
+    def test_nonexistence_brick(self):
+        self.assertEqual(
+            self.client.get('/api/forum/bricks/BBa_2333333/').status_code,
+            404
+        )
 
     def test_list_data_with_and_without_param_short(self):
         response = self.client.get('/api/forum/bricks/')
@@ -62,7 +68,7 @@ class BrickRestfulAPITest(TestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_using_name_rather_than_id_to_retrieve_brick(self):
-        response = self.client.get('/api/forum/bricks/I718017/')
+        response = self.client.get('/api/forum/bricks/BBa_I718017/')
         self.assertEqual(response.status_code, 200)
         # with open("brick_content.txt",'wb') as f:
         #     f.write(response.content)
@@ -80,11 +86,11 @@ class BrickRestfulAPITest(TestCase):
 
     def test_list_using_searching_param(self):
         # fetch several bricks
-        response = self.client.get('/api/forum/bricks/I6101/')
+        response = self.client.get('/api/forum/bricks/BBa_I6101/')
         self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/bricks/E0240/')
+        response = self.client.get('/api/forum/bricks/BBa_E0240/')
         self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/bricks/I742158/')
+        response = self.client.get('/api/forum/bricks/BBa_I742158/')
         self.assertEqual(response.status_code, 200)
         # list all bricks
         response = self.client.get('/api/forum/bricks/')
@@ -187,23 +193,3 @@ class BrickRestfulAPITest(TestCase):
         response = self.client.get('/api/forum/bricks/%d/' % self.brick.id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['rate_score'], '3.5')
-
-    def test_getting_bricks_watched(self):
-        response = self.client.get('/api/forum/bricks/watched_bricks/')
-        self.assertEqual(response.status_code, 400)
-        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
-        self.assertEqual(len(response.data['results']), 0)
-        self.assertTrue(self.client.login(username='abc', password='123456000+'))
-        response = self.client.post('/api/forum/bricks/%d/watch/' % self.brick.id)
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
-        data = response.data
-        self.assertEqual(len(data['results']), 1)
-        self.assertEqual(data['results'][0]['id'], self.brick.id)
-        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc')
-        data = response.data
-        self.assertEqual(len(data['results']), 1)
-        self.assertEqual(data['results'][0]['id'], self.brick.id)
-        response = self.client.get('/api/forum/bricks/watched_bricks/?username=abc&short=true')
-        data = response.data
-        self.assertNotIn('designer', data['results'][0])

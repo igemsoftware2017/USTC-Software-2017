@@ -11,8 +11,8 @@ class BrickSpiderTests(TestCase):
     def test1(self):
         ''' test with page: http://parts.igem.org/Part:BBa_I718017  '''
         brickspider = spiders.BrickSpider()
-        brickspider.fill_from_page(brick_name='I718017')
-        brick = Brick.objects.get(name='I718017')
+        brickspider.fill_from_page(brick_name='BBa_I718017')
+        brick = Brick.objects.get(name='BBa_I718017')
         self.assertEqual(brick.designer, 'Eimad Shotar')
         self.assertEqual(brick.group_name, 'iGEM07_Paris')
         self.assertEqual(brick.part_type, 'DNA')
@@ -27,8 +27,8 @@ class BrickSpiderTests(TestCase):
     def test2(self):
         ''' test with page: http://parts.igem.org/Part:BBa_B0015'''
         brickspider = spiders.BrickSpider()
-        brickspider.fill_from_page(brick_name='B0015')
-        brick = Brick.objects.get(name='B0015')
+        brickspider.fill_from_page(brick_name='BBa_B0015')
+        brick = Brick.objects.get(name='BBa_B0015')
         self.assertEqual(brick.designer, 'Reshma Shetty')
         self.assertEqual(brick.group_name, 'Antiquity')
         self.assertEqual(brick.part_type, 'Terminator')
@@ -45,16 +45,16 @@ class BrickSpiderTests(TestCase):
         I just examine the values in debug mode.
         '''
         brickspider = spiders.BrickSpider()
-        brickspider.fill_from_page(brick_name='I6084')
-        Brick.objects.get(name='I6084')
+        brickspider.fill_from_page(brick_name='BBa_I6084')
+        Brick.objects.get(name='BBa_I6084')
 
     def test4(self):
         ''' test with page: BBa_K314110'''
-        spiders.BrickSpider().fill_from_page(brick_name='K314110')
+        spiders.BrickSpider().fill_from_page(brick_name='BBa_K314110')
         ''' test a page with no sequence feature panel'''
-        spiders.BrickSpider().fill_from_page(brick_name='B1003')
-        Brick.objects.get(name='B1003')
-        spiders.BrickSpider().fill_from_page(brick_name='J23106')
+        spiders.BrickSpider().fill_from_page(brick_name='BBa_B1003')
+        Brick.objects.get(name='BBa_B1003')
+        spiders.BrickSpider().fill_from_page(brick_name='BBa_J23106')
         pass
 
 
@@ -64,10 +64,10 @@ class ExperienceSpiderTests(TestCase):
     def test1(self):
         ''' test with page: http://parts.igem.org/Part:BBa_B0015:Experience '''
         brickspider = spiders.BrickSpider()
-        brickspider.fill_from_page(brick_name='B0015')
+        brickspider.fill_from_page(brick_name='BBa_B0015')
         experiencespider = spiders.ExperienceSpider()
-        experiencespider.fill_from_page(brick_name='B0015')
-        brick = Brick.objects.get(name='B0015')
+        experiencespider.fill_from_page(brick_name='BBa_B0015')
+        brick = Brick.objects.get(name='BBa_B0015')
         experiences = brick.experience_set.all()
         for experience in experiences:
             markdown = experience.content.text

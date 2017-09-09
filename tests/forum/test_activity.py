@@ -21,7 +21,7 @@ class ActivityTest(APITestCase):
         response = client.login(username='abc', password='123456000+')
 
         # fetch some bricks and experiences
-        response = client.get('/api/forum/bricks/B0032/')
+        response = client.get('/api/forum/bricks/BBa_B0032/')
         data = response.data
         # publish an experience
         loads2 = {'brick_id': data['id'], 'content': {

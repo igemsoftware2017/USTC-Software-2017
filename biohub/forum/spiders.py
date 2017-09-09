@@ -3,13 +3,27 @@ import logging
 import re
 
 import requests
+from requests.exceptions import RequestException
 import html2text
 from bs4 import BeautifulSoup
 from django.db import transaction
 
 from biohub.forum.models import Brick, Article
+from biohub.forum.exceptions import NetworkError, ResourceNotFoundError
 
 GENE_MAP = {'a': 't', 't': 'a', 'c': 'g', 'g': 'c'}
+
+
+def safe_fetch(url, resource_name):
+    try:
+        response = requests.get(url)
+    except RequestException as e:
+        raise NetworkError(resource_name, str(e))
+    else:
+        if response.status_code == 404:
+            raise ResourceNotFoundError(resource_name)
+
+        return response
 
 
 class BrickSpider:
@@ -43,11 +57,7 @@ class BrickSpider:
         if brick is None:
             brick = Brick(name=brick_name)
 
-        raw_response = requests.get(
-            BrickSpider.base_site + 'Part:' + brick_name
-        )
-        if raw_response.status_code == 404:
-            raise Exception('The part does not exist on iGEM\'s website')
+        raw_response = safe_fetch(BrickSpider.base_site + 'Part:' + brick_name, brick_name)
 
         raw_html = raw_response.text
         soup = BeautifulSoup(raw_html, "lxml")
@@ -99,8 +109,10 @@ class BrickSpider:
             else:
                 seq_features = []
         else:
-            raw_response = requests.get(
-                BrickSpider.registry_base_site + 'part=' + brick_name)
+            raw_response = safe_fetch(
+                BrickSpider.registry_base_site + 'part=' + brick_name,
+                'meta of {}'.format(brick_name)
+            )
             _soup = BeautifulSoup(raw_response.text, "lxml-xml")
             feature_set = _soup.find_all('feature')
             seq_features = [
@@ -204,10 +216,10 @@ class ExperienceSpider:
 
         brick = Brick.objects.get(name=brick_name)
 
-        raw_response = requests.get(
-            ExperienceSpider.base_site + 'Part:' + brick_name + ':Experience')
-        if raw_response.status_code == 404:
-            raise Exception('The experience does not exist on iGEM\'s website')
+        raw_response = safe_fetch(
+            ExperienceSpider.base_site + 'Part:' + brick_name + ':Experience',
+            'experiences of {}'.format(brick_name)
+        )
 
         raw_html = raw_response.text
         soup = BeautifulSoup(raw_html, "lxml")
