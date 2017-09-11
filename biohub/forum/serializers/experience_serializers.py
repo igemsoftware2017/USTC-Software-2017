@@ -11,8 +11,8 @@ from .brick_serializers import BrickSerializer
 class ExperienceSerializer(ModelSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = ArticleSerializer()
-    author = UserSerializer(fields=('id', 'username'), read_only=True)
     brick = BrickSerializer(read_only=True, fields=('id', 'api_url', 'name', 'part_type'))
+    author = UserSerializer(fields=('id', 'username', 'avatar_url'), read_only=True)
     brick_id = serializers.PrimaryKeyRelatedField(
         write_only=True, queryset=Brick.objects.only('id', 'name', 'part_type')
     )
