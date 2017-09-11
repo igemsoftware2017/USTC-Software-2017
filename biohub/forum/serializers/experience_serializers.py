@@ -20,6 +20,8 @@ class ExperienceSerializer(ModelSerializer):
         write_only=True, queryset=Brick.objects.only('id', 'name', 'part_type')
     )
     up_vote_users = UserSerializer(fields=('id', 'username'), read_only=True, many=True)
+    voted = serializers.BooleanField(read_only=True, required=False)
+    posts_num = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         model = Experience

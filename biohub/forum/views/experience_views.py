@@ -43,7 +43,7 @@ class ExperienceViewSet(
         Extra context provided to the serializer class.
         """
         return {
-            'request': None,
+            'request': self.request,
             'format': self.format_kwarg,
             'view': self
         }
@@ -52,12 +52,13 @@ class ExperienceViewSet(
 
         author = self.request.query_params.get('author', None)
 
+        queryset = Experience.objects.with_posts_num()\
+            .with_voted_flag(self.request.user)
+
         if author is not None:
-            queryset = Experience.objects.filter(
+            queryset = queryset.filter(
                 author__username=author
             )
-        else:
-            queryset = Experience.objects.all()
         if self.brick_lookup_url_kwarg in self.kwargs:
             options = self.get_brick_lookup_options()
             queryset = queryset.filter(

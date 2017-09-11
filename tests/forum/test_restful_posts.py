@@ -33,10 +33,18 @@ class PostRestfulAPITest(TestCase):
     def test_authenticated_visitors_can_read_create_post(self):
         client = APIClient()
         self.assertTrue(client.login(username='abc', password='abc546565132'))
+        experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick)
         response = client.post('/api/forum/posts/', {
-            'experience_id': self.experience.id,
+            'experience_id': experience.id,
             'content': 'test_test_test',
         })
+
+        self.assertEqual(
+            self.client.get(
+                '/api/forum/experiences/{}/'.format(experience.id)
+            ).data['posts_num'],
+            1
+        )
         self.assertEqual(response.status_code, 201)
         response = client.get('/api/forum/posts/')
         self.assertEqual(response.status_code, 200)

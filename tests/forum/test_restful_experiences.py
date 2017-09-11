@@ -32,7 +32,13 @@ class ExperienceRestfulAPITest(TestCase):
             '/api/forum/experiences/?author=' + self.user1.username + '&short=true'
         )
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(response.data['results'][0].get('content'))
+
+        exp = response.data['results'][0]
+        self.assertNotIn('content', exp)
+        self.assertNotIn('up_vote_users', exp)
+        self.assertIn('stars', exp['brick'])
+        self.assertIn('rate_num', exp['brick'])
+        self.assertIn('avatar_url', exp['author'])
 
     def test_post_experiences(self):
         payloads = {
@@ -125,6 +131,7 @@ class ExperienceRestfulAPITest(TestCase):
         response = client.get('/api/forum/experiences/' + str(other.id) + '/')
         post_detail = response.data
         self.assertEqual(post_detail['up_vote_num'], 1)
+        self.assertTrue(post_detail['voted'])
         # vote for my experience
         mine = Experience.objects.create(author=self.user1, brick=self.brick, author_name=self.user1.username)
         response = client.post('/api/forum/experiences/' + str(mine.id) + '/up_vote/')

@@ -122,6 +122,24 @@ class Brick(models.Model):
         return False
 
 
+class ExperienceQuerySet(models.QuerySet):
+
+    def with_posts_num(self):
+        return self.annotate(
+            posts_num=models.Count('posts')
+        )
+
+    def with_voted_flag(self, user):
+        return self.annotate(
+            voted=models.Exists(
+                Experience.up_vote_users.through.objects.filter(
+                    user=user.id,
+                    experience=models.OuterRef('pk')
+                )
+            )
+        )
+
+
 class Experience(models.Model):
     # In fact, a brick's experience consists not only user reviews,
     # but also applications of the brick.
@@ -150,6 +168,8 @@ class Experience(models.Model):
     # add records for users mark down who has already voted for the post
     up_vote_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='experiences_voted')
+
+    objects = ExperienceQuerySet.as_manager()
 
     def up_vote(self, user):
         if self.author is not None and self.author.id == user.id:

@@ -12,7 +12,7 @@ class Post(models.Model):
     # The is_visible fields of those posts will be set False instead.
     # That is, they can't be read by the people except the author himself.
     experience = models.ForeignKey(
-        Experience, on_delete=models.SET_NULL, null=True)
+        Experience, on_delete=models.SET_NULL, null=True, related_name='posts')
     content = models.TextField(blank=False, max_length=MAX_LEN_FOR_CONTENT, )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='post_set')
