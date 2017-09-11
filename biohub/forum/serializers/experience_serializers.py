@@ -14,7 +14,7 @@ class ExperienceSerializer(ModelSerializer):
     author = UserSerializer(fields=('id', 'username', 'avatar_url'), read_only=True)
     brick = BrickSerializer(
         read_only=True,
-        fields=('id', 'api_url', 'name', 'part_type', 'rate_num', 'stars')
+        fields=('id', 'api_url', 'name', 'part_type', 'rate_score', 'stars')
     )
     brick_id = serializers.PrimaryKeyRelatedField(
         write_only=True, queryset=Brick.objects.only('id', 'name', 'part_type')
