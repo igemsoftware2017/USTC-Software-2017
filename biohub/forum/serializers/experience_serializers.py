@@ -20,7 +20,7 @@ class ExperienceSerializer(ModelSerializer):
 
     class Meta:
         model = Experience
-        exclude = ('update_time', )
+        exclude = ('update_time', 'up_vote_users')
         read_only_fields = ('author', 'author_name', 'pub_time',
                             'content_url', 'brick_url', 'up_vote_num')
 
