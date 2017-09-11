@@ -15,7 +15,7 @@ class Post(models.Model):
         Experience, on_delete=models.SET_NULL, null=True, related_name='posts')
     content = models.TextField(blank=False, max_length=MAX_LEN_FOR_CONTENT, )
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='post_set')
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     update_time = models.DateTimeField(
         'last updated', auto_now=True,)
     pub_time = models.DateTimeField('publish time', auto_now_add=True)

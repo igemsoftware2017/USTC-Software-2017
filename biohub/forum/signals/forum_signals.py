@@ -10,7 +10,7 @@ from biohub.notices.tool import Dispatcher
 
 @receiver(pre_delete, sender=Experience)
 def hide_attached_posts(instance, **kwargs):
-    instance.post_set.update(is_visible=False)
+    instance.posts.update(is_visible=False)
 
 
 forum_dispatcher = Dispatcher('Forum')

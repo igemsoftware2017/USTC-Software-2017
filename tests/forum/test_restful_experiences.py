@@ -36,6 +36,7 @@ class ExperienceRestfulAPITest(TestCase):
         exp = response.data['results'][0]
         self.assertNotIn('content', exp)
         self.assertNotIn('up_vote_users', exp)
+        self.assertNotIn('post_set', exp)
         self.assertIn('stars', exp['brick'])
         self.assertIn('rate_num', exp['brick'])
         self.assertIn('avatar_url', exp['author'])
