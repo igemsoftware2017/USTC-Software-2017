@@ -11,7 +11,6 @@ from biohub.forum.user_defined_signals import rating_brick_signal, \
 
 
 MAX_LEN_FOR_THREAD_TITLE = 500
-MAX_LEN_FOR_ARTICLE = 50000
 
 
 class Article(models.Model):
@@ -19,8 +18,23 @@ class Article(models.Model):
     Each article serves as one of the following: a lab experience, or a document.
     The article has no 'name' field, for the name can be specified in text(using markdown)
     """
-    text = models.TextField(max_length=MAX_LEN_FOR_ARTICLE)
+    text = models.TextField()
+    digest = models.TextField(blank=True, null=False)
     files = models.ManyToManyField(File, default=None)
+
+    def make_digest(self):
+        import re
+        string = self.text.replace('\n', ' ')
+        string = re.sub(r'\!?\[(.*?)\]\(.+?\)', r'\1', string)
+        string = re.sub(r'[^a-zA-Z\d\-_\(\)]+', ' ', string)
+
+        self.digest = string[:string.rfind(' ', 0, 600)]
+        return self.digest
+
+    def save(self, *args, **kwargs):
+        self.make_digest()
+
+        super(Article, self).save(*args, **kwargs)
 
 
 class Brick(models.Model):

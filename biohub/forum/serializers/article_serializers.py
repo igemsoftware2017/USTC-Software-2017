@@ -10,19 +10,19 @@ from biohub.core.files.models import File
 class ArticleSerializer(ModelSerializer):
     file_ids = serializers.PrimaryKeyRelatedField(
         many=True, write_only=True,
-        queryset=File.objects.all()
+        queryset=File.objects.only('id')
     )
 
     class Meta:
         model = Article
-        fields = ('text', 'file_ids')
+        fields = ('text', 'file_ids', 'digest')
+        read_only_fields = ('digest',)
 
     def create(self, validated_data):
         files = validated_data.pop('file_ids')
-        article = Article.objects.create(**validated_data)
-        for file in files:
-            article.files.add(file)
-        article.save()
+        with transaction.atomic():
+            article = Article.objects.create(**validated_data)
+            article.files.add(*files)
         return article
 
     def update(self, instance, validated_data):
