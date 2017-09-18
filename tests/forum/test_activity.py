@@ -2,8 +2,9 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 from biohub.accounts.models import User
-from biohub.forum.models import Activity, Experience, Brick
-from biohub.forum.serializers import ActivitySerializer
+from biohub.forum.models import Activity, Experience
+from biohub.biobrick.models import Biobrick
+from biohub.forum.serializers.activity_serializers import ActivitySerializer
 
 
 class ActivityTest(APITestCase):
@@ -24,13 +25,13 @@ class ActivityTest(APITestCase):
         response = client.get('/api/forum/bricks/BBa_B0032/')
         data = response.data
         # publish an experience
-        loads2 = {'brick_id': data['id'], 'content': {
+        loads2 = {'brick_name': data['part_name'], 'content': {
             'text': 'this is a sample text', 'file_ids': []}}
         response = client.post('/api/forum/experiences/', loads2, format='json')
         self.assertEqual(response.status_code, 201)
         exp_id = response.data['id']
         # rate a brick
-        response = client.post('/api/forum/bricks/' + str(data['id']) + '/rate/', {'score': 2.9})
+        response = client.post('/api/forum/bricks/' + str(data['part_name']) + '/rate/', {'score': 2.9})
         self.assertEqual(response.status_code, 200)
         # comment a experience
         response = client.post('/api/forum/posts/', {'experience_id': exp_id, 'content': 'Uhhh...what you wrote is holly shit!'}, format='json')
@@ -38,10 +39,10 @@ class ActivityTest(APITestCase):
         # star an experience
         client.logout()
         client.login(username='another', password='hahaha')
-        response = client.post('/api/forum/experiences/' + str(exp_id) + '/up_vote/')
+        response = client.post('/api/forum/experiences/' + str(exp_id) + '/vote/')
         self.assertEqual(response.status_code, 200)
         # watch a brick
-        response = client.post('/api/forum/bricks/' + str(data['id']) + '/watch/')
+        response = client.post('/api/forum/bricks/' + str(data['part_name']) + '/watch/')
         self.assertEqual(response.status_code, 200)
         # examine activities
         act_serializer = ActivitySerializer(
@@ -52,12 +53,13 @@ class ActivityTest(APITestCase):
 
     def test_only_fetching_one_user_activities(self):
         client = APIClient()
-        brick = Brick.objects.create(name='emmm')
-        Experience.objects.create(brick=brick, author=self.user)
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        Experience.objects.create(brick=meta, author=self.user)
         self.assertTrue(brick.watch(self.user))
-        Experience.objects.create(brick=brick, author=self.another_user)
+        Experience.objects.create(brick=meta, author=self.another_user)
         self.assertTrue(brick.watch(self.another_user))
-        self.assertTrue(brick.rate(2.3, self.user))
+        self.assertTrue(brick.rate(self.user, 2.3))
         response = client.get('/api/forum/activities/?user=abc')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['results']), 3)
@@ -65,12 +67,13 @@ class ActivityTest(APITestCase):
     def test_fetching_specific_type_activities(self):
         client = APIClient()
 
-        brick = Brick.objects.create(name='emmm')
-        Experience.objects.create(brick=brick, author=self.user)
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        Experience.objects.create(brick=meta, author=self.user)
         self.assertTrue(brick.watch(self.user))
-        Experience.objects.create(brick=brick, author=self.another_user)
+        Experience.objects.create(brick=meta, author=self.another_user)
         self.assertTrue(brick.watch(self.another_user))
-        self.assertTrue(brick.rate(2.3, self.user))
+        self.assertTrue(brick.rate(self.user, 2.3))
 
         response = client.get('/api/forum/activities/?user=abc&type=Rating')
         self.assertEqual(response.status_code, 200)

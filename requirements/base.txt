@@ -12,3 +12,4 @@ lxml==3.8.0
 requests==2.18.4
 beautifulsoup4==4.6.0
 html2text==2016.9.19
+sqlparse==0.2.3

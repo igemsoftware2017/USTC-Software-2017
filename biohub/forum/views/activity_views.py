@@ -2,7 +2,7 @@ from rest_framework import mixins
 from rest_framework import viewsets
 
 from biohub.forum.models import Activity
-from biohub.forum.serializers import ActivitySerializer
+from biohub.forum.serializers.activity_serializers import ActivitySerializer
 from biohub.utils.rest import pagination
 
 

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from ..serializers import ArticleSerializer
+from biohub.forum.serializers.article_serializers import ArticleSerializer
 from ..models import Article
 
 

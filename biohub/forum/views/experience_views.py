@@ -8,12 +8,12 @@ from rest_framework.exceptions import ValidationError, NotFound
 
 from biohub.utils.rest import pagination, permissions
 from biohub.accounts.mixins import UserPaginationMixin, BaseUserViewSetMixin
-from biohub.forum.serializers import ExperienceSerializer
-from biohub.forum.exceptions import SpiderError
+from biohub.forum.serializers.experience_serializers import ExperienceSerializer
 
 from ..models import Experience
-from ..spiders import ExperienceSpider
-from .brick_views import BrickLookupMixin
+from biohub.biobrick.spiders import ExperienceSpider
+from biohub.biobrick.exceptions import SpiderError
+from biohub.biobrick.views import BrickLookupMixin
 
 logger = logging.getLogger('biohub.forum.views.experience_views')
 
@@ -23,8 +23,10 @@ class BaseExperienceViewSet(object):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
     pagination_class = pagination.factory('PageNumberPagination')
-    permission_classes = [permissions.C(permissions.IsAuthenticatedOrReadOnly) &
-                          permissions.check_owner('author', ('PATCH', 'PUT', 'DELETE'))]
+    permission_classes = [
+        permissions.C(permissions.IsAuthenticatedOrReadOnly) &
+        permissions.check_owner('author', ('PATCH', 'PUT', 'DELETE'))
+    ]
 
 
 class ExperienceViewSet(
@@ -68,21 +70,21 @@ class ExperienceViewSet(
                 }
             )
 
-        return queryset.order_by('-pub_time', '-update_time')
+        return queryset.order_by('-pub_time')
 
     @decorators.detail_route(methods=['GET'])
     def voted_users(self, request, *args, **kwargs):
-        return self.paginate_user_queryset(self.get_object().up_vote_users.all())
+        return self.paginate_user_queryset(self.get_object().voted_users.all())
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def up_vote(self, request, *args, **kwargs):
-        if self.get_object().up_vote(request.user):
+    def vote(self, request, *args, **kwargs):
+        if self.get_object().vote(request.user):
             return Response('OK')
         raise ValidationError('Fail')
 
     @decorators.detail_route(methods=['POST'], permission_classes=(permissions.IsAuthenticated,))
-    def cancel_up_vote(self, request, *args, **kwargs):
-        if self.get_object().cancel_up_vote(request.user):
+    def unvote(self, request, *args, **kwargs):
+        if self.get_object().unvote(request.user):
             return Response('OK')
         raise ValidationError('Fail')
 
@@ -90,11 +92,11 @@ class ExperienceViewSet(
         experience = self.get_object()
         # experience.author is None means it is from iGEM website,
         # rather than uploaded by a user
-        if experience.author is None:
+        if experience.author is None and experience.last_fetched is not None:
             now = timezone.now()
-            if now - experience.update_time > self.UPDATE_DELTA:
+            if now - experience.last_fetched > self.UPDATE_DELTA:
                 try:
-                    self.spider.fill_from_page(experience.brick.name)
+                    self.spider.fill_from_page(experience.brick.part_name)
                 except SpiderError as e:
                     logger.warn(str(e))
                 else:
@@ -136,7 +138,7 @@ class UserExperienceViewSet(mixins.ListModelMixin, BaseExperienceViewSet, BaseUs
             return getattr(
                 self.get_user_object(),
                 self.allowed_actions[self.action]
-            ).order_by('-pub_time', '-update_time')
+            ).order_by('-pub_time',)
         except KeyError:
             raise NotFound
 

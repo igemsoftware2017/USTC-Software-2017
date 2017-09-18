@@ -1,7 +1,8 @@
 from rest_framework.test import APIClient
 from django.test import TestCase
 from biohub.accounts.models import User
-from biohub.forum.models import Post, Experience, Brick
+from biohub.forum.models import Post, Experience
+from biohub.biobrick.models import BiobrickMeta, Biobrick
 
 
 class PostRestfulAPITest(TestCase):
@@ -12,8 +13,8 @@ class PostRestfulAPITest(TestCase):
         self.user1 = User.objects.create_test_user(username="abc")
         self.user1.set_password("abc546565132")
         self.user1.save()
-        self.brick = Brick.objects.create(name='K314110')
-        self.experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick)
+        self.brick = Biobrick.objects.get(part_name='BBa_K314110')
+        self.experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick.meta_instance)
         self.user2 = User.objects.create_test_user(username="fff")
         self.user2.set_password("1593562120")
         self.user2.save()
@@ -33,7 +34,7 @@ class PostRestfulAPITest(TestCase):
     def test_authenticated_visitors_can_read_create_post(self):
         client = APIClient()
         self.assertTrue(client.login(username='abc', password='abc546565132'))
-        experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick)
+        experience = Experience.objects.create(title="hhh", author=self.user1, brick=self.brick.meta_instance)
         response = client.post('/api/forum/posts/', {
             'experience_id': experience.id,
             'content': 'test_test_test',

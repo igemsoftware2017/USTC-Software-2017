@@ -39,8 +39,8 @@ class BaseUserViewSetMixin(viewsets.GenericViewSet):
         elif lookup.startswith('n:'):
 
             return get_object_or_404(User, username=lookup[2:])
-
-        return super(BaseUserViewSetMixin, self).get_object()
+        else:
+            return get_object_or_404(User, pk=lookup)
 
     @classmethod
     def add_to_router(cls, router):

@@ -1,4 +1,5 @@
-from biohub.forum.models import Post, Experience, Article, Brick
+from biohub.forum.models import Post, Experience, Article
+from biohub.biobrick.models import Biobrick, BiobrickMeta
 from biohub.accounts.models import User
 from django.test import TestCase
 import random
@@ -34,8 +35,8 @@ def create_new_experience(author, **kwargs):
 
 
 def create_new_brick(**kwargs):
-    brick = Brick.objects.create(
-        name=create_random_string(), document=create_new_article(),
+    brick = BiobrickMeta.objects.create(
+        part_name=create_random_string(), document=create_new_article(),
         **kwargs
     )
     return brick
@@ -87,7 +88,7 @@ class ExperienceSignalTests(TestCase):
         Article.objects.get(pk=article_id)
         article_id2 = self.experience2.content.id
         Article.objects.get(pk=article_id2)
-        Brick.objects.all().delete()
+        BiobrickMeta.objects.all().delete()
         self.assertRaises(Article.DoesNotExist, Article.objects.get, {
             'pk': article_id
         })
@@ -115,7 +116,7 @@ class BrickSignalTests(TestCase):
         Article.objects.get(pk=article_id)
         article_id2 = self.brick2.document.id
         Article.objects.get(pk=article_id2)
-        Brick.objects.all().delete()
+        BiobrickMeta.objects.all().delete()
         self.assertRaises(Article.DoesNotExist, Article.objects.get, {
             'pk': article_id
         })
@@ -129,7 +130,7 @@ class PostSignalTests(TestCase):
     def setUp(self):
         self.user1 = create_new_user()
         self.user2 = create_new_user()
-        self.brick = Brick.objects.create(name='K314110')
+        self.brick = BiobrickMeta.objects.create(part_name='BBa_K314110')
         self.experience1 = create_new_experience(self.user1, brick=self.brick)
         self.post1 = create_new_post(self.experience1, self.user1)
         self.post2 = create_new_post(self.experience1, self.user2)
@@ -148,26 +149,26 @@ class UpVotingSignalTests(TestCase):
     def setUp(self):
         self.user1 = create_new_user()
         self.user2 = create_new_user()
-        self.brick = Brick.objects.create(name='K314110')
+        self.brick = BiobrickMeta.objects.create(part_name='BBa_K314110')
         self.experience1 = create_new_experience(self.user1, brick=self.brick)
         self.post1 = create_new_post(self.experience1, self.user1)
 
     def test_up_vote(self):
-        self.assertTrue(self.experience1.up_vote(self.user2))
+        self.assertTrue(self.experience1.vote(self.user2))
         self.assertEqual(self.user1.notices.all().count(), 1)
 
 
 class WatchSigalTests(TestCase):
 
     def setUp(self):
-        self.brick = Brick.objects.create(name='K314110')
+        self.brick = Biobrick.objects.get(part_name='BBa_K314110')
         self.user = create_new_user()
 
     def test_watch_the_brick_and_receive_notice(self):
         self.assertIs(self.brick.watch(self.user), True)
         user2 = create_new_user()
         # publishing own experience won't receive notice
-        create_new_experience(self.user, brick=self.brick)
+        create_new_experience(self.user, brick=self.brick.meta_instance)
         self.assertEqual(self.user.notices.all().count(), 0)
-        create_new_experience(user2, brick=self.brick)
+        create_new_experience(user2, brick=self.brick.meta_instance)
         self.assertEqual(self.user.notices.all().count(), 1)

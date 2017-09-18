@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from biohub.forum.serializers import PostSerializer
+from biohub.forum.serializers.post_serializers import PostSerializer
 from biohub.utils.rest import pagination, permissions
 from biohub.forum.models import Post
 

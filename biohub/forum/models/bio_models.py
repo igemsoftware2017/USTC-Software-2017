@@ -1,13 +1,10 @@
-import decimal
 from datetime import date
 
 from django.conf import settings
 from django.db import models, transaction
 
 from biohub.core.files.models import File
-from biohub.utils.db import PackedField
-from biohub.forum.user_defined_signals import rating_brick_signal, \
-    up_voting_experience_signal, watching_brick_signal
+from biohub.forum.user_defined_signals import up_voting_experience_signal
 
 
 MAX_LEN_FOR_THREAD_TITLE = 500
@@ -37,105 +34,6 @@ class Article(models.Model):
         super(Article, self).save(*args, **kwargs)
 
 
-class Brick(models.Model):
-    name = models.CharField(max_length=200, unique=True, db_index=True)
-    designer = models.CharField(max_length=200, default='')
-    group_name = models.CharField(max_length=200, default='')
-    part_type = models.CharField(max_length=100, default='', db_index=True)  # eg: Signalling
-    nickname = models.CharField(max_length=100, default='')  # eg: f1 ori
-
-    part_status = models.CharField(
-        default='Not Released', max_length=50)
-
-    sample_status = models.CharField(
-        default='Sample in Stock', max_length=50)
-    experience_status = models.CharField(
-        default='works', max_length=50)
-    use_num = models.PositiveIntegerField(default=0)
-    twin_num = models.PositiveIntegerField(default=0)
-    document = models.OneToOneField(
-        Article, null=True, on_delete=models.SET_NULL, default=None)
-
-    watch_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_watched',
-    )
-    # eg: "True,False,False,True,True,True"
-    assembly_compatibility = PackedField(max_length=100, default='')
-    parameters = models.TextField(default='')
-    categories = models.TextField(default='')
-    # private to Part:
-    # a gene part has two strand, so use two fields to record the sequence.
-    sequence_a = models.TextField(default='')
-    sequence_b = models.TextField(default='')
-    # used_by = models.TextField(blank=True, default='') # temporarily removed
-    # recursive relation. the brick related must be a Device
-
-    # private to Device
-    # format: "BBa_K808013,BBa_K648028"
-    sub_parts = models.TextField(blank=True, default='', null=True)
-    update_time = models.DateTimeField('last updated', auto_now=True)
-
-    rate_score = models.DecimalField(
-        max_digits=2, decimal_places=1, default=0)  # eg: 3.7
-    rate_num = models.IntegerField(default=0)
-    # add records for users mark down who has already rated
-    rate_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_rated')
-    star_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='bricks_starred')
-    stars = models.PositiveIntegerField(default=0)
-
-    seq_features = PackedField()
-
-    def watch(self, user):
-        if not self.watch_users.filter(pk=user.id).exists():
-            with transaction.atomic():
-                self.watch_users.add(user)
-                watching_brick_signal.send(sender=self.__class__, instance=self, user=user)
-                return True
-        return False
-
-    def cancel_watch(self, user):
-        if self.watch_users.filter(pk=user.id).exists():
-            self.watch_users.remove(user)
-            return True
-        return False
-
-    def star(self, user):
-        if not self.star_users.filter(pk=user.id).exists():
-            with transaction.atomic():
-                self.star_users.add(user)
-                self.stars += 1
-                self.save()
-
-            return True
-
-        return False
-
-    def unstar(self, user):
-        if self.star_users.filter(pk=user.id).exists():
-            self.star_users.remove(user)
-            self.stars -= 1
-            self.save()
-
-            return True
-
-        return False
-
-    def rate(self, rate, user):
-        if not self.rate_users.filter(pk=user.id).exists():
-            with transaction.atomic():
-                self.rate_score = (self.rate_score *
-                                   self.rate_num + decimal.Decimal(rate)) / (self.rate_num + 1)
-                self.rate_num += 1
-                self.rate_users.add(user)
-                self.save()
-                rating_brick_signal.send(sender=self.__class__, user_rating=user, instance=self,
-                                         rating_score=rate, curr_score=self.rate_score)
-            return True
-        return False
-
-
 class ExperienceQuerySet(models.QuerySet):
 
     def with_posts_num(self):
@@ -146,7 +44,7 @@ class ExperienceQuerySet(models.QuerySet):
     def with_voted_flag(self, user):
         return self.annotate(
             voted=models.Exists(
-                Experience.up_vote_users.through.objects.filter(
+                Experience.voted_users.through.objects.filter(
                     user=user.id,
                     experience=models.OuterRef('pk')
                 )
@@ -172,38 +70,40 @@ class Experience(models.Model):
     # If the experience was fetched from the iGEM website,
     # the author_name should be set according to the data fetched.
     author_name = models.CharField(max_length=100, blank=True, default='')
-    update_time = models.DateTimeField('last updated', auto_now=True)
+    last_fetched = models.DateTimeField('last updated', null=True, default=None)
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
     pub_time = models.DateField('publish time', default=date.today)
     brick = models.ForeignKey(
-        Brick, on_delete=models.CASCADE, null=True, default=None)
-    up_vote_num = models.IntegerField(default=0)
+        'biobrick.BiobrickMeta', on_delete=models.CASCADE, null=True, default=None,
+        related_name='experiences')
+    votes = models.IntegerField(default=0)
     # add records for users mark down who has already voted for the post
-    up_vote_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='experiences_voted')
+    voted_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='experiences_voted'
+    )
 
     objects = ExperienceQuerySet.as_manager()
 
-    def up_vote(self, user):
+    def vote(self, user):
         if self.author is not None and self.author.id == user.id:
             return False
-        if not self.up_vote_users.filter(pk=user.id).exists():
+        if not self.voted_users.filter(pk=user.id).exists():
             with transaction.atomic():
-                self.up_vote_num += 1
-                self.up_vote_users.add(user)
-                self.save()
+                self.votes += 1
+                self.voted_users.add(user)
+                self.save(update_fields=['votes'])
                 up_voting_experience_signal.send(
                     sender=self.__class__, instance=self,
-                    user_up_voting=user, curr_up_vote_num=self.up_vote_num)
+                    user_up_voting=user, curr_up_vote_num=self.votes)
             return True
         return False
 
-    def cancel_up_vote(self, user):
-        if self.up_vote_users.filter(pk=user.id).exists():
+    def unvote(self, user):
+        if self.voted_users.filter(pk=user.id).exists():
             with transaction.atomic():
-                self.up_vote_users.remove(user)
-                self.up_vote_num -= 1
+                self.voted_users.remove(user)
+                self.votes -= 1
                 self.save()
             return True
         return False

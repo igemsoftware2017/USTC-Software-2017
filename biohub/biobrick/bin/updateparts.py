@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import os
 import sys
+import functools
 import argparse
 import pymysql
 import pymysql.err
@@ -19,6 +21,9 @@ ac_re = re.compile(
     r"<li\s+class='boxctrl\s+box_(?P<color>green|red)'>(?P<RFC>\d+)",
     re.IGNORECASE
 )
+
+
+make_path = functools.partial(os.path.join, os.path.dirname(__file__))
 
 
 def _display_error(exc, abort=True):
@@ -60,7 +65,7 @@ def make_connection(args):
             port=args.port,
             user=args.user,
             password=args.password,
-            db=args.database,
+            db='igem',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -68,35 +73,64 @@ def make_connection(args):
         _display_error(e)
 
 
-def prepare_table_structure():
+def prepare_table(args):
     """
-    The function is to make sure fields `ruler`, `ac` exist in table `parts`.
+    To ensure the table structure was prepared.
     """
 
     with connection.cursor() as cursor:
         try:
-            cursor.execute("DESCRIBE parts")
+            print('Checking if `parts_filtered` exists...')
+            cursor.execute("DESCRIBE parts_filtered")
             structures = cursor.fetchall()
         except pymysql.err.ProgrammingError as e:
-            no_table(e)
+            existence = False
+            print('`parts_filtered` does not exist')
+        else:
+            existence = True
+            print('`parts_filtered` exists')
 
-        fields = {'ruler', 'ac'}
-        wrong_types = [x['Field'] for x in structures if x['Field'] in fields and x['Type'] != 'longtext']
+        if not existence or args.force_rebuild_table:
+            print(
+                'Rebuilding `parts_filtered` due to {}...'.format(
+                    'non-existence'
+                    if not existence
+                    else '`force-rebuild-table` flag'
+                )
+            )
 
-        if wrong_types:
-            print("Fields %s have wrong types, dropping..." % ', '.join(wrong_types))
-            for field in wrong_types:
-                cursor.execute('ALTER TABLE parts DROP COLUMN %s' % field)
+            print('Reinstalling stored procedure...')
+            return_code = os.system(' '.join([
+                'mysql',
+                '-u{}'.format(args.user),
+                '-p{}'.format(args.password) if args.password else '',
+                '<',
+                make_path('..', 'sql', 'igem', 'preprocess.sql')
+            ]))
+            if return_code != 0:
+                print('Stored procedure installation failed with exit code {}'.format(return_code))
+                sys.exit(return_code)
 
-        missing = fields - set(x['Field'] for x in structures)
+            print('Stored procedure installed')
+            cursor.execute('CALL filter_parts')
+        else:
+            fields = {'ruler', 'ac'}
+            wrong_types = [x['Field'] for x in structures if x['Field'] in fields and x['Type'] != 'longtext']
 
-        if missing:
-            print('Fields %s missing, altering table...' % ', '.join(missing))
-            for field in missing:
-                cursor.execute("ALTER TABLE parts ADD COLUMN %s longtext" % field)
+            if wrong_types:
+                print("Fields %s have wrong types, dropping..." % ', '.join(wrong_types))
+                for field in wrong_types:
+                    cursor.execute('ALTER TABLE parts_filtered DROP COLUMN %s' % field)
+
+            missing = fields - set(x['Field'] for x in structures)
+
+            if missing:
+                print('Fields %s missing, altering table...' % ', '.join(missing))
+                for field in missing:
+                    cursor.execute("ALTER TABLE parts_filtered ADD COLUMN %s longtext" % field)
 
     connection.commit()
-    print('Table structures prepared')
+    print('Table structure prepared')
 
 
 def iterate_table(chunk, force):
@@ -107,7 +141,7 @@ def iterate_table(chunk, force):
     """
 
     SQL = """
-    SELECT `part_id`, `seq_edit_cache` {} FROM parts ORDER BY `part_id`
+    SELECT `part_id`, `seq_edit_cache` {} FROM parts_filtered ORDER BY `part_id`
     """.format(', `ruler`, `ac`' if not force else '')
 
     with connection.cursor() as cursor:
@@ -172,7 +206,7 @@ def process(data, force, connection):
             ac = build_ac(ac_re.findall(html))
 
             cursor.execute(
-                "UPDATE parts SET `ruler`=%s, `ac`=%s WHERE `part_id`=%s",
+                "UPDATE parts_filtered SET `ruler`=%s, `ac`=%s WHERE `part_id`=%s",
                 (json.dumps(ruler), json.dumps(ac), item['part_id'])
             )
 
@@ -183,7 +217,7 @@ def main(args):
 
     global connection
     connection = make_connection(args)
-    prepare_table_structure()
+    prepare_table(args)
 
     update_connection = make_connection(args)
     for data in iterate_table(args.chunk, args.force):
@@ -195,7 +229,6 @@ if __name__ == '__main__':
         description='The script iterates table `parts`, parses `seq_edit_cache` of '
         'each row and stores the results in `ruler` and `ac` fields.'
     )
-    parser.add_argument('database')
     parser.add_argument(
         '--host',
         dest='host',
@@ -232,6 +265,10 @@ if __name__ == '__main__':
         action='store_true', default=False,
         help='if set, the script will parse all rows, otherwise it will skip '
         'processed rows'
+    )
+    parser.add_argument(
+        '--force-rebuild-table', '-frt',
+        dest='force_rebuild_table', action='store_true', default=False
     )
 
     main(parser.parse_args())

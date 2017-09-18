@@ -2,9 +2,10 @@ from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
 from rest_framework.reverse import reverse
 
-from biohub.forum.models import Post, Experience, Brick
+from biohub.forum.models import Post, Experience
 from biohub.forum.models import Activity
 from biohub.forum.user_defined_signals import up_voting_experience_signal, rating_brick_signal, watching_brick_signal
+from biohub.biobrick.models import Biobrick
 from biohub.notices.tool import Dispatcher
 
 
@@ -31,16 +32,19 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
         )
         post_author_url = instance.author.api_url
         brick_url = reverse(
-            'api:forum:brick-detail',
-            kwargs={'pk': experience.brick.id}
+            'api:forum:biobrick-detail',
+            kwargs={'pk': experience.brick.part_name}
         )
         forum_dispatcher.send(
             author,
             '{{instance.author.username|url:post_author_url}} commented on '
             'your experience (Title: {{ experience.title|url:experience_url }})'
-            ' of brick BBA_{{experience.brick.name|url:brick_url}}.',
-            instance=instance, experience=experience, brick_url=brick_url,
-            post_author_url=post_author_url, experience_url=experience_url
+            ' of brick {{experience.brick.part_name|url:brick_url}}.',
+            instance=instance,
+            experience=experience,
+            brick_url=brick_url,
+            post_author_url=post_author_url,
+            experience_url=experience_url
         )
 
 
@@ -52,7 +56,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
             Activity.objects.create(
                 type='Experience', user=instance.author,
                 params={
-                    'partName': instance.brick.name,
+                    'partName': instance.brick.part_name,
                     'expLink': reverse(
                         'api:forum:experience-detail', kwargs={'pk': instance.id}
                     )
@@ -65,7 +69,7 @@ def add_creating_post_activity(instance, created, **kwargs):
     Activity.objects.create(
         type='Comment', user=instance.author,
         params={
-            'partName': instance.experience.brick.name,
+            'partName': instance.experience.brick.part_name,
             'expLink': reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
         }
     )
@@ -76,7 +80,7 @@ def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
     Activity.objects.create(
         type='Star', user=user_up_voting,
         params={
-            'partName': instance.brick.name,
+            'partName': instance.brick.part_name,
             'expLink': reverse(
                 'api:forum:experience-detail', kwargs={'pk': instance.id}
             )
@@ -84,50 +88,64 @@ def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
     )
 
 
-@receiver(rating_brick_signal, sender=Brick)
+@receiver(rating_brick_signal, sender=Biobrick)
 def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
     Activity.objects.create(
         type='Rating', user=user_rating,
         params={
-            'score': rating_score,
-            'partName': instance.name,
+            'score': str(rating_score),  # make sure `rating_score` is JSON-serializable
+            'partName': instance.part_name,
             'expLink': reverse(
-                'api:forum:brick-detail', kwargs={'pk': instance.id}
+                'api:forum:biobrick-detail', kwargs={'pk': instance.part_name}
             )
         }
     )
 
 
-@receiver(watching_brick_signal, sender=Brick)
+@receiver(watching_brick_signal, sender=Biobrick)
 def add_watching_brick_activity(instance, user, **kwargs):
     Activity.objects.create(
         type='Watch', user=user,
         params={
-            'partName': instance.name
+            'partName': instance.part_name
         }
     )
 
 
 @receiver(up_voting_experience_signal, sender=Experience)
-def send_notice_to_experience_author_on_up_voting(instance, user_up_voting,
-                                                  curr_up_vote_num, **kwargs):
+def send_notice_to_experience_author_on_up_voting(
+        instance, user_up_voting,
+        curr_up_vote_num, **kwargs):
     author = instance.author
     # ignore if up_voting an experience fetched from iGEM website.
     if author is None:
         return
     brick = instance.brick
     experience_url = reverse(
-        'api:forum:experience-detail', kwargs={'pk': instance.id})
-    brick_url = reverse('api:forum:brick-detail', kwargs={'pk': brick.id})
+        'api:forum:experience-detail',
+        kwargs={
+            'pk': instance.id
+        }
+    )
+    brick_url = reverse(
+        'api:forum:biobrick-detail',
+        kwargs={
+            'pk': brick.part_name
+        }
+    )
     user_up_voting_url = user_up_voting.api_url
     forum_dispatcher.send(
         author,
         '{{user_up_voting.username|url:user_up_voting_url}}'
         ' voted for your experience '
         '(Title: {{ experience.title|url:experience_url }})'
-        ' of brick BBA_{{brick.name|url:brick_url}}. '
+        ' of brick BBA_{{brick.part_name|url:brick_url}}. '
         'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
-        experience=instance, brick_url=brick_url, experience_url=experience_url,
-        user_up_voting=user_up_voting, user_up_voting_url=user_up_voting_url,
-        brick=brick, curr_up_vote_num=curr_up_vote_num
+        experience=instance,
+        brick_url=brick_url,
+        experience_url=experience_url,
+        user_up_voting=user_up_voting,
+        user_up_voting_url=user_up_voting_url,
+        brick=brick,
+        curr_up_vote_num=curr_up_vote_num
     )

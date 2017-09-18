@@ -1,42 +1,28 @@
-from django.core.urlresolvers import reverse
-
-from rest_framework.test import APITestCase
+from ._base import BiobrickTest
 
 
-class TestSearch(APITestCase):
-    # To test the search function. As the search function is highly
-    # dependent on the indexes, you can only test it with given indexes.
-    # And don't worry if it does not show the specific answer 'cause
-    # the indexes may be different.
+class Test(BiobrickTest):
 
-    def test_suggestion(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'promotre'})
-        self.assertEqual(len(resp.data['results']), 0)
-        self.assertDictContainsSubset({'suggestion': 'promoter'}, resp.data)
+    def test_keyword(self):
 
-    def test_q_desc(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'RBS'})
-        self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertIn('RBS', resp.data['results'][0]['short_desc'])
+        res = self.client.get(self.base_url + '?q=Bio')
+        self.assertEqual(res.status_code, 200)
 
-    def test_highlight_desc(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'RBS', 'highlight': None})
-        self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertIn('<div class="highlight">RBS</div>',
-                      resp.data['results'][0]['short_desc'])
+        for item in res.data['results']:
+            self.assertIn('bio', item['short_desc'].lower())
 
-    def test_q_name(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'BBa_J63006'})
-        self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertEqual(resp.data['results'][0]['part_name'], 'BBa_J63006')
+    def test_name(self):
 
-    def test_highlight_name(self):
-        resp = self.client.get(reverse('api:biobrick:biobrick-search'),
-                               {'q': 'bba', 'highlight': None})
-        self.assertGreaterEqual(len(resp.data['results']), 1)
-        self.assertIn('<div class="highlight">BBa</div>',
-                      resp.data['results'][0]['part_name'])
+        res = self.client.get(self.base_url + '?q=n:0000')
+        self.assertEqual(res.status_code, 200)
+
+        for item in res.data['results']:
+            self.assertIn('0000', item['part_name'])
+
+    def test_type(self):
+
+        res = self.client.get(self.base_url + '?q=t:termin')
+        self.assertEqual(res.status_code, 200)
+
+        for item in res.data['results']:
+            self.assertIn('termin', item['part_type'].lower())

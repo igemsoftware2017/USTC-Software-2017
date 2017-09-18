@@ -1,3 +1,5 @@
+from functools import partial
+
 from rest_framework import serializers as rest_serializers
 
 
@@ -61,6 +63,14 @@ class DynamicSerializerMixin(object):
 
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
+
+    @classmethod
+    def creator(cls, *args, **kwargs):
+        result = partial(cls, *args, **kwargs)
+
+        result.creator = partial(partial, result)
+
+        return result
 
 
 class ModelSerializer(

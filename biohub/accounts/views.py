@@ -106,7 +106,9 @@ class UserViewSet(
     filter_fields = ('username',)
 
     def get_object(self):
-        return self.get_user_object()
+        obj = self.get_user_object()
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     @decorators.detail_route(['GET'])
     def followers(self, request, *args, **kwargs):

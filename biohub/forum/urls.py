@@ -1,13 +1,15 @@
 from django.conf.urls import url  # noqa
 from biohub.core.routes import register_api
 from rest_framework.routers import DefaultRouter
-from biohub.forum.views import PostViewSet, ArticleViewSet, BrickViewSet,\
-    ExperienceViewSet, ActivityViewSet, UserBrickViewSet, UserExperienceViewSet
+from biohub.forum.views import PostViewSet, ArticleViewSet,\
+    ExperienceViewSet, ActivityViewSet, UserExperienceViewSet
+
+from biohub.biobrick.views import BiobrickViewSet, UserBrickViewSet
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, base_name='post')
 router.register(r'articles', ArticleViewSet, base_name='article')
-router.register(r'bricks', BrickViewSet, base_name='brick')
+router.register(r'bricks', BiobrickViewSet, base_name='biobrick')
 router.register(r'experiences', ExperienceViewSet, base_name='experience')
 router.register(r'activities', ActivityViewSet, base_name='activity')
 router.register(r'experiences/(?P<experience_id>\d+)/posts', PostViewSet, base_name='post')
