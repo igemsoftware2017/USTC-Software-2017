@@ -69,14 +69,19 @@ class BaseBrickViewSet(object):
 
     @property
     def detail(self):
-        return 'detail' in self.request.query_params
+        if self.action == 'list':
+            return False
+        elif self.action == 'retrieve':
+            return True
+        else:
+            return 'detail' in self.request.query_params
 
     def get_serializer_class(self):
         ret = BiobrickSerializer
 
         if self.action == 'list':
             return ret.short_creator(
-                ('id', 'part_name', 'part_type', 'rate_score', 'stars', 'rates', 'watches', 'short_desc')
+                ('part_name', 'part_type', 'rate_score', 'stars', 'rates', 'watches', 'short_desc', 'uses')
             )
 
         if not self.detail:

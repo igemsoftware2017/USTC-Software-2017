@@ -32,7 +32,7 @@ class BiobrickSerializer(ModelSerializer):
 
     @classmethod
     def short_creator(cls, fields=(
-        'id', 'part_name', 'part_type', 'rate_score', 'stars', 'rates', 'watches',
+        'part_name', 'part_type', 'rate_score', 'stars', 'rates', 'watches', 'uses'
     )):
         return cls.creator(
             fields=fields
