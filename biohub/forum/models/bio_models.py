@@ -73,7 +73,7 @@ class Experience(models.Model):
     last_fetched = models.DateTimeField('last updated', null=True, default=None)
     # Automatically set the pub_time to now when the object is first created.
     # Also the pub_time can be set manually.
-    pub_time = models.DateField('publish time', default=date.today)
+    pub_time = models.DateTimeField('publish time', auto_now_add=True)
     brick = models.ForeignKey(
         'biobrick.BiobrickMeta', on_delete=models.CASCADE, null=True, default=None,
         related_name='experiences')
@@ -109,7 +109,7 @@ class Experience(models.Model):
         return False
 
     class Meta:
-        ordering = ('pub_time', 'id')
+        ordering = ('-pub_time', 'id')
 
     def __str__(self):
         return '%s' % self.title

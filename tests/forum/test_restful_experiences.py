@@ -63,7 +63,7 @@ class ExperienceRestfulAPITest(TestCase):
         data = response.data
         self.assertEqual(len(data['results']), 2)
         response = self.client.get('/api/forum/articles/%d/'
-                                   % Experience.objects.get(pk=data['results'][1]['id']).content.id)
+                                   % Experience.objects.get(pk=data['results'][0]['id']).content.id)
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(data['text'], 'hahaha')

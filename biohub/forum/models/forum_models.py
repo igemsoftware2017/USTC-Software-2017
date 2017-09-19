@@ -22,7 +22,7 @@ class Post(models.Model):
     is_visible = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['pub_time']
+        ordering = ['-pub_time']
 
     def hide(self):
         self.is_visible = False
