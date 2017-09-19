@@ -120,7 +120,7 @@ BEGIN
                 MAX(review_total) - MIN(review_total) + 1 as rt_gap,
                 MIN(deep_count) as dc_inf,
                 MAX(deep_count) - MIN(deep_count) as dc_gap
-            FROM parts WHERE doc_size > 0) AS t
+            FROM parts) AS t
         WHERE sequence_length > 10
         AND part_name NOT IN (
             SELECT part_name FROM parts
