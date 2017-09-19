@@ -23,12 +23,13 @@ class RateSerializer(serializers.Serializer):
 class BiobrickSerializer(ModelSerializer):
     ac = PackedField()
     ruler = PackedField()
+    parameters = PackedField()
     document = ArticleSerializer(fields=('text', 'digest'))
 
     class Meta:
         model = Biobrick
         exclude = ('favorite', 'has_barcode', 'review_count', 'review_total',
-                   'sequence_length')
+                   'sequence_length', 'last_fetched', 'ok', 'dominant')
 
     @classmethod
     def short_creator(cls, fields=(

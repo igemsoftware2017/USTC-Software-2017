@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 
@@ -91,7 +90,7 @@ class BrickSpider:
                 parameters.append(
                     [element.text for element in entry.find_all('td')]
                 )
-            meta.parameters = json.dumps(parameters)
+            meta.parameters = parameters
 
         soup = soup.find('div', id='mw-content-text')
         # remove scripts, panel, and compatibility infos

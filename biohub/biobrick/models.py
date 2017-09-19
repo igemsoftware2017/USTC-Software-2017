@@ -59,7 +59,7 @@ class MetaBase(models.Model):
     experience_status = models.CharField(default='works', max_length=50)
     twin_num = models.PositiveIntegerField(default=0)
 
-    parameters = models.TextField(default='')
+    parameters = PackedField(default='')
 
     rates = models.PositiveIntegerField(default=0)
     rate_score = models.DecimalField(max_digits=2, decimal_places=1, default=0)
