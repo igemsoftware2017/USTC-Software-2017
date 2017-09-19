@@ -13,3 +13,4 @@ requests==2.18.4
 beautifulsoup4==4.6.0
 html2text==2016.9.19
 sqlparse==0.2.3
+python-crontab==2.2.4
