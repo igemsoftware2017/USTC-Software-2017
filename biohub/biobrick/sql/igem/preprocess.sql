@@ -122,6 +122,9 @@ BEGIN
                 MAX(deep_count) - MIN(deep_count) as dc_gap
             FROM parts WHERE doc_size > 0) AS t
         WHERE sequence_length > 10
-            AND doc_size > 0;
+        AND part_name NOT IN (
+            SELECT part_name FROM parts
+            GROUP BY part_name HAVING COUNT(part_name) > 1
+        );
 END//
 delimiter ;
