@@ -3,10 +3,10 @@
 mkdir tmp
 
 # Install a specific version of elasticsearch
-if [ ! -f tmp/es.deb ]; then
-    wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.deb -O tmp/es.deb
+if [ ! -f tmp/es2.deb ]; then
+    wget https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.4.6/elasticsearch-2.4.6.deb -O tmp/es2.deb
 fi
-sudo dpkg -i --force-confnew tmp/es.deb
+sudo dpkg -i --force-confnew tmp/es2.deb
 sudo service elasticsearch start
 
 # Compile espresso
@@ -61,7 +61,7 @@ biohub/biobrick/bin/updateparts.py
 
 biohub/manage.py migrate
 biohub/manage.py refreshweight
-biohub/manage.py update_index
+time biohub/manage.py update_index -k 4
 
 
 cat > biohub/abacus/config.json << EOF2

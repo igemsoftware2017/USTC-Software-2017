@@ -21,3 +21,11 @@ The numerous parts provided by iGEM Parts Registry are precious to the community
 With the data dumped from iGEM Parts Registry, which contains information like sample status or used times, the parts can be roughly ranked. But further ranking can only be accomplished after experiments are done, which requires the assistance from the whole community. Such feedback mechanism does exist in iGEM Parts Registry, which is called Experiences, but is seldom used probably because of its hard-to-use interface. We think a user-friendly forum centred on Biobricks is necessary, where users can grade the parts they've used, or share experiences with other scholars. The forum on the one hand complements the data used for more accurate ranking, and on the other hand provides a platform for idea exchanging.
 
 The parts data can be used for various purposes, but apparently we are not able to achieve all of them. In consideration of this, we decide to make our software extensible. Developers with ideas to better make use of the data may develop their own plugins, and embed them into the software. With the help of forum, such plugins will be acquainted quickly, and accelerate the development of synthetic biology.
+
+## How to use Biohub 2.0?
+
+For biologists, just register an account on [biohub.tech](http://biohub.tech) (not deployed yet) and sign into it, and you can enjoy all the services we provide.
+
+For plugin developers, it's recommended to read our [Tutorials](#) (not deployed yet) first to get an idea of the plugin model. The documantation also contains [full list of references for Plugin APIs](#) (not deployed yet).
+
+If you are interested in the implementation of Biohub 2.0, you may also clone this repository onto your server and run it. The documantation contains a guide on [how to deploy this project](#) (not deployed yet). But **NOTE** that Biohub 2.0 is a GPL-licensed project, so all you have done with it must not violate the license.
