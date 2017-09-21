@@ -69,7 +69,7 @@ class Command(BaseCommand):
             return None
 
         job = cron.new(self.get_command())
-        job.setall("*/1 * * * *")
+        job.setall("*/30 * * * *")
 
         return job
 
