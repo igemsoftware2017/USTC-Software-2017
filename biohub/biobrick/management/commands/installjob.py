@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import crontab
+import multiprocessing
 from os import path
 
 from django.core.management import BaseCommand
@@ -33,11 +34,25 @@ class Command(BaseCommand):
         manage_py = path.abspath(path.join(modpath('biohub'), 'manage.py'))
         redirection = ' '.join(['>>' + self.log_file, '2>&1'])
 
-        commands = [' '.join(('date', redirection))]
-        for subcommand in ('refreshweight', 'update_index'):
-            commands.append(
-                ' '.join((python_bin, manage_py, subcommand, redirection))
-            )
+        cmd = lambda *parts: ' '.join(parts)  # noqa
+
+        commands = [
+            cmd('echo ===START `date`===', redirection),
+            cmd(
+                python_bin,
+                manage_py,
+                'refreshweight',
+                redirection
+            ),
+            cmd(
+                python_bin,
+                manage_py,
+                'update_index',
+                '-k {}'.format(multiprocessing.cpu_count()),
+                redirection
+            ),
+            cmd('echo ===END `date`===', redirection)
+        ]
 
         return ' && '.join(commands)
 
@@ -54,7 +69,7 @@ class Command(BaseCommand):
             return None
 
         job = cron.new(self.get_command())
-        job.setall("*/30 * * * *")
+        job.setall("*/1 * * * *")
 
         return job
 

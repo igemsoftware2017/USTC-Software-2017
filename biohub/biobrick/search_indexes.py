@@ -24,4 +24,7 @@ class BiobrickIndex(indexes.SearchIndex, indexes.Indexable):
         return Biobrick
 
     def index_queryset(self, using=None):
-        return self.get_model().objects.all()
+        return self.get_model().objects.only('short_desc', 'part_name', 'part_type', 'creation_date', 'weight')
+
+    def __str__(self):
+        return '<Biobrick Index for ElasticSearch>'
