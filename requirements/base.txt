@@ -2,13 +2,13 @@ Django==1.11.5
 djangorestframework==3.6.4
 django-filter==1.0.4
 rest-condition==1.0.3
-channels==1.1.6
+channels==1.1.8
 PyMySQL==0.7.11
 filelock==2.0.12
 asgi-redis==1.4.2
 cryptography==2.0.3
 django-redis==4.8.0
-lxml==3.8.0
+lxml==4.0.0
 requests==2.18.4
 beautifulsoup4==4.6.0
 html2text==2016.9.19
