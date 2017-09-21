@@ -20,7 +20,6 @@ class Command(BaseCommand):
         ('status_w', (4, '', False)),
         ('sample_status_w', (4, '', False)),
         ('works_w', (1, '', False)),
-        ('doc_size_w', (1, '', False)),
         ('uses_w', (5, '', False)),
         ('review_total_w', (1, '', False)),
         ('review_count_w', (1, '', False)),
@@ -55,12 +54,13 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
 
             cursor.execute(self.fetch_sql)
+            cols = [col[0] for col in cursor.description]
 
             while True:
                 result = cursor.fetchmany(chunk)
                 if not result:
                     break
-                yield result
+                yield (dict(zip(cols, row)) for row in result)
 
     def get_stats(self):
         """
@@ -85,18 +85,22 @@ class Command(BaseCommand):
         """
         For a given bulk of bricks, calculates and updates weight value for each
         record, with the help of statistical data specified by `stats`.
+
+        Returns the number of bricks processed.
         """
 
         with connection.cursor() as cursor:
             sql = []
+            counter = 0
 
             for brick in bricks:
 
+                counter += 1
                 full_scores = weight = 0
 
-                for index, (field, (score, max_field, pass_if_zero)) in enumerate(self.parameters):
+                for field, (score, max_field, pass_if_zero) in self.parameters:
 
-                    value = brick[index]
+                    value = brick[field]
                     if value is None or not score or not value and pass_if_zero:
                         continue
                     value = decimal.Decimal(value)
@@ -112,7 +116,7 @@ class Command(BaseCommand):
 
                 sql.append(
                     "SELECT '{}' as part_name, {} as weight".format(
-                        brick[0],
+                        brick['part_name'],
                         weight
                     )
                 )
@@ -124,6 +128,7 @@ class Command(BaseCommand):
             )
 
         connection.commit()
+        return counter
 
     def handle(self, chunk, **kwargs):
 
@@ -134,8 +139,7 @@ class Command(BaseCommand):
         counter = 0
 
         for bricks in self.iter_bricks(chunk):
-            counter += len(bricks)
-            self.calculate_bricks_weight(bricks, stats)
+            counter += self.calculate_bricks_weight(bricks, stats)
 
         self.stdout.write(
             "Done.\n{} bricks processed.\n{:.4f}s elapsed.".format(

@@ -5,7 +5,6 @@ SELECT
     p.status_w as status_w,
     p.sample_status_w as sample_status_w,
     p.works_w as works_w,
-    p.doc_size_w as doc_size_w,
     p.uses_w as uses_w,
     p.review_total_w as review_total_w,
     p.review_count_w as review_count_w,
