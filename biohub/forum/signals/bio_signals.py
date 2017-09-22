@@ -34,7 +34,7 @@ def notice_watching_user_when_new_experience_is_posted(instance, created, **kwar
                 user,
                 'New experience (Title: '
                 '{{experience.title|url:experience_url}}) was published '
-                'under brick BBA_{{brick.part_name|url:brick_url}}.',
+                'under brick {{brick.part_name|url:brick_url}}.',
                 experience=instance, experience_url=experience_url,
                 brick=brick, brick_url=brick_url
             )

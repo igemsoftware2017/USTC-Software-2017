@@ -139,7 +139,7 @@ def send_notice_to_experience_author_on_up_voting(
         '{{user_up_voting.username|url:user_up_voting_url}}'
         ' voted for your experience '
         '(Title: {{ experience.title|url:experience_url }})'
-        ' of brick BBA_{{brick.part_name|url:brick_url}}. '
+        ' of brick {{brick.part_name|url:brick_url}}. '
         'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
         experience=instance,
         brick_url=brick_url,
