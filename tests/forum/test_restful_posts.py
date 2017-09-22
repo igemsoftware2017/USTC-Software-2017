@@ -1,11 +1,11 @@
 from rest_framework.test import APIClient
-from django.test import TestCase
+from rest_framework.test import APITestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience
-from biohub.biobrick.models import BiobrickMeta, Biobrick
+from biohub.biobrick.models import Biobrick
 
 
-class PostRestfulAPITest(TestCase):
+class PostRestfulAPITest(APITestCase):
 
     def setUp(self):
         # don't pass the password on create() method,
@@ -20,6 +20,15 @@ class PostRestfulAPITest(TestCase):
         self.user2.save()
         self.post1 = Post.objects.create(author=self.user1, content="15210", experience=self.experience)
         self.post2 = Post.objects.create(author=self.user2, content="777777", experience=self.experience)
+
+    def test_10_items_per_page(self):
+        for _ in range(20):
+            Post.objects.create(author=self.user1, content='23333', experience=self.experience)
+
+        self.client.force_authenticate(self.user1)
+
+        data = self.client.get('/api/forum/posts/?experience_id={}'.format(self.experience.id)).data
+        self.assertEqual(len(data['results']), 10)
 
     def test_unauthenticated_visitors_can_only_read_post(self):
         client = APIClient()

@@ -6,7 +6,7 @@ from biohub.forum.models import Post
 
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
-    pagination_class = pagination.factory('PageNumberPagination')
+    pagination_class = pagination.factory('PageNumberPagination', page_size=10)
     permission_classes = [permissions.C(permissions.IsAuthenticatedOrReadOnly) &
                           permissions.check_owner('author', ('PATCH', 'PUT', 'DELETE'))]
 
