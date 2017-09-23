@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
             name='Biobrick',
             fields=[
                 ('weight', models.FloatField(default=0.0)),
+                ('weight_updated_time', models.DateTimeField(null=True)),
                 ('part_type', models.CharField(blank=True, max_length=20, null=True)),
                 ('author', models.CharField(blank=True, max_length=200, null=True)),
                 ('part_status', models.CharField(max_length=40, null=True)),
@@ -157,6 +158,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('weight', models.FloatField(default=0.0)),
                 ('part_name', models.CharField(db_index=True, max_length=255, primary_key=True, serialize=False)),
+                ('weight_updated_time', models.DateTimeField(null=True)),
             ],
             options={
                 'abstract': False,

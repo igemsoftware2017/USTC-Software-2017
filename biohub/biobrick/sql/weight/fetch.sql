@@ -12,7 +12,9 @@ SELECT
     m.rates as rates,
     m.rate_score as rate_score,
     m.stars as stars,
-    m.watches as watches
+    m.watches as watches,
+    w.weight as old_weight
 FROM
     igem.parts_filtered as p
-    LEFT JOIN biobrick_biobrickmeta as m ON p.part_name = m.part_name;
+    LEFT JOIN biobrick_biobrickmeta as m ON p.part_name = m.part_name
+    LEFT JOIN biobrick_biobrickweight as w ON w.part_name = p.part_name;

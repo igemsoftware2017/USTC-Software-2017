@@ -1,10 +1,14 @@
+import sys
 import time
 import decimal
+import math
+from datetime import timedelta
 import os.path as path
 
 from django.db import connection
+from django.utils.timezone import now
 from django.utils.functional import cached_property
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, call_command
 
 from biohub.utils.path import modpath
 
@@ -29,11 +33,29 @@ class Command(BaseCommand):
         ('watches', (2, 'max_watches', True))
     )
 
+    tolerance = 1e-4
+
     def add_arguments(self, parser):
+        parser.add_argument(
+            '--action', '-A',
+            choices=['calc', 'invalidate'],
+            default='calc'
+        )
         parser.add_argument(
             '--chunk',
             '-c',
-            type=int, default=1000
+            type=int, default=1000,
+            help='Items processed at once.'
+        )
+        parser.add_argument(
+            '--update-index', '-u',
+            action='store_true', default=False,
+            help='Indexes will be updated if specified.'
+        )
+        parser.add_argument(
+            '--age', '-a',
+            default='29m',
+            help='Time back to consider objects new. Should in the form of /\d+[HhMmSs]/.'
         )
 
     @cached_property
@@ -89,13 +111,15 @@ class Command(BaseCommand):
         Returns the number of bricks processed.
         """
 
+        current_time = connection.ops.adapt_datetimefield_value(now())
+
         with connection.cursor() as cursor:
             sql = []
-            counter = 0
+            total_counter = updated_counter = 0
 
             for brick in bricks:
 
-                counter += 1
+                total_counter += 1
                 full_scores = weight = 0
 
                 for field, (score, max_field, pass_if_zero) in self.parameters:
@@ -114,37 +138,109 @@ class Command(BaseCommand):
                 if full_scores:
                     weight /= full_scores
 
-                sql.append(
-                    "SELECT '{}' as part_name, {} as weight".format(
-                        brick['part_name'],
-                        weight
+                old_weight = brick['old_weight']
+
+                if old_weight is not None and not math.isclose(old_weight, weight, rel_tol=self.tolerance):
+
+                    sql.append(
+                        "SELECT '{}', {}, '{}'".format(
+                            brick['part_name'],
+                            weight,
+                            current_time
+                        )
+                    )
+                    updated_counter += 1
+
+            if updated_counter:
+                cursor.execute(
+                    "REPLACE INTO biobrick_biobrickweight (part_name, weight, weight_updated_time) {};".format(
+                        ' UNION ALL '.join(sql)
                     )
                 )
 
-            cursor.execute(
-                "REPLACE INTO biobrick_biobrickweight (part_name, weight) {};".format(
-                    ' UNION ALL '.join(sql)
-                )
-            )
-
         connection.commit()
-        return counter
+        return total_counter, updated_counter
 
-    def handle(self, chunk, **kwargs):
+    def calc(self, options):
 
-        begin_time = time.time()
         stats = self.get_stats()
+        chunk = options['chunk']
 
         self.stdout.write("Calculating...")
-        counter = 0
+        total_counter = updated_counter = 0
 
         for bricks in self.iter_bricks(chunk):
-            counter += self.calculate_bricks_weight(bricks, stats)
+            processed, updated = self.calculate_bricks_weight(bricks, stats)
+            total_counter += processed
+            updated_counter += updated
 
         self.stdout.write(
-            "Done.\n{} bricks processed.\n{:.4f}s elapsed.".format(
-                counter,
-                time.time() - begin_time
+            "Done.\n{} bricks processed,{} bricks updated.".format(
+                total_counter, updated_counter
             ),
             self.style.SUCCESS
+        )
+
+    def invalidate(self):
+
+        from biohub.biobrick.models import BiobrickWeight
+
+        self.stdout.write('Invalidating weights...')
+        BiobrickWeight.objects.update(weight_updated_time=now())
+        self.stdout.write('Done.', self.style.SUCCESS)
+
+    def parse_age(self, age):
+
+        if not age:
+            raise ValueError('Age cannot be empty.')
+
+        suffix = age[-1].lower()
+        if suffix not in 'hms':
+            raise ValueError('Age should end with s/m/h.')
+
+        num = age[:-1]
+        try:
+            num = int(age[:-1])
+        except ValueError:
+            raise ValueError('"{}" is not a valid integer.'.format(num))
+
+        return timedelta(**dict({
+            {'h': 'hours', 'm': 'minutes', 's': 'seconds'}[suffix]: num
+        }))
+
+    def parse_update_index(self, options):
+
+        to_update_index = options['update_index']
+        age = options['age']
+
+        if not to_update_index:
+            return to_update_index, None
+
+        try:
+            return to_update_index, self.parse_age(age)
+        except ValueError as exc:
+            self.stdout.write(str(exc), self.style.ERROR)
+            sys.exit(1)
+
+    def handle(self, action, **options):
+
+        to_update_index, age = self.parse_update_index(options)
+
+        begin_time = time.time()
+
+        if action == 'calc':
+            self.calc(options)
+        elif action == 'invalidate':
+            self.invalidate()
+
+        if to_update_index:
+            from multiprocessing import cpu_count
+
+            start = (now() - age).strftime('%Y-%m-%dT%H:%M:%S%z')
+
+            self.stdout.write('Indexing weights from {}'.format(start))
+            call_command('update_index', start_date=start, workers=cpu_count())
+
+        self.stdout.write(
+            '{:.4f}(s) elapsed.'.format(time.time() - begin_time)
         )

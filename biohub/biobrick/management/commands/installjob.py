@@ -42,13 +42,7 @@ class Command(BaseCommand):
                 python_bin,
                 manage_py,
                 'refreshweight',
-                redirection
-            ),
-            cmd(
-                python_bin,
-                manage_py,
-                'update_index',
-                '-k {}'.format(multiprocessing.cpu_count()),
+                '-u',
                 redirection
             ),
             cmd('echo ===END `date`===', redirection)

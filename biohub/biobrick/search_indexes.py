@@ -23,6 +23,9 @@ class BiobrickIndex(indexes.SearchIndex, indexes.Indexable):
     def get_model(self):
         return Biobrick
 
+    def get_updated_field(self):
+        return 'weight_updated_time'
+
     def index_queryset(self, using=None):
         return self.get_model().objects.only('short_desc', 'part_name', 'part_type', 'creation_date', 'weight')
 

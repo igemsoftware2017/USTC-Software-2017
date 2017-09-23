@@ -32,6 +32,7 @@ class RatedUser(models.Model):
 class WeightBase(models.Model):
 
     weight = models.FloatField(default=0.0)
+    weight_updated_time = models.DateTimeField(null=True)
 
     class Meta:
         abstract = True

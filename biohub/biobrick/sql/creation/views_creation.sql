@@ -4,6 +4,7 @@ DROP VIEW IF EXISTS biobricks;
 CREATE VIEW biobricks AS
     SELECT
         w.weight as weight,
+        w.weight_updated_time as weight_updated_time,
         m.group_name as group_name,
         m.experience_status as experience_status,
         m.twin_num as twin_num,
