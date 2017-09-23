@@ -10,6 +10,7 @@ from biohub.biobrick.serializers import BiobrickSerializer
 
 @bind_model(Experience)
 class ExperienceSerializer(ModelSerializer):
+
     api_url = serializers.HyperlinkedIdentityField(view_name='api:forum:experience-detail')
     content = ArticleSerializer()
     author = UserSerializer(fields=('id', 'username', 'avatar_url'), read_only=True)
@@ -28,11 +29,8 @@ class ExperienceSerializer(ModelSerializer):
 
     def create(self, validated_data):
         brick = validated_data.pop('brick_name')
-        content_data = validated_data.pop('content')
-        content_serializer = ArticleSerializer(data=content_data)
-        # In these two methods, use .create() and .update() directly without verifying.
-        # Because the data validation will be accomplished by the Experience serializer.
-        content = content_serializer.create(content_data)
+        content_serializer = validated_data.pop('content')
+        content = content_serializer.save()
         experience = Experience.objects.create(
             brick=brick, content=content,
             author_name=validated_data['author'].username,
@@ -40,11 +38,20 @@ class ExperienceSerializer(ModelSerializer):
         )
         return experience
 
+    def validate_content(self, value):
+
+        if self.instance is None:
+            serializer = ArticleSerializer(data=value)
+        else:
+            serializer = ArticleSerializer(self.instance.content, data=value, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+
+        return serializer
+
     def update(self, instance, validated_data):
         instance.brick = validated_data.get('brick_name', instance.brick)
         instance.author_name = validated_data['author_name']
         if 'content'in validated_data:
-            content_data = validated_data.pop('content')
-            content_serializer = ArticleSerializer(instance.content, data=content_data)
-            content_serializer.update(instance.content, content_data)
+            validated_data.pop('content').save()
         return super(ExperienceSerializer, self).update(instance, validated_data)

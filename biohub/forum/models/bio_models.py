@@ -31,6 +31,16 @@ class Article(models.Model):
 
         super(Article, self).save(*args, **kwargs)
 
+    def update_files(self, file_ids):
+        to_erase = self.files.exclude(id__in=file_ids)
+
+        for item in to_erase:
+            item.file.delete()
+
+        to_erase.delete()
+
+        self.files.set(File.objects.only('id').filter(pk__in=file_ids), clear=True)
+
 
 class ExperienceQuerySet(models.QuerySet):
 
