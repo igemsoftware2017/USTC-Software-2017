@@ -1,7 +1,6 @@
 import sys
 import tempfile
 import crontab
-import multiprocessing
 from os import path
 
 from django.core.management import BaseCommand
