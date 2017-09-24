@@ -25,16 +25,29 @@ class ActivityTest(APITestCase):
         response = client.get('/api/forum/bricks/BBa_B0032/')
         data = response.data
         # publish an experience
-        loads2 = {'brick_name': data['part_name'], 'content': {
-            'text': 'this is a sample text', 'file_ids': []}}
-        response = client.post('/api/forum/experiences/', loads2, format='json')
+        payload = {
+            'brick_name': data['part_name'],
+            'title': 'title',
+            'content': {
+                'text': 'this is a sample text',
+                'file_ids': []
+            }
+        }
+        response = client.post('/api/forum/experiences/', payload, format='json')
         self.assertEqual(response.status_code, 201)
         exp_id = response.data['id']
         # rate a brick
         response = client.post('/api/forum/bricks/' + str(data['part_name']) + '/rate/', {'score': 2.9})
         self.assertEqual(response.status_code, 200)
         # comment a experience
-        response = client.post('/api/forum/posts/', {'experience_id': exp_id, 'content': 'Uhhh...what you wrote is holly shit!'}, format='json')
+        response = client.post(
+            '/api/forum/posts/',
+            {
+                'experience_id': exp_id,
+                'content': 'Uhhh...what you wrote is holly shit!'
+            },
+            format='json'
+        )
         self.assertEqual(response.status_code, 201)
         # star an experience
         client.logout()
