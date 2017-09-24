@@ -1,11 +1,11 @@
 from rest_framework.test import APIClient
-from django.test import TestCase
+from rest_framework.test import APITestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Article
 from biohub.biobrick.models import Biobrick
 
 
-class ExperienceRestfulAPITest(TestCase):
+class ExperienceRestfulAPITest(APITestCase):
 
     def setUp(self):
         self.brick = Biobrick.objects.get(part_name='BBa_B0032')
@@ -44,6 +44,21 @@ class ExperienceRestfulAPITest(TestCase):
         self.assertIn('stars', exp['brick'])
         self.assertIn('rate_score', exp['brick'])
         self.assertIn('avatar_url', exp['author'])
+
+    def test_post_empty_title_experience_failed(self):
+        payload = {
+            'title': '',
+            'content': {
+                'text': 'hahaha',
+                'file_ids': []
+            },
+            'brick_name': self.brick_meta.part_name
+        }
+        self.client.force_authenticate(self.user1)
+
+        resp = self.client.post('/api/forum/experiences/', payload, format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('title', resp.data)
 
     def test_post_experiences(self):
         payloads = {

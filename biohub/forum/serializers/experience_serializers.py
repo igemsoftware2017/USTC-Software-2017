@@ -21,6 +21,8 @@ class ExperienceSerializer(ModelSerializer):
     voted = serializers.BooleanField(read_only=True, required=False)
     posts_num = serializers.IntegerField(read_only=True, required=False)
 
+    title = serializers.CharField(required=True)
+
     class Meta:
         model = Experience
         exclude = ('voted_users',)
