@@ -1,5 +1,5 @@
-from rest_framework.test import APIClient
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
+from unittest import SkipTest  # noqa
 
 from biohub.accounts.models import User
 from biohub.forum.models import Activity, Experience
@@ -17,7 +17,50 @@ class ActivityTest(APITestCase):
         self.another_user.save()
         self.user.save()
 
+    def test_timeline_permission(self):
+
+        self.assertEqual(
+            self.client.get('/api/forum/activities/timeline/').status_code,
+            403
+        )
+
+    def test_timeline(self):
+
+        self.user.follow(self.another_user)
+
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        Experience.objects.create(brick=meta, author=self.another_user)
+        self.assertTrue(brick.watch(self.another_user))
+        self.assertTrue(brick.rate(self.another_user, 2.3))
+
+        user3 = User.objects.create_test_user('usr3')
+        brick2 = Biobrick.objects.get(part_name='BBa_B0015')
+        brick2.ensure_meta_exists(fetch=True)
+        brick2.watch(user3)
+        brick2.watch(self.user)
+
+        self.client.force_authenticate(self.user)
+        data = self.client.get('/api/forum/activities/timeline/').data
+
+        self.assertEqual(len(data['results']), 4)
+        results = data['results']
+        self.assertDictContainsSubset({
+            'type': 'Watch',
+        }, results[0])
+        self.assertDictContainsSubset({
+            'type': 'Rating',
+        }, results[1])
+        self.assertDictContainsSubset({
+            'type': 'Watch'
+        }, results[2])
+        self.assertDictContainsSubset({
+            'type': 'Experience'
+        }, results[3])
+
     def test_simulation(self):
+        # raise SkipTest
+
         client = APIClient()
         response = client.login(username='abc', password='123456000+')
 

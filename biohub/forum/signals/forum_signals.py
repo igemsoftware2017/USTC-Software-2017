@@ -55,6 +55,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
         if created:
             Activity.objects.create(
                 type='Experience', user=instance.author,
+                brick_name=instance.brick.part_name,
                 params={
                     'partName': instance.brick.part_name,
                     'expLink': reverse(
@@ -68,6 +69,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
 def add_creating_post_activity(instance, created, **kwargs):
     Activity.objects.create(
         type='Comment', user=instance.author,
+        brick_name=instance.experience.brick.part_name,
         params={
             'partName': instance.experience.brick.part_name,
             'expLink': reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
@@ -79,6 +81,7 @@ def add_creating_post_activity(instance, created, **kwargs):
 def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
     Activity.objects.create(
         type='Star', user=user_up_voting,
+        brick_name=instance.brick.part_name,
         params={
             'partName': instance.brick.part_name,
             'expLink': reverse(
@@ -92,6 +95,7 @@ def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
 def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
     Activity.objects.create(
         type='Rating', user=user_rating,
+        brick_name=instance.part_name,
         params={
             'score': str(rating_score),  # make sure `rating_score` is JSON-serializable
             'partName': instance.part_name,
@@ -106,6 +110,7 @@ def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
 def add_watching_brick_activity(instance, user, **kwargs):
     Activity.objects.create(
         type='Watch', user=user,
+        brick_name=instance.part_name,
         params={
             'partName': instance.part_name
         }
