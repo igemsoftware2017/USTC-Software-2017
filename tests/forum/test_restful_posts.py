@@ -29,6 +29,7 @@ class PostRestfulAPITest(APITestCase):
 
         data = self.client.get('/api/forum/posts/?experience_id={}'.format(self.experience.id)).data
         self.assertEqual(len(data['results']), 10)
+        self.assertIn('avatar_url', data['results'][0]['author'])
 
     def test_unauthenticated_visitors_can_only_read_post(self):
         client = APIClient()

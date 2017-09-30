@@ -10,7 +10,7 @@ from .experience_serializers import ExperienceSerializer
 
 @bind_model(Post)
 class PostSerializer(ModelSerializer):
-    author = UserSerializer(fields=('id', 'username'), read_only=True)
+    author = UserSerializer(fields=('id', 'username', 'avatar_url'), read_only=True)
     experience_id = serializers.PrimaryKeyRelatedField(
         write_only=True, queryset=Experience.objects.all()
     )
