@@ -9,7 +9,7 @@ from biohub.utils.rest import pagination, permissions
 class ActivityViewSet(viewsets.GenericViewSet,
                       mixins.ListModelMixin):
     serializer_class = ActivitySerializer
-    pagination_class = pagination.factory('PageNumberPagination')
+    pagination_class = pagination.factory('PageNumberPagination', page_size=10)
 
     def get_queryset(self):
 
