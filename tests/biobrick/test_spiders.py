@@ -39,7 +39,7 @@ class TestBiobrickSpider(BiobrickTest):
         self.assertEqual(brick.sample_status, 'In stock')
         self.assertEqual(brick.experience_status, '1 Registry Star')
         self.assertEqual(brick.uses, 3210)
-        self.assertEqual(brick.twin_num, 16)
+        self.assertGreater(brick.twin_num, 1)
 
 
 class TestExperienceSpider(BiobrickTest):
