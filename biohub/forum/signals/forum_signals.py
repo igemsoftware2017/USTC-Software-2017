@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
 from biohub.forum.models import Activity
-from biohub.forum.user_defined_signals import up_voting_experience_signal, \
+from biohub.forum.user_defined_signals import voted_experience_signal, \
     rating_brick_signal, watching_brick_signal, unwatching_brick_signal
 from biohub.biobrick.models import Biobrick
 from biohub.notices.tool import Dispatcher
@@ -78,10 +78,10 @@ def add_creating_post_activity(instance, created, **kwargs):
     )
 
 
-@receiver(up_voting_experience_signal, sender=Experience)
-def add_up_voting_experience_activity(instance, user_up_voting, **kwargs):
+@receiver(voted_experience_signal, sender=Experience)
+def add_voted_experience_activity(instance, user_voted, **kwargs):
     Activity.objects.create(
-        type='Star', user=user_up_voting,
+        type='Star', user=user_voted,
         brick_name=instance.brick.part_name,
         params={
             'partName': instance.brick.part_name,
@@ -126,10 +126,10 @@ def remove_watching_brick_activity(instance, user, **kwargs):
     ).delete()
 
 
-@receiver(up_voting_experience_signal, sender=Experience)
-def send_notice_to_experience_author_on_up_voting(
-        instance, user_up_voting,
-        curr_up_vote_num, **kwargs):
+@receiver(voted_experience_signal, sender=Experience)
+def send_notice_to_experience_author_on_voting(
+        instance, user_voted,
+        current_votes, **kwargs):
     author = instance.author
     # ignore if up_voting an experience fetched from iGEM website.
     if author is None:
@@ -147,19 +147,19 @@ def send_notice_to_experience_author_on_up_voting(
             'pk': brick.part_name
         }
     )
-    user_up_voting_url = user_up_voting.api_url
+    user_url = user_voted.api_url
     forum_dispatcher.send(
         author,
-        '{{user_up_voting.username|url:user_up_voting_url}}'
-        ' voted for your experience '
+        '{{user_voted.username|url:user_url}}'
+        ' voted your experience '
         '(Title: {{ experience.title|url:experience_url }})'
         ' of brick {{brick.part_name|url:brick_url}}. '
-        'Now you have {{curr_up_vote_num}} vote(s) for that experience.',
+        'Now you have {{current_votes}} vote(s) for that experience.',
         experience=instance,
         brick_url=brick_url,
         experience_url=experience_url,
-        user_up_voting=user_up_voting,
-        user_up_voting_url=user_up_voting_url,
+        user_voted=user_voted,
+        user_url=user_url,
         brick=brick,
-        curr_up_vote_num=curr_up_vote_num
+        current_votes=current_votes
     )

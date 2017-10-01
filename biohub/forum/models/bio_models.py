@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models, transaction
 
 from biohub.core.files.models import File
-from biohub.forum.user_defined_signals import up_voting_experience_signal
+from biohub.forum.user_defined_signals import voted_experience_signal
 
 
 MAX_LEN_FOR_THREAD_TITLE = 500
@@ -101,9 +101,9 @@ class Experience(models.Model):
                 self.votes += 1
                 self.voted_users.add(user)
                 self.save(update_fields=['votes'])
-                up_voting_experience_signal.send(
+                voted_experience_signal.send(
                     sender=self.__class__, instance=self,
-                    user_up_voting=user, curr_up_vote_num=self.votes)
+                    user_voted=user, current_votes=self.votes)
             return True
         return False
 
