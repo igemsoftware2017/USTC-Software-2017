@@ -1,5 +1,5 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_delete, post_save
+from django.db.models.signals import post_save
 from rest_framework.reverse import reverse
 
 from biohub.forum.models import Experience
