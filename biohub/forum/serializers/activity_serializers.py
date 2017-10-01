@@ -11,7 +11,7 @@ class ActivitySerializer(ModelSerializer):
 
     class Meta:
         model = Activity
-        exclude = ('user', 'id')
+        exclude = ('user', 'id', 'target_type', 'target_id')
         read_only_fields = ('type', 'params', 'acttime',)
 
     def to_representation(self, obj):
