@@ -7,7 +7,7 @@ from django.db import models, transaction
 from biohub.accounts.models import User
 from biohub.utils.db import PackedField
 from biohub.forum.user_defined_signals import rating_brick_signal, \
-    watching_brick_signal
+    watching_brick_signal, unwatching_brick_signal
 
 
 class WatchingUser(models.Model):
@@ -264,6 +264,7 @@ class Biobrick(MetaBase, WeightBase):
             if num:
                 BiobrickMeta.objects.filter(part_name=self.part_name)\
                     .update(watches=models.F('watches') - 1)
+                unwatching_brick_signal.send(sender=Biobrick, instance=self, user=user)
                 return True
             else:
                 return False

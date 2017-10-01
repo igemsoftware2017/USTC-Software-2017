@@ -120,6 +120,11 @@ class ActivityTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['results']), 3)
 
+        self.assertTrue(brick.unwatch(self.user))
+        response = client.get('/api/forum/activities/?user=abc')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results']), 2)
+
     def test_fetching_specific_type_activities(self):
         client = APIClient()
 

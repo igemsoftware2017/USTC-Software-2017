@@ -4,7 +4,8 @@ from rest_framework.reverse import reverse
 
 from biohub.forum.models import Post, Experience
 from biohub.forum.models import Activity
-from biohub.forum.user_defined_signals import up_voting_experience_signal, rating_brick_signal, watching_brick_signal
+from biohub.forum.user_defined_signals import up_voting_experience_signal, \
+    rating_brick_signal, watching_brick_signal, unwatching_brick_signal
 from biohub.biobrick.models import Biobrick
 from biohub.notices.tool import Dispatcher
 
@@ -115,6 +116,14 @@ def add_watching_brick_activity(instance, user, **kwargs):
             'partName': instance.part_name
         }
     )
+
+
+@receiver(unwatching_brick_signal, sender=Biobrick)
+def remove_watching_brick_activity(instance, user, **kwargs):
+    Activity.objects.filter(
+        type='Watch',
+        user=user, brick_name=instance.part_name
+    ).delete()
 
 
 @receiver(up_voting_experience_signal, sender=Experience)
