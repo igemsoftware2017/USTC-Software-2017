@@ -17,6 +17,9 @@ rating_brick_signal = Signal(providing_args=('rating_score', 'curr_score',
 voted_experience_signal = Signal(
     providing_args=('instance', 'user_voted', 'current_votes')
 )
+unvoted_experience_signal = Signal(
+    providing_args=('instance', 'user_unvoted')
+)
 
 watching_brick_signal = Signal(providing_args=('instance', 'user'))
 unwatching_brick_signal = Signal(providing_args=('instance', 'user'))

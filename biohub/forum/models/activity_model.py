@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from biohub.utils.db import PackedField
 
@@ -18,3 +19,8 @@ class Activity(models.Model):
     brick_name = models.CharField(max_length=20)
     params = PackedField()
     acttime = models.DateTimeField(auto_now_add=True)
+
+    target_type = models.ForeignKey('contenttypes.ContentType', null=True)
+    target_id = models.PositiveSmallIntegerField(default=0, null=True)
+
+    target = GenericForeignKey('target_type', 'target_id')

@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                 ('pub_time', models.DateTimeField(auto_now_add=True, verbose_name='publish time')),
                 ('is_visible', models.BooleanField(default=True)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='posts', to=settings.AUTH_USER_MODEL)),
-                ('experience', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='posts', to='forum.Experience')),
+                ('experience', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='posts', to='forum.Experience')),
             ],
             options={
                 'ordering': ['pub_time'],

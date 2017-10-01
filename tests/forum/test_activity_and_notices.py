@@ -2,9 +2,9 @@ from rest_framework.test import APIClient, APITestCase
 from unittest import SkipTest  # noqa
 
 from biohub.accounts.models import User
-from biohub.forum.models import Activity, Experience
+from biohub.notices.models import Notice
+from biohub.forum.models import Activity, Experience, Post
 from biohub.biobrick.models import Biobrick
-from biohub.forum.serializers.activity_serializers import ActivitySerializer
 
 
 class ActivityTest(APITestCase):
@@ -100,33 +100,89 @@ class ActivityTest(APITestCase):
         # watch a brick
         response = client.post('/api/forum/bricks/' + str(data['part_name']) + '/watch/')
         self.assertEqual(response.status_code, 200)
-        # examine activities
-        act_serializer = ActivitySerializer(
-            Activity.objects.all(), many=True)
-        act_serializer.data
 
-        client.get('/api/forum/activities/')
+    def _simulate(self):
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        Experience.objects.create(brick=meta, author=self.user)
+        self.assertTrue(brick.watch(self.user))
+        exp = Experience.objects.create(brick=meta, author=self.another_user)
+        self.assertTrue(exp.vote(self.user))
+        self.assertTrue(brick.watch(self.another_user))
+        self.assertTrue(brick.rate(self.user, 2.3))
+
+        return brick, meta, exp
 
     def test_only_fetching_one_user_activities(self):
-        client = APIClient()
-        brick = Biobrick.objects.get(part_name='BBa_B0032')
-        meta = brick.ensure_meta_exists(fetch=True)
-        Experience.objects.create(brick=meta, author=self.user)
-        self.assertTrue(brick.watch(self.user))
-        Experience.objects.create(brick=meta, author=self.another_user)
-        self.assertTrue(brick.watch(self.another_user))
-        self.assertTrue(brick.rate(self.user, 2.3))
-        response = client.get('/api/forum/activities/?user=abc')
+
+        brick, meta, exp = self._simulate()
+        response = self.client.get('/api/forum/activities/?user=abc')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 3)
+        self.assertEqual(len(response.data['results']), 4)
+
+    def test_unwatch(self):
+
+        brick, meta, exp = self._simulate()
+
+        cnt = Activity.objects.count()
 
         self.assertTrue(brick.unwatch(self.user))
-        response = client.get('/api/forum/activities/?user=abc')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(Activity.objects.count(), cnt - 1)
+
+    def test_unvote(self):
+
+        brick, meta, exp = self._simulate()
+
+        cnt = Activity.objects.count()
+        ncnt = Notice.objects.count()
+
+        exp.unvote(self.user)
+        self.assertEqual(Activity.objects.count(), cnt - 1)
+        self.assertEqual(Notice.objects.count(), ncnt - 1)
+
+    def _make_experience(self):
+
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        return Experience.objects.create(brick=meta, author=self.user)
+
+    def test_make_post(self):
+
+        exp = self._make_experience()
+
+        Post.objects.create(content='2333', author=self.user, experience=exp)
+
+        self.assertEqual(Activity.objects.filter(type='Comment').count(), 0)
+        self.assertEqual(Notice.objects.count(), 0)
+
+        for _ in range(3):
+            Post.objects.create(content='2333', author=self.another_user, experience=exp)
+
+        self.assertEqual(Notice.objects.count(), 1)
+
+    def test_delete_post(self):
+
+        exp = self._make_experience()
+
+        post = Post.objects.create(content='2333', author=self.another_user, experience=exp)
+        post.delete()
+
+        self.assertEqual(Activity.objects.filter(type='Comment').count(), 0)
+        self.assertEqual(Notice.objects.count(), 0)
+
+    def test_delete_experience(self):
+
+        exp = self._make_experience()
+
+        Post.objects.create(content='2333', author=self.another_user, experience=exp)
+        exp.delete()
+
+        self.assertEqual(Activity.objects.filter(type='Experience').count(), 0)
+        self.assertEqual(Notice.objects.count(), 0)
+
+        self.assertEqual(Post.objects.count(), 0)
 
     def test_fetching_specific_type_activities(self):
-        client = APIClient()
 
         brick = Biobrick.objects.get(part_name='BBa_B0032')
         meta = brick.ensure_meta_exists(fetch=True)
@@ -136,12 +192,12 @@ class ActivityTest(APITestCase):
         self.assertTrue(brick.watch(self.another_user))
         self.assertTrue(brick.rate(self.user, 2.3))
 
-        response = client.get('/api/forum/activities/?user=abc&type=Rating')
+        response = self.client.get('/api/forum/activities/?user=abc&type=Rating')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['type'], 'Rating')
 
-        response = client.get('/api/forum/activities/?user=abc&type=Rating,Watch')
+        response = self.client.get('/api/forum/activities/?user=abc&type=Rating,Watch')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 2)
         self.assertEqual(

@@ -6,11 +6,6 @@ from biohub.forum.models import Experience
 from biohub.notices.tool import Dispatcher
 
 
-@receiver(pre_delete, sender=Experience)
-def delete_article_attached_if_experience_is_deleted(instance, **kwargs):
-    instance.content.delete()
-
-
 forum_dispatcher = Dispatcher('Forum')
 
 

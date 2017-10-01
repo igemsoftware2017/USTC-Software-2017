@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.db import models, transaction
+from django.contrib.contenttypes.fields import GenericRelation
 
 from biohub.core.files.models import File
-from biohub.forum.user_defined_signals import voted_experience_signal
+from biohub.forum.user_defined_signals import voted_experience_signal,\
+    unvoted_experience_signal
 
 
 MAX_LEN_FOR_THREAD_TITLE = 500
@@ -91,6 +93,9 @@ class Experience(models.Model):
         settings.AUTH_USER_MODEL, related_name='experiences_voted'
     )
 
+    activities = GenericRelation('forum.Activity', 'target_id', 'target_type', related_query_name='experience')
+    notices = GenericRelation('notices.Notice', 'target_id', 'target_type', related_query_name='experience')
+
     objects = ExperienceQuerySet.as_manager()
 
     def vote(self, user):
@@ -112,7 +117,10 @@ class Experience(models.Model):
             with transaction.atomic():
                 self.voted_users.remove(user)
                 self.votes -= 1
-                self.save()
+                self.save(update_fields=['votes'])
+                unvoted_experience_signal.send(
+                    sender=self.__class__, instance=self,
+                    user_unvoted=user)
             return True
         return False
 

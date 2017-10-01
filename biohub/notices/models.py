@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 
 class NoticeQuerySet(models.QuerySet):
@@ -36,6 +37,14 @@ class Notice(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     message = models.TextField()
     category = models.CharField(max_length=200, db_index=True)
+
+    target_type = models.ForeignKey('contenttypes.ContentType', null=True, blank=True)
+    target_id = models.PositiveIntegerField(default=0, null=True)
+    target_slug = models.CharField(max_length=20, default='')
+
+    target = GenericForeignKey('target_type', 'target_id')
+
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
 
     objects = NoticeQuerySet.as_manager()
 

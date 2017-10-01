@@ -55,25 +55,22 @@ class ExperienceSignalTests(TestCase):
         self.experience = create_new_experience(author=self.user)
         self.experience2 = create_new_experience(author=self.user)
 
-    def test_delete_a_experience_those_posts_should_hide(self):
+    def test_delete_a_experience_those_posts_should_delete(self):
         experience = create_new_experience(author=self.user)
         post1 = create_new_post(experience=experience, author=self.user)
         post2 = create_new_post(experience, self.user)
         self.assertTrue(post1.is_visible)
         self.assertTrue(post2.is_visible)
         experience.delete()
-        # remember to reload post1 and post2 and comment2!
-        self.assertFalse(Post.objects.get(pk=post1.id).is_visible)
-        self.assertFalse(Post.objects.get(pk=post2.id).is_visible)
+        self.assertFalse(Post.objects.count(), 0)
 
-    def test_delete_experience_queryset_and_posts_should_hide(self):
+    def test_delete_experience_queryset_and_posts_should_delete(self):
         experience1 = create_new_experience(self.user)
         experience2 = create_new_experience(self.user)
-        post1 = create_new_post(experience1, self.user)
-        post2 = create_new_post(experience2, self.user)
+        post1 = create_new_post(experience1, self.user)  # noqa
+        post2 = create_new_post(experience2, self.user)  # noqa
         Experience.objects.all().delete()
-        self.assertFalse(Post.objects.get(pk=post1.id).is_visible)
-        self.assertFalse(Post.objects.get(pk=post2.id).is_visible)
+        self.assertFalse(Post.objects.count(), 0)
 
     def delete_experience_the_article_should_be_deleted(self):
         article_id = self.experience.content.id
