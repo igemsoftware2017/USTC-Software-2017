@@ -179,7 +179,7 @@ class ActivityTest(APITestCase):
 
         Post.objects.create(content='2333', author=self.user, experience=exp)
 
-        self.assertEqual(Activity.objects.filter(type='Comment').count(), 0)
+        self.assertEqual(Activity.objects.filter(type='Comment').count(), 1)
         self.assertEqual(Notice.objects.count(), 0)
 
         for _ in range(3):

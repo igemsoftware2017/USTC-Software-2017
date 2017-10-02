@@ -68,7 +68,7 @@ def add_creating_post_activity(instance, created, **kwargs):
 
     exp_author = instance.experience.author
 
-    if not exp_author or instance.author.pk == exp_author.pk:
+    if not exp_author:
         return False
 
     Activity.objects.create(
