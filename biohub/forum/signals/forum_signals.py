@@ -71,7 +71,7 @@ def add_creating_post_activity(instance, created, **kwargs):
     if not exp_author:
         return False
 
-    Activity.objects.create(
+    Activity.objects.create_activity(
         type='Comment', user=instance.author, target=instance,
         brick_name=instance.experience.brick.part_name,
         params={
@@ -86,7 +86,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
     # do nothing when it's from iGEM's website
     if instance.author:
         if created:
-            Activity.objects.create(
+            Activity.objects.create_activity(
                 type='Experience', user=instance.author, target=instance,
                 brick_name=instance.brick.part_name,
                 params={
@@ -100,7 +100,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
 
 @receiver(rating_brick_signal, sender=Biobrick)
 def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
-    Activity.objects.create(
+    Activity.objects.create_activity(
         type='Rating', user=user_rating,
         brick_name=instance.part_name,
         params={
@@ -115,11 +115,12 @@ def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
 
 @receiver(watching_brick_signal, sender=Biobrick)
 def add_watching_brick_activity(instance, user, **kwargs):
-    Activity.objects.create(
+    Activity.objects.create_activity(
         type='Watch', user=user,
         brick_name=instance.part_name,
         params={
-            'partName': instance.part_name
+            'partName': instance.part_name,
+            'intro': instance.short_desc
         }
     )
 
@@ -159,7 +160,7 @@ def send_notice_to_experience_author_on_voting(
 
 @receiver(voted_experience_signal, sender=Experience)
 def add_voted_experience_activity(instance, user_voted, **kwargs):
-    Activity.objects.create(
+    Activity.objects.create_activity(
         type='Star', user=user_voted,
         brick_name=instance.brick.part_name,
         target=instance,

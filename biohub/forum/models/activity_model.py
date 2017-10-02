@@ -5,6 +5,17 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from biohub.utils.db import PackedField
 
 
+class ActivityManager(models.Manager):
+
+    def create_activity(self, **kwargs):
+        kwargs['params'].update({
+            'user': kwargs['user'].username,
+            'type': kwargs['type']
+        })
+
+        return self.create(**kwargs)
+
+
 class Activity(models.Model):
     TYPE_CHOICES = (
         ('Experience', 'Experience'),
@@ -24,3 +35,5 @@ class Activity(models.Model):
     target_id = models.PositiveSmallIntegerField(default=0, null=True)
 
     target = GenericForeignKey('target_type', 'target_id')
+
+    objects = ActivityManager()

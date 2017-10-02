@@ -17,9 +17,8 @@ class ActivitySerializer(ModelSerializer):
     def to_representation(self, obj):
 
         result = super(ActivitySerializer, self).to_representation(obj)
-        result['params'].update({
-            'user': obj.user.username,
-            'type': obj.type
-        })
+
+        if obj.type == 'Watch':
+            result['params']['score'] = obj.score
 
         return result

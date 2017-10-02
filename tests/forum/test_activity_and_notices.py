@@ -33,12 +33,14 @@ class ActivityTest(APITestCase):
         Experience.objects.create(brick=meta, author=self.another_user)
         self.assertTrue(brick.watch(self.another_user))
         self.assertTrue(brick.rate(self.another_user, 2.3))
+        brick.refresh_from_db()
 
         user3 = User.objects.create_test_user('usr3')
         brick2 = Biobrick.objects.get(part_name='BBa_B0015')
         brick2.ensure_meta_exists(fetch=True)
         brick2.watch(user3)
         brick2.watch(self.user)
+        brick2.refresh_from_db()
 
         self.client.force_authenticate(self.user)
         data = self.client.get('/api/forum/activities/timeline/').data
@@ -49,11 +51,20 @@ class ActivityTest(APITestCase):
             'type': 'Watch',
         }, results[0])
         self.assertDictContainsSubset({
+            'intro': brick2.short_desc,
+            'user': user3.username
+        }, results[0]['params'])
+        self.assertDictContainsSubset({
             'type': 'Rating',
         }, results[1])
         self.assertDictContainsSubset({
             'type': 'Watch'
         }, results[2])
+        self.assertDictContainsSubset({
+            'intro': brick.short_desc,
+            'score': brick.rate_score,
+            'user': self.another_user.username
+        }, results[2]['params'])
         self.assertDictContainsSubset({
             'type': 'Experience'
         }, results[3])
