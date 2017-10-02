@@ -131,7 +131,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
-    'PAGE_SIZE': 30,
+    'PAGE_SIZE': 20,
     'DEFAULT_AUTHENTICATION_CLASSES': ('biohub.utils.rest.authentication.NoCSRFAuthentication',)
 }
 
