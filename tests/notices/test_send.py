@@ -22,9 +22,9 @@ class Test(APITestCase):
     def test_url(self):
         notice = self.dispatcher.send(
             self.me,
-            '{{"title"|url:user.api_url}}')
+            '{{"title"|url:user}}')
 
-        self.assertEqual('[[title]]((%s))' % self.me.api_url, notice.message)
+        self.assertEqual('[[title]]((user))((%s))' % self.me.username, notice.message)
 
     def test_group_send(self):
         notices = self.dispatcher.group_send(

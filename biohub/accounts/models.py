@@ -138,3 +138,6 @@ class User(AbstractBaseUser):
 
         self.avatar_url = url
         self.save()
+
+    def get_router_arguments(self):
+        return 'user', self.username

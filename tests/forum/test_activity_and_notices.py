@@ -113,6 +113,33 @@ class ActivityTest(APITestCase):
 
         return brick, meta, exp
 
+    def test_watch_notice(self):
+        brick, meta, exp = self._simulate()
+
+        notice = Notice.objects.filter(user=self.user)[0]
+        self.assertEqual(
+            notice.message,
+            '[[another]]((user))((another)) published a new experience'
+            ' [[]]((experience))((%s)) at brick '
+            '[[BBa_B0032]]((brick))((BBa_B0032)).' % exp.id
+        )
+
+    def test_vote(self):
+
+        brick = Biobrick.objects.get(part_name='BBa_B0032')
+        meta = brick.ensure_meta_exists(fetch=True)
+        exp = Experience.objects.create(title='title', brick=meta, author=self.another_user)
+        self.assertFalse(exp.vote(self.another_user))
+        self.assertTrue(exp.vote(self.user))
+
+        self.assertEqual(Notice.objects.count(), 1)
+        self.assertEqual(
+            Notice.objects.all()[0].message,
+            '[[abc]]((user))((abc)) voted your experience '
+            '[[title]]((experience))((%s)) at brick [[BBa_B0032]]((brick))((BBa_B0032)).'
+            ' Now you have 1 vote(s) for that experience.' % exp.id
+        )
+
     def test_only_fetching_one_user_activities(self):
 
         brick, meta, exp = self._simulate()
@@ -159,6 +186,12 @@ class ActivityTest(APITestCase):
             Post.objects.create(content='2333', author=self.another_user, experience=exp)
 
         self.assertEqual(Notice.objects.count(), 1)
+        notice = Notice.objects.all()[0]
+        self.assertEqual(
+            notice.message,
+            '[[another]]((user))((another)) commented your experience'
+            ' [[]]((experience))((%s)) at brick [[BBa_B0032]]((brick))((BBa_B0032)).' % exp.id
+        )
 
     def test_delete_post(self):
 

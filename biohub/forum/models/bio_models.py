@@ -127,5 +127,8 @@ class Experience(models.Model):
     class Meta:
         ordering = ('-pub_time', 'id')
 
+    def get_router_arguments(self):
+        return 'experience', self.pk
+
     def __str__(self):
         return '%s' % self.title

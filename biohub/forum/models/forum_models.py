@@ -35,3 +35,6 @@ class Post(models.Model):
     def show(self):
         self.is_visible = True
         self.save()
+
+    def get_router_arguments(self):
+        return 'post', self.pk

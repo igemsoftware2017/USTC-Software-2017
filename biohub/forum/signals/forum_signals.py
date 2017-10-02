@@ -49,24 +49,13 @@ def send_notice_to_the_experience_author_on_commenting(instance, created, **kwar
         # ignore if the comment's author is the same as the experience author
         if not author or author.id == instance.author.id:
             return
-        experience_url = reverse(
-            'api:forum:experience-detail', kwargs={'pk': experience.id}
-        )
-        post_author_url = instance.author.api_url
-        brick_url = reverse(
-            'api:forum:biobrick-detail',
-            kwargs={'pk': experience.brick.part_name}
-        )
         forum_dispatcher.send_or_update(
             author,
-            '{{instance.author.username|url:post_author_url}} commented on '
-            'your experience (Title: {{ experience.title|url:experience_url }})'
-            ' of brick {{experience.brick.part_name|url:brick_url}}.',
-            instance=instance,
+            '{{post.author.username|url:post.author}} commented '
+            'your experience {{ experience.title|url:experience }} '
+            'at brick {{experience.brick.part_name|url:experience.brick}}.',
+            post=instance,
             experience=experience,
-            brick_url=brick_url,
-            post_author_url=post_author_url,
-            experience_url=experience_url,
             target=instance,
             target_slug='comment experience',
             actor=instance.author,
@@ -152,31 +141,14 @@ def send_notice_to_experience_author_on_voting(
     if author is None:
         return
     brick = instance.brick
-    experience_url = reverse(
-        'api:forum:experience-detail',
-        kwargs={
-            'pk': instance.id
-        }
-    )
-    brick_url = reverse(
-        'api:forum:biobrick-detail',
-        kwargs={
-            'pk': brick.part_name
-        }
-    )
-    user_url = user_voted.api_url
     forum_dispatcher.send(
         author,
-        '{{user_voted.username|url:user_url}}'
+        '{{actor.username|url:actor}}'
         ' voted your experience '
-        '(Title: {{ experience.title|url:experience_url }})'
-        ' of brick {{brick.part_name|url:brick_url}}. '
+        '{{ experience.title|url:experience }}'
+        ' at brick {{brick.part_name|url:brick}}. '
         'Now you have {{current_votes}} vote(s) for that experience.',
         experience=instance,
-        brick_url=brick_url,
-        experience_url=experience_url,
-        user_voted=user_voted,
-        user_url=user_url,
         brick=brick,
         current_votes=current_votes,
         target=instance,

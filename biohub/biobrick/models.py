@@ -87,6 +87,9 @@ class MetaBase(models.Model):
         ExperienceSpider().fill_from_page(self.part_name)
         self.refresh_from_db()
 
+    def get_router_arguments(self):
+        return 'brick', self.part_name
+
 
 class BiobrickMeta(MetaBase):
 
