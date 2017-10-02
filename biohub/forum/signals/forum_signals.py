@@ -2,8 +2,6 @@ from django.db.models import Q, Subquery
 from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
 
-from rest_framework.reverse import reverse
-
 from biohub.notices.tool import Dispatcher
 from biohub.notices.models import Notice
 
@@ -76,7 +74,8 @@ def add_creating_post_activity(instance, created, **kwargs):
         brick_name=instance.experience.brick.part_name,
         params={
             'partName': instance.experience.brick.part_name,
-            'expLink': reverse('api:forum:experience-detail', kwargs={'pk': instance.experience.id})
+            'expId': instance.experience.id,
+            'postId': instance.id
         }
     )
 
@@ -91,9 +90,7 @@ def add_creating_experience_activity(instance, created, **kwargs):
                 brick_name=instance.brick.part_name,
                 params={
                     'partName': instance.brick.part_name,
-                    'expLink': reverse(
-                        'api:forum:experience-detail', kwargs={'pk': instance.id}
-                    )
+                    'expId': instance.id
                 }
             )
 
@@ -106,9 +103,6 @@ def add_rating_brick_activity(instance, rating_score, user_rating, **kwargs):
         params={
             'score': str(rating_score),  # make sure `rating_score` is JSON-serializable
             'partName': instance.part_name,
-            'expLink': reverse(
-                'api:forum:biobrick-detail', kwargs={'pk': instance.part_name}
-            )
         }
     )
 
@@ -166,9 +160,7 @@ def add_voted_experience_activity(instance, user_voted, **kwargs):
         target=instance,
         params={
             'partName': instance.brick.part_name,
-            'expLink': reverse(
-                'api:forum:experience-detail', kwargs={'pk': instance.id}
-            )
+            'expId': instance.id
         }
     )
 
