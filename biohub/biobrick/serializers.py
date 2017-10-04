@@ -45,6 +45,7 @@ class BiobrickSerializer(ModelSerializer):
             fields=(
                 'part_name',
                 'part_type',
+                'status',
                 'rate_score',
                 'stars',
                 'rates',
