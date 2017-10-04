@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 
 from channels import Group
@@ -16,7 +17,9 @@ def group_send(handler_name, group_name, data):
     """
     To send message to a specific group.
     """
-    return get_group(group_name).send(parsers.encode(handler_name, data))
+    return get_group(group_name).send({
+        'text': json.dumps(parsers.encode(handler_name, data))
+    })
 
 
 def broadcast(handler_name, data):
