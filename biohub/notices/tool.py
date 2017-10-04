@@ -106,6 +106,7 @@ class Dispatcher(object):
             message = render_notice_message(
                 template, self, user=user, **context)
             try_find.update(message=message, has_read=False, created=Now())
+            notice = None
         else:
             notice = self.send(user, template, **context)
 
