@@ -75,7 +75,8 @@ def add_creating_post_activity(instance, created, **kwargs):
         params={
             'partName': instance.experience.brick.part_name,
             'expId': instance.experience.id,
-            'postId': instance.id
+            'postId': instance.id,
+            'expTitle': instance.title
         }
     )
 
@@ -90,7 +91,8 @@ def add_creating_experience_activity(instance, created, **kwargs):
                 brick_name=instance.brick.part_name,
                 params={
                     'partName': instance.brick.part_name,
-                    'expId': instance.id
+                    'expId': instance.id,
+                    'expTitle': instance.title
                 }
             )
 
@@ -160,7 +162,8 @@ def add_voted_experience_activity(instance, user_voted, **kwargs):
         target=instance,
         params={
             'partName': instance.brick.part_name,
-            'expId': instance.id
+            'expId': instance.id,
+            'expTitle': instance.title
         }
     )
 
