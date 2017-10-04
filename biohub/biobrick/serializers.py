@@ -53,7 +53,8 @@ class BiobrickSerializer(ModelSerializer):
                 'weight',
                 'author',
                 'part_status',
-                'sample_status'
+                'sample_status',
+                'short_desc'
             )
         )
 
