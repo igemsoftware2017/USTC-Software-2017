@@ -76,7 +76,7 @@ def add_creating_post_activity(instance, created, **kwargs):
             'partName': instance.experience.brick.part_name,
             'expId': instance.experience.id,
             'postId': instance.id,
-            'expTitle': instance.title
+            'expTitle': instance.experience.title
         }
     )
 
