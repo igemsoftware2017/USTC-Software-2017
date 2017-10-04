@@ -39,6 +39,24 @@ class BiobrickSerializer(ModelSerializer):
             fields=fields
         )
 
+    @classmethod
+    def list_creator(cls):
+        return cls.creator(
+            fields=(
+                'part_name',
+                'part_type',
+                'rate_score',
+                'stars',
+                'rates',
+                'watches',
+                'uses',
+                'weight',
+                'author',
+                'part_status',
+                'sample_status'
+            )
+        )
+
     def to_representation(self, obj):
 
         super_func = super(BiobrickSerializer, self).to_representation

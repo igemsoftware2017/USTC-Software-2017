@@ -80,9 +80,7 @@ class BaseBrickViewSet(object):
         ret = BiobrickSerializer
 
         if self.action == 'list':
-            return ret.short_creator(
-                ('part_name', 'part_type', 'rate_score', 'stars', 'rates', 'watches', 'short_desc', 'uses')
-            )
+            return ret.list_creator()
 
         if not self.detail:
             ret = ret.short_creator()
