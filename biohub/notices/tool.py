@@ -64,7 +64,9 @@ class Dispatcher(object):
         context.
         """
 
-        return self._get_notice_instance(user, template, context, save=True)
+        notice = self._get_notice_instance(user, template, context, save=True)
+        Notice.objects.broadcast_stats([user])
+        return notice
 
     def send_or_update(self, user, template, **context):
         """
@@ -105,7 +107,10 @@ class Dispatcher(object):
                 template, self, user=user, **context)
             try_find.update(message=message, has_read=False, created=Now())
         else:
-            return self.send(user, template, **context)
+            notice = self.send(user, template, **context)
+
+        Notice.objects.broadcast_stats([user])
+        return notice
 
     def group_send(self, users, template, **context):
         """
@@ -126,4 +131,7 @@ class Dispatcher(object):
                 )
             )
 
-        return Notice.objects.bulk_create(results)
+        notices = Notice.objects.bulk_create(results)
+        Notice.objects.broadcast_stats(users)
+
+        return notices

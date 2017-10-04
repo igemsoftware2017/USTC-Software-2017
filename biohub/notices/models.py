@@ -26,6 +26,28 @@ class NoticeQuerySet(models.QuerySet):
                     models.F('count') - models.Sum('has_read'),
                     output_field=models.IntegerField()))
 
+    def users_stats(self, users):
+
+        if isinstance(users, models.QuerySet):
+            users = models.Subquery(users)
+
+        qs = self.order_by('user').values('user')\
+            .filter(user__in=users)\
+            .annotate(count=models.Count('id'))\
+            .annotate(
+                unread=models.ExpressionWrapper(
+                    models.F('count') - models.Sum('has_read'),
+                    output_field=models.IntegerField()
+                )
+        )
+        return qs
+
+    def broadcast_stats(self, users):
+        from biohub.core.websocket.tool import broadcast_user
+
+        for stat in self.users_stats(users):
+            broadcast_user('notices', stat['user'], stat['unread'])
+
 
 class Notice(models.Model):
 

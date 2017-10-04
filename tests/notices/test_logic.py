@@ -34,6 +34,13 @@ class TestQS(NoticeTestCase):
                 'unread': 10
             }], Notice.objects.stats())
 
+    def test_user_stats(self):
+        Notice.objects.filter(category='a').mark_read()
+        self.assertSequenceEqual([
+            {'user': user.id, 'unread': 1, 'count': 2}
+            for user in self.users
+        ], Notice.objects.users_stats(self.users))
+
     def test_mark_read(self):
         qs = Notice.objects.filter(category='a')
         qs.mark_read()

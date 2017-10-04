@@ -14,9 +14,7 @@ class Test(WSTestCase):
 
         self.assertEqual(client.receive(), {
             'handler': 'notices',
-            'data': [
-                {'category': 'a', 'count': 1, 'unread': 1}
-            ]
+            'data': 1
         })
 
     def test_fetch(self):
@@ -29,12 +27,10 @@ class Test(WSTestCase):
 
         self.assertEqual(client.receive(), {
             'handler': 'notices',
-            'data': []
+            'data': 0
         })
 
         self.assertEqual(client.receive(), {
             'handler': 'notices',
-            'data': [
-                {'category': 'a', 'count': 1, 'unread': 1}
-            ]
+            'data': 1
         })

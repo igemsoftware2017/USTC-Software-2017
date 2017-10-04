@@ -5,8 +5,7 @@ from .models import Notice
 
 def echo_notices_stats(message):
     message.reply(
-        list(Notice.objects
-             .user_notices(message.user).stats())
+        Notice.objects.user_notices(message.user).unread().count()
     )
 
 
