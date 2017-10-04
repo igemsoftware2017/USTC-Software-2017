@@ -24,7 +24,7 @@ class NoticeViewSet(
         if id_list is not None:
             qs = qs.filter(id__in=id_list.split(','))
 
-        return qs
+        return qs.order_by('-created')
 
     @decorators.list_route(['GET'])
     def mark_all_as_read(self, *args, **kwargs):
