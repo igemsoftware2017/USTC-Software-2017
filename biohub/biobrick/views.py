@@ -4,6 +4,7 @@ from operator import or_
 from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
+from django.db.models import Subquery
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets, mixins
@@ -270,16 +271,17 @@ class UserBrickViewSet(mixins.ListModelMixin, BaseBrickViewSet, BaseUserViewSetM
         except KeyError:
             raise NotFound
 
-        if self.detail:
-            from django.db.models import Subquery
+        return Biobrick.objects.filter(
+            part_name__in=Subquery(
+                rel_field.values('part_name')
+            )
+        ).order_by('part_name')
 
-            return Biobrick.objects.filter(
-                part_name__in=Subquery(
-                    rel_field.values('part_name')
-                )
-            ).order_by('part_name')
-        else:
-            return rel_field.order_by('part_name')
+        # if self.detail:
+        #
+
+        # else:
+        #     return rel_field.order_by('part_name')
 
     for view_name in allowed_actions:
         locals()[view_name] = list_route(methods=['GET'])(
