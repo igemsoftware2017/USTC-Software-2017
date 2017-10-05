@@ -280,12 +280,6 @@ class UserBrickViewSet(mixins.ListModelMixin, BaseBrickViewSet, BaseUserViewSetM
             )
         ).order_by('part_name')
 
-        # if self.detail:
-        #
-
-        # else:
-        #     return rel_field.order_by('part_name')
-
     for view_name in allowed_actions:
         locals()[view_name] = list_route(methods=['GET'])(
             lambda self, *args, **kwargs: self.list(*args, **kwargs)
