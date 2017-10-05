@@ -19,10 +19,6 @@ from .models import User
 class UserSerializer(ModelSerializer):
 
     followed = serializers.BooleanField(required=False, read_only=True)
-    # follower_count = serializers.IntegerField(required=False, read_only=True)
-    # following_count = serializers.IntegerField(required=False, read_only=True)
-    # star_count = serializers.IntegerField(required=False, read_only=True)
-    # experience_count = serializers.IntegerField(required=False, read_only=True)
 
     class Meta:
         model = User
