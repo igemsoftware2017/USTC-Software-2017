@@ -75,10 +75,20 @@ class Test(APITestCase):
         )
 
         self.me.follow(self.you)
-        self.assertEqual(
-            self._get(self.me, 'following').data['results'][0]['id'],
-            self.you.id
-        )
+        self.assertDictContainsSubset({
+            'id': self.you.id,
+            'followed': True
+        }, self._get(self.me, 'following').data['results'][0])
+        self.assertDictContainsSubset({
+            'id': self.me.id,
+            'following_count': 1,
+            'follower_count': 0
+        }, self.client.get('/api/users/me/').data)
+        self.assertDictContainsSubset({
+            'id': self.you.id,
+            'following_count': 0,
+            'follower_count': 1
+        }, self.client.get('/api/users/{}/'.format(self.you.id)).data)
 
         self._post(self.you, 'unfollow')
         self.assertListEqual(

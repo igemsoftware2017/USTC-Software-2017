@@ -18,6 +18,10 @@ from .models import User
 @bind_model(User)
 class UserSerializer(ModelSerializer):
 
+    followed = serializers.BooleanField(required=False, read_only=True)
+    follower_count = serializers.IntegerField(required=False, read_only=True)
+    following_count = serializers.IntegerField(required=False, read_only=True)
+
     class Meta:
         model = User
         exclude = ('password', 'followers',)

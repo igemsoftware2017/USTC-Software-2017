@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.core.files.storage import default_storage
+from django.db import models
 
 from biohub.utils.rest import pagination, permissions as p
 from biohub.core.files.utils import store_file
@@ -98,30 +99,41 @@ class UserViewSet(
     lookup_value_regex = re_user_lookup_value
     lookup_url_kwarg = 'user_pk'
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
-    pagination_class = pagination.factory('CursorPagination', page_size=20)
+    pagination_class = pagination.factory('PageNumberPagination', page_size=20)
     permission_classes = [
         p.C(p.IsAuthenticatedOrReadOnly) & p.check_owner()]
     filter_fields = ('username',)
+
+    def get_user_queryset(self):
+
+        qs = super(UserViewSet, self).get_user_queryset()
+
+        if self.action == 'retrieve':
+            qs = qs.annotate(
+                following_count=models.Count(
+                    models.Subquery(
+                        User.followers.through.objects.filter(
+                            to_user_id=models.OuterRef('id')
+                        ).values('id')
+                    )
+                ),
+                follower_count=models.Count(
+                    models.Subquery(
+                        User.followers.through.objects.filter(
+                            from_user_id=models.OuterRef('id')
+                        ).values('id')
+                    )
+                )
+            )
+
+        return qs
 
     def get_object(self):
         obj = self.get_user_object()
         self.check_object_permissions(self.request, obj)
         return obj
-
-    @decorators.detail_route(['GET'])
-    def followers(self, request, *args, **kwargs):
-        return pagination.paginate_queryset(
-            self.get_object().followers.all(),
-            self
-        )
-
-    @decorators.detail_route(['GET'])
-    def following(self, request, *args, **kwargs):
-        return pagination.paginate_queryset(
-            self.get_object().following.all(),
-            self)
 
     @decorators.detail_route(['POST'])
     def follow(self, request, *args, **kwargs):
@@ -134,3 +146,45 @@ class UserViewSet(
         request.user.unfollow(self.get_object())
 
         return Response('OK')
+
+
+class UserRelationViewSet(mixins.ListModelMixin, BaseUserViewSetMixin):
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    pagination_class = pagination.factory('PageNumberPagination', page_size=20)
+
+    allowed_actions = {
+        'followers': 'followers',
+        'following': 'following'
+    }
+
+    def get_queryset(self):
+        user = self.get_user_object()
+
+        try:
+            rel_field = getattr(user, self.allowed_actions[self.action])
+        except KeyError:
+            raise NotFound
+
+        if self.request.user.is_authenticated():
+            rel_field = rel_field.annotate(
+                followed=models.ExpressionWrapper(
+                    models.Count(
+                        models.Subquery(
+                            User.following.through.objects.filter(
+                                to_user_id=self.request.user.id,
+                                from_user_id=models.OuterRef('id')
+                            ).values('id')
+                        )
+                    ),
+                    output_field=models.BooleanField()
+                )
+            )
+
+        return rel_field.order_by('id')
+
+    for view_name in allowed_actions:
+        locals()[view_name] = decorators.list_route(methods=['GET'])(
+            lambda self, *args, **kwargs: self.list(*args, **kwargs)
+        )

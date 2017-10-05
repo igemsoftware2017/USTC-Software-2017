@@ -17,3 +17,7 @@ register_api(r'^', [
     url(r'^users/reset_password/$',
         views.PasswordResetView.as_view(), name='reset-password')
 ] + router.urls, 'accounts')
+
+extra_router = DefaultRouter()
+views.UserRelationViewSet.add_to_router(extra_router)
+register_api(r'^', extra_router.urls)

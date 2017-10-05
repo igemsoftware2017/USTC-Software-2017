@@ -27,6 +27,9 @@ class BaseUserViewSetMixin(viewsets.GenericViewSet):
 
     user_lookup_value_regex = re_user_lookup_value
 
+    def get_user_queryset(self):
+        return User.objects.all()
+
     def get_user_object(self):
         lookup = self.kwargs['user_pk']
 
@@ -35,12 +38,16 @@ class BaseUserViewSetMixin(viewsets.GenericViewSet):
             if not self.request.user.is_authenticated():
                 raise NotFound
 
-            return self.request.user
-        elif lookup.startswith('n:'):
+            if self.action != 'retrieve':
+                return self.request.user
 
-            return get_object_or_404(User, username=lookup[2:])
+            lookup = str(self.request.user.id)
+
+        if lookup.startswith('n:'):
+
+            return get_object_or_404(self.get_user_queryset(), username=lookup[2:])
         else:
-            return get_object_or_404(User, pk=lookup)
+            return get_object_or_404(self.get_user_queryset(), pk=lookup)
 
     @classmethod
     def add_to_router(cls, router):
