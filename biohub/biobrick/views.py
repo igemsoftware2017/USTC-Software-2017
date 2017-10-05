@@ -263,6 +263,9 @@ class UserBrickViewSet(mixins.ListModelMixin, BaseBrickViewSet, BaseUserViewSetM
         'bricks_rated': 'bricks_rated'
     }
 
+    def get_serializer_class(self):
+        return BiobrickSerializer.list_creator()
+
     def get_queryset(self):
         user = self.get_user_object()
 
