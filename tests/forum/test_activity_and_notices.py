@@ -69,8 +69,22 @@ class ActivityTest(APITestCase):
             'type': 'Experience'
         }, results[3])
 
+    def test_aggregation(self):
+        brick, meta, exp = self._simulate()
+        Experience.objects.create(brick=meta, author=self.user)
+        brick2 = Biobrick.objects.get(part_name='BBa_B0015')
+        brick2.ensure_meta_exists(fetch=True)
+        brick.star(self.user)
+        brick2.star(self.user)
+
+        self.client.force_authenticate(self.user)
+        self.assertEqual(
+            self.client.get('/api/users/me/stat/').data,
+            {'follower_count': 0, 'following_count': 0, 'star_count': 2, 'experience_count': 2}
+        )
+
     def test_simulation(self):
-        # raise SkipTest
+        raise SkipTest
 
         client = APIClient()
         response = client.login(username='abc', password='123456000+')

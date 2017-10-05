@@ -113,36 +113,6 @@ class UserViewSet(
         qs = super(UserViewSet, self).get_user_queryset()
 
         if self.action == 'retrieve':
-            qs = qs.annotate(
-                following_count=models.Count(
-                    models.Subquery(
-                        User.followers.through.objects.filter(
-                            to_user_id=models.OuterRef('id')
-                        ).values('id')
-                    )
-                ),
-                follower_count=models.Count(
-                    models.Subquery(
-                        User.followers.through.objects.filter(
-                            from_user_id=models.OuterRef('id')
-                        ).values('id')
-                    )
-                ),
-                star_count=models.Count(
-                    models.Subquery(
-                        StarredUser.objects.filter(
-                            user=models.OuterRef('id')
-                        ).values('id')
-                    )
-                ),
-                experience_count=models.Count(
-                    models.Subquery(
-                        Experience.objects.filter(
-                            author=models.OuterRef('id')
-                        ).values('id')
-                    )
-                )
-            )
 
             if self.request.user.is_authenticated():
                 qs = qs.annotate(
@@ -177,6 +147,20 @@ class UserViewSet(
         request.user.unfollow(self.get_object())
 
         return Response('OK')
+
+    @decorators.detail_route(['GET'])
+    def stat(self, request, *args, **kwargs):
+
+        user = self.get_object()
+
+        result = {
+            'follower_count': user.followers.count(),
+            'following_count': User.followers.through.objects.filter(to_user_id=user.id).count(),
+            'star_count': StarredUser.objects.filter(user=user).count(),
+            'experience_count': Experience.objects.filter(author=user).count()
+        }
+
+        return Response(result)
 
 
 class UserRelationViewSet(mixins.ListModelMixin, BaseUserViewSetMixin):
