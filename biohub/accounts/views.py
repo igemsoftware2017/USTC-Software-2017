@@ -9,6 +9,8 @@ from django.core.files.storage import default_storage
 from django.db import models
 
 from biohub.utils.rest import pagination, permissions as p
+from biohub.forum.models import Experience
+from biohub.biobrick.models import StarredUser
 from biohub.core.files.utils import store_file
 
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer,\
@@ -123,6 +125,20 @@ class UserViewSet(
                     models.Subquery(
                         User.followers.through.objects.filter(
                             from_user_id=models.OuterRef('id')
+                        ).values('id')
+                    )
+                ),
+                star_count=models.Count(
+                    models.Subquery(
+                        StarredUser.objects.filter(
+                            user=models.OuterRef('id')
+                        ).values('id')
+                    )
+                ),
+                experience_count=models.Count(
+                    models.Subquery(
+                        Experience.objects.filter(
+                            author=models.OuterRef('id')
                         ).values('id')
                     )
                 )
