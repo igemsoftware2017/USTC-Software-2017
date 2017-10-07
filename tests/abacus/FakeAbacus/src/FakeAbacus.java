@@ -1,6 +1,7 @@
 import java.util.concurrent.TimeUnit;
 import cmd.ArgsTemplement;
 import java.io.*;
+import java.nio.file.*;
 
 public class FakeAbacus {
     public static void main (String args[]) throws InterruptedException, IOException {
@@ -11,6 +12,7 @@ public class FakeAbacus {
         String output = at.getValue("-out");
 
         checkFile(input);
+        Files.copy(new File(input).toPath(), new File(output).toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         TimeUnit.SECONDS.sleep(1);
         System.out.println("ENERGY");
