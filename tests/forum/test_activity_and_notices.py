@@ -84,7 +84,7 @@ class ActivityTest(APITestCase):
         )
 
     def test_simulation(self):
-        raise SkipTest
+        # raise SkipTest
 
         client = APIClient()
         response = client.login(username='abc', password='123456000+')
