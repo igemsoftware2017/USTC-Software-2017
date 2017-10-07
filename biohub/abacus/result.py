@@ -1,3 +1,5 @@
+import logging
+
 from biohub.core.tasks import AsyncResult, TaskStatus
 
 from biohub.abacus import remote, consts, conf
@@ -11,6 +13,8 @@ remote_status_mapping = dict(
     REVOKED=TaskStatus.ERROR,
 )
 
+logger = logging.getLogger('biohub.abacus')
+
 
 class AbacusAsyncResult(AsyncResult):
 
@@ -21,6 +25,10 @@ class AbacusAsyncResult(AsyncResult):
         Broadcasts a message when ready.
         """
         from biohub.core.websocket.tool import broadcast_user
+
+        if not self.user:
+            logger.error('Failed to broadcast ready state due to null user %r.' % self.user)
+            return
 
         broadcast_user('abacus', self.user, self.response(status, result))
 
