@@ -18,7 +18,7 @@ class Executor(object):
 
     def __init__(self, task_instance):
         self.task_instance = task_instance
-        self.async_result = AsyncResult(task_instance.task_id)
+        self.async_result = task_instance.async_result_class(task_instance.task_id)
         payload = self.payload = task_instance.payload
         self.timeout = payload.options['timeout']
 

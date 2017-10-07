@@ -13,7 +13,7 @@ logger = logging.getLogger('biohub.abacus.tasks')
 
 class AbacusTask(Task):
 
-    async_result = AbacusAsyncResult
+    async_result_class = AbacusAsyncResult
 
     def before_interrupt(self):
 
