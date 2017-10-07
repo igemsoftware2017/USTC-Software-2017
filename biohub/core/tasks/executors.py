@@ -10,7 +10,6 @@ import functools
 import asyncio
 import concurrent.futures
 
-from biohub.core.tasks.result import AsyncResult
 from biohub.core.tasks.exceptions import TaskInterruption
 
 
