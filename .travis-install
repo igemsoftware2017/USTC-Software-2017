@@ -57,7 +57,7 @@ fi
 mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS igem;'
 mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new character set utf8;'
 mysql -uroot igem < tmp/biobricks.sql
-biohub/biobrick/bin/updateparts.py
+biohub/biobrick/bin/updateparts.py -c 1000
 
 biohub/manage.py migrate
 biohub/manage.py refreshweight
