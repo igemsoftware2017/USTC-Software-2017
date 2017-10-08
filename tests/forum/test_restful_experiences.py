@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from biohub.accounts.models import User
 from biohub.forum.models import Post, Experience, Article
 from biohub.biobrick.models import Biobrick
+from biohub.core.files.models import File
 
 
 class ExperienceRestfulAPITest(APITestCase):
@@ -59,6 +60,27 @@ class ExperienceRestfulAPITest(APITestCase):
         resp = self.client.post('/api/forum/experiences/', payload, format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertIn('title', resp.data)
+
+    def test_file(self):
+        from .test_restful_articles import make_file
+
+        f = File.objects.create_from_file(make_file())
+
+        payloads = {
+            'title': 'f**k',
+            'content': {
+                'text': 'hahaha',
+                'file_ids': [f.id]
+            },
+            'brick_name': self.brick_meta.part_name
+        }
+        self.assertTrue(self.client.login(username='abc', password='abc546565132'))
+        response = self.client.post('/api/forum/experiences/', payloads, format='json')
+        self.assertEqual(response.status_code, 201)
+        self.assertDictContainsSubset({
+            'id': f.id,
+
+        }, response.data['content']['files'][0])
 
     def test_post_experiences(self):
         payloads = {

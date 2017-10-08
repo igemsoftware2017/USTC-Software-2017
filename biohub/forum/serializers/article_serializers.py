@@ -1,6 +1,8 @@
+
 from django.db import transaction
 from rest_framework import serializers
 
+from biohub.core.files.serializers import FileSerializer
 from biohub.utils.rest.serializers import bind_model, ModelSerializer
 from ..models import Article
 
@@ -12,10 +14,11 @@ class ArticleSerializer(ModelSerializer):
         child=serializers.IntegerField(),
         write_only=True
     )
+    files = FileSerializer(many=True, read_only=True)
 
     class Meta:
         model = Article
-        fields = ('text', 'file_ids', 'digest')
+        fields = ('text', 'file_ids', 'digest', 'files')
         read_only_fields = ('digest',)
 
     def create(self, validated_data):
