@@ -12,4 +12,4 @@ cache:
   directories:
     - tmp
 install: "bash .travis-install"
-script: "biohub/manage.py codestyle && biohub/manage.py test && TEST_ABACUS=1 biohub/manage.py test abacus"
+script: "biohub/manage.py codestyle && biohub/manage.py test"

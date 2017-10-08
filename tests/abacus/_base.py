@@ -1,5 +1,4 @@
 import os
-from biohub.utils.test import skip_if_no_environ
 from ..core.tasks import _base
 from rest_framework.test import APIRequestFactory
 
@@ -20,7 +19,6 @@ def make_req(user):
     return request, fp
 
 
-@skip_if_no_environ('TEST_ABACUS')
 class AbacusTestCase(_base.TaskTestCase):
 
     pass
