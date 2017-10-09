@@ -14,3 +14,4 @@ beautifulsoup4==4.6.0
 html2text==2017.10.4
 sqlparse==0.2.4
 python-crontab==2.2.4
+psutil==5.3.1

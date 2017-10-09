@@ -1,3 +1,4 @@
+import psutil
 import subprocess
 from urllib.request import urlopen
 import urllib.parse as parse
@@ -64,6 +65,7 @@ def run_abacus(self, input_file, callback, output_file, output_file_url):
         ]
 
         p = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        psutil.Process(p.pid).nice(10)
 
         output, err = p.communicate()
 

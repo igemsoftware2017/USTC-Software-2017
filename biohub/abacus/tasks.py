@@ -1,4 +1,5 @@
 import io
+import psutil
 import subprocess
 import logging
 
@@ -40,6 +41,7 @@ class AbacusTask(Task):
                          '-out', default_storage.path(output_file_name)
                          ]
             p = self.abacus_process = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            psutil.Process(p.pid).nice(10)
 
             while 1:
                 self.check_interrupt()
