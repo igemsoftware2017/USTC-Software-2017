@@ -1,3 +1,5 @@
+from random import choice
+
 import requests
 from django.urls import reverse
 
@@ -16,15 +18,23 @@ def _ensure_success(response):
         "Remote call failed with status code {}\nContent: {}".format(response.status_code, response.text)
 
 
+def choose_server():
+    """
+    Choose and return the most idled server.
+    """
+    return choice(settings.ABACUS_REMOTE_SERVERS)
+
+
 def start(request):
     """
     Uploads the file to remote server.
 
-    Returns a tuple (task_id, signature).
+    Returns a tuple (task_id, server, signature).
     """
+    server = choose_server()
     signature = security.signature()
     response = requests.post(
-        settings.ABACUS_REMOTE_SERVER,
+        server,
         params={
             'callback': add_params(
                 request.build_absolute_uri(reverse('api:abacus:remote-callback')),
@@ -36,15 +46,17 @@ def start(request):
         }
     )
     _ensure_success(response)
-    return response.json()['task_id'], signature
+    return response.json()['task_id'], server, signature
 
 
 def query(task_id):
     """
     Queries the task specified by task_id and returns the raw response.
     """
+    from .result import AbacusAsyncResult
+
     response = requests.get(
-        '{}{}/'.format(settings.ABACUS_REMOTE_SERVER, task_id)
+        '{}{}/'.format(AbacusAsyncResult(task_id).server, task_id)
     )
     _ensure_success(response)
     return response.json()

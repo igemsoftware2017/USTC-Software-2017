@@ -45,21 +45,58 @@ class TestRemote(ChannelTestCaseMixin, BaseTest):
         fp = get_example_descriptor()
         resp = self.client.post('/api/abacus/start/', {'file': fp}, SERVER_NAME=self.server_name)
         task_id = resp.data['id']
+
+        fp2 = get_example_descriptor()
+        resp2 = self.client.post('/api/abacus/start/', {'file': fp2}, SERVER_NAME=self.server_name)
+        task_id2 = resp2.data['id']
+
         self.tearDown()
+
         resp = self.client.get(resp.data['query_url'])
         self.assertEqual(resp.data['status'], 'PENDING')
+
+        resp2 = self.client.get(resp2.data['query_url'])
+        self.assertEqual(resp2.data['status'], 'PENDING')
+
         time.sleep(2)
+
         ar = AbacusAsyncResult(task_id)
         self.assertEqual(ar.status.value, 'SUCCESS')
         self.assertEqual(requests.get(ar.result).status_code, 200)
+
+        ar2 = AbacusAsyncResult(task_id2)
+        self.assertEqual(ar2.status.value, 'SUCCESS')
+        self.assertEqual(requests.get(ar2.result).status_code, 200)
+
+        outputs = set()
+        notices = []
 
         while True:
             data = client.receive()
             if data is None:
                 raise Exception('No data received.')
             elif data['handler'] == 'abacus':
-                self.assertEqual(data['data']['output'], ar.result)
+                outputs.add(data['data']['output'])
                 self.assertEqual(data['data']['status'], 'SUCCESS')
                 break
 
+        while True:
+            data = client.receive()
+            if data is None:
+                raise Exception('No data received.')
+            elif data['handler'] == 'abacus':
+                outputs.add(data['data']['output'])
+                self.assertEqual(data['data']['status'], 'SUCCESS')
+                break
+
+        self.assertEqual(outputs, {ar.result, ar2.result})
+
+        messages = self.me.notices.values_list('message', flat=True)
+        for result in (ar, ar2):
+            message = (
+                'ABACUS finished processing {input}. [[Check output]]((plugin.abacus))(({id})).'
+                .format(input=result.input_file_name, id=result.task_id)
+            )
+            self.assertIn(message, messages)
         fp.close()
+        fp2.close()

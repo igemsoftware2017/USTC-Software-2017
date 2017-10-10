@@ -19,6 +19,7 @@ class BaseHandler(object):
 
         task_id = self._perform_start_task()
         async_result = AbacusAsyncResult(task_id)
+        async_result._set_input_file_name(self._request.FILES['file'].name)
         async_result._set_ident(self.ident)
         async_result._set_user(user.pk)
 
@@ -36,11 +37,13 @@ class LocalHandler(BaseHandler):
     ident = consts.LOCAL
 
     def _run_task(self, input_file_name):
+
         from biohub.abacus.tasks import AbacusTask
 
         return AbacusTask.apply_async(input_file_name)
 
     def _store_file(self):
+
         from biohub.core.files.utils import store_file
 
         return store_file(self._request.FILES['file'])[0]
@@ -55,8 +58,10 @@ class RemoteHandler(BaseHandler):
     ident = consts.REMOTE
 
     def _perform_start_task(self):
-        task_id, signature = remote.start(self._request)
-        AbacusAsyncResult(task_id)._set_signature(signature)
+        task_id, server, signature = remote.start(self._request)
+        result = AbacusAsyncResult(task_id)
+        result._set_server(server)
+        result._set_signature(signature)
         return task_id
 
 

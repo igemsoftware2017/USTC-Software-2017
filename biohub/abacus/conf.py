@@ -37,7 +37,9 @@ class Settings(SimpleLazyObject):
         Check if remote ABACUS environment is ready.
         """
         try:
-            URLValidator()(config.get('ABACUS_REMOTE_URL', ''))
+            validator = URLValidator()
+            for url in config.get('ABACUS_REMOTE_SERVERS', ['']):
+                validator(url)
 
             return True
         except ValidationError:
