@@ -11,7 +11,6 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from abacus_server.tasks import run_abacus
-from abacus_server.celery import app
 
 
 class MainView(View):
