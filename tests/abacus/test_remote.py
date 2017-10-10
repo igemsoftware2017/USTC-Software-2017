@@ -69,7 +69,6 @@ class TestRemote(ChannelTestCaseMixin, BaseTest):
         self.assertEqual(requests.get(ar2.result).status_code, 200)
 
         outputs = set()
-        notices = []
 
         while True:
             data = client.receive()
