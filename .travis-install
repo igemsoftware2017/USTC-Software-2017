@@ -70,7 +70,7 @@ cat > biohub/abacus/config.json << EOF2
     "ABACUS_DATABASE_PATH": "$PWD/config.json",
     "ABACUS_REMOTE_SERVERS": [
         "http://localhost:46135/",
-        'http://localhost:46136/'
+        "http://localhost:46136/"
     ]
 }
 EOF2
