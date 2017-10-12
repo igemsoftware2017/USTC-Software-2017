@@ -96,7 +96,7 @@ class ActivityTest(APITestCase):
         payload = {
             'brick_name': data['part_name'],
             'title': 'title',
-            'content': {
+            'content_input': {
                 'text': 'this is a sample text',
                 'file_ids': []
             }

@@ -26,6 +26,23 @@ class ExperienceRestfulAPITest(APITestCase):
         self.post2 = Post.objects.create(author=self.user2, content="777777", experience=self.experience)
         self.client = APIClient()
 
+    def test_partial_fields(self):
+        response = self.client.get('/api/forum/experiences/')
+
+        for item in response.data['results']:
+            self.assertNotIn('text', item['content'])
+            self.assertIn('digest', item['content'])
+
+            resp = self.client.get('/api/forum/experiences/%d/' % item['id'])
+            self.assertNotIn('digest', resp.data['content'])
+            self.assertIn('text', resp.data['content'])
+
+    def test_text(self):
+
+        resp = self.client.get('/api/forum/experiences/%d/text/' % self.experience.id)
+
+        self.assertEqual('aha?', resp.data)
+
     def test_list_experiences(self):
         response = self.client.get('/api/forum/experiences/')
         self.assertEqual(response.status_code, 200)
@@ -42,14 +59,13 @@ class ExperienceRestfulAPITest(APITestCase):
         self.assertNotIn('content', exp)
         self.assertNotIn('voted_users', exp)
         self.assertNotIn('post_set', exp)
-        self.assertIn('stars', exp['brick'])
-        self.assertIn('rate_score', exp['brick'])
+        self.assertEqual('BBa_B0032', exp['brick'])
         self.assertIn('avatar_url', exp['author'])
 
     def test_post_empty_title_experience_failed(self):
         payload = {
             'title': '',
-            'content': {
+            'content_input': {
                 'text': 'hahaha',
                 'file_ids': []
             },
@@ -68,7 +84,7 @@ class ExperienceRestfulAPITest(APITestCase):
 
         payloads = {
             'title': 'f**k',
-            'content': {
+            'content_input': {
                 'text': 'hahaha',
                 'file_ids': [f.id]
             },
@@ -85,7 +101,7 @@ class ExperienceRestfulAPITest(APITestCase):
     def test_post_experiences(self):
         payloads = {
             'title': 'f**k',
-            'content': {
+            'content_input': {
                 'text': 'hahaha',
                 'file_ids': []
             },
@@ -106,7 +122,7 @@ class ExperienceRestfulAPITest(APITestCase):
         self.assertEqual(data['text'], 'hahaha')
         response = self.client.post('/api/forum/experiences/', {
             'title': '??',
-            'content': {
+            'content_input': {
                 'text': 'no file ids'
             },
             'brick_name': self.brick.part_name
@@ -115,7 +131,7 @@ class ExperienceRestfulAPITest(APITestCase):
 
     def test_patch_experiences(self):
         payloads = {
-            'content': {
+            'content_input': {
                 'text': 'hahaha'
             },
             'brick_name': self.brick.part_name
@@ -136,7 +152,7 @@ class ExperienceRestfulAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['text'], 'hahaha')
         response = self.client.patch('/api/forum/experiences/%d/' % self.experience.id, {
-            'content': {
+            'content_input': {
                 'text': ['unable to pass validation']
             }
         }, format='json')

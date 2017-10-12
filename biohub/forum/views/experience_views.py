@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 
 from biohub.utils.rest import pagination, permissions
 from biohub.accounts.mixins import UserPaginationMixin, BaseUserViewSetMixin
-from biohub.forum.serializers.experience_serializers import ExperienceSerializer
+from biohub.forum.serializers.experience_serializers import ShortExperienceSerializer, DetailExperienceSerializer
 
 from ..models import Experience
 from biohub.biobrick.spiders import ExperienceSpider
@@ -21,12 +21,14 @@ logger = logging.getLogger('biohub.forum.views.experience_views')
 class BaseExperienceViewSet(object):
 
     queryset = Experience.objects.all()
-    serializer_class = ExperienceSerializer
     pagination_class = pagination.factory('PageNumberPagination')
     permission_classes = [
         permissions.C(permissions.IsAuthenticatedOrReadOnly) &
         permissions.check_owner('author', ('PATCH', 'PUT', 'DELETE'))
     ]
+
+    def get_serializer_class(self):
+        return DetailExperienceSerializer if self.action == 'retrieve' else ShortExperienceSerializer
 
 
 class ExperienceViewSet(
@@ -70,6 +72,9 @@ class ExperienceViewSet(
                 }
             )
 
+        # if self.action == 'text':
+        #     queryset = queryset.only('id', 'content_id', 'author_id').prefetch_related('content__text')
+
         return queryset.order_by('-pub_time')
 
     @decorators.detail_route(methods=['GET'])
@@ -101,7 +106,7 @@ class ExperienceViewSet(
                     logger.warn(str(e))
                 else:
                     experience.refresh_from_db()
-        serializer = ExperienceSerializer(
+        serializer = DetailExperienceSerializer(
             experience,
             context={'request': None}
         )
@@ -112,13 +117,17 @@ class ExperienceViewSet(
         short = self.request.query_params.get('short', '')
         if short.lower() == 'true':
             page = self.paginate_queryset(self.get_queryset())
-            serializer = ExperienceSerializer(
+            serializer = ShortExperienceSerializer(
                 page,
                 fields=('api_url', 'id', 'title', 'author_name', 'author', 'brick'),
                 many=True, context={'request': None}
             )
             return self.get_paginated_response(serializer.data)
         return super(ExperienceViewSet, self).list(request=request, *args, **kwargs)
+
+    @decorators.detail_route(methods=['GET'])
+    def text(self, request, *args, **kwargs):
+        return Response(self.get_object().content.text)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
