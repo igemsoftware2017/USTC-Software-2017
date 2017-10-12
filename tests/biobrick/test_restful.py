@@ -122,3 +122,18 @@ class Test(BiobrickTest):
         self.brick.refresh_from_db()
         ae(self.brick.rate_score, Decimal('3.8'))
         ae(self.brick.rates, 2)
+
+    def test_stats(self):
+
+        from decimal import Decimal
+
+        self.test_rate()
+        self.assertEqual(
+            self.client.get(self.brick_url() + 'stats/').data,
+            {
+                'rated': True,
+                'watched': False,
+                'starred': False,
+                'score': Decimal('5.0')
+            }
+        )

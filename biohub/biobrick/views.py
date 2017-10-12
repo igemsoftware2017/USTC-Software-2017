@@ -14,7 +14,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from haystack.query import SQ, SearchQuerySet
 
-from .models import Biobrick
+from .models import Biobrick, BiobrickMeta, StarredUser, WatchingUser, RatedUser
 from .serializers import BiobrickSerializer, RateSerializer
 from .exceptions import SpiderError
 
@@ -175,6 +175,36 @@ class BiobrickViewSet(
             response = Response(serializer.data)
         response.data.update(context)
         return response
+
+    @detail_route(methods=['GET'])
+    def stats(self, request, *args, **kwargs):
+
+        user = request.user
+
+        if not user.is_authenticated():
+            return Response({})
+
+        try:
+            brick_meta = BiobrickMeta.objects.only('part_name').get(**self.get_brick_lookup_options())
+        except BiobrickMeta.DoesNotExist:
+            return Response({})
+
+        result = {}
+        for name, model in (
+            ('watched', WatchingUser),
+            ('rated', RatedUser),
+            ('starred', StarredUser)
+        ):
+            try:
+                obj = model.objects.get(user=user, brick=brick_meta)
+                result[name] = True
+
+                if name == 'rated':
+                    result['score'] = obj.score
+            except model.DoesNotExist:
+                result[name] = False
+
+        return Response(result)
 
     def retrieve(self, request, *args, **kwargs):
 
