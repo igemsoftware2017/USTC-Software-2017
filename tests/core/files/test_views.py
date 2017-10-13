@@ -15,18 +15,19 @@ class Test(APITestCase):
         self.assertEqual(403,
                          self.client.post(url, {}).status_code)
 
-    def test_upload(self):
+    def test_upload(self, filename='2.txt.txt'):
         url = reverse('default:files:upload')
         me = User.objects.create_test_user('me')
         self.client.force_authenticate(me)
 
-        sample = open_sample('2.txt')
+        sample = open_sample(filename)
         content = sample.read()
         sample.seek(0)
 
         # Phase 1
         resp = self.client.post(url + '?store_db=1', dict(file=sample))
         self.assertIn('id', resp.data)
+        self.assertEqual(resp.data['name'], filename)
         self.assertEqual(
             content,
             b''.join(
@@ -40,3 +41,6 @@ class Test(APITestCase):
             content,
             b''.join(
                 self.client.get(resp.data['file']).streaming_content))
+
+    def test_upload2(self):
+        self.test_upload('2')
