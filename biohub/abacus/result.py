@@ -113,7 +113,7 @@ class AbacusAsyncResult(AsyncResult):
         if status is None:
             status = self.status
 
-        ret = dict(status=status.value)
+        ret = dict(status=status.value, id=self.task_id)
         if status == TaskStatus.SUCCESS:
             ret['output'] = result if result is not None else self.result
 
