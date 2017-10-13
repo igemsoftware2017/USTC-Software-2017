@@ -38,7 +38,7 @@ cat > config.json << EOF
             "MIRROR": null
         }
     },
-    "PLUGINS": ["biohub.abacus"],
+    "PLUGINS": ["biohub.abacus", "biohub.biocircuit"],
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "/tmp/biohub",
     "REDIS_URI": "redis://localhost:6379"

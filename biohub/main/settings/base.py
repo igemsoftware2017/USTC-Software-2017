@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'biohub.core.plugins',
     'haystack',
     'biohub.biobrick',
-    'biohub.biocircuit',
     'biohub.forum',
 ]
 

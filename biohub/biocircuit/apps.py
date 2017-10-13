@@ -1,5 +1,9 @@
-from django.apps import AppConfig
+from biohub.core.plugins import PluginConfig
 
 
-class BiocircuitConfig(AppConfig):
+class BiocircuitConfig(PluginConfig):
+
     name = 'biohub.biocircuit'
+    title = 'Biocircuit'
+    author = 'zml, wxq'
+    description = ''
