@@ -154,6 +154,8 @@ class ExperienceSpider:
             # the first type
             for entry in tables:
                 tds = entry.tr.find_all('td')
+                if not tds[0].p:
+                    continue
                 author_name = re.search(
                     r'\s*(.*?)\s*$',
                     tds[0].p.text,
