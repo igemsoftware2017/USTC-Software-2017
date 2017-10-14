@@ -140,7 +140,7 @@ class Command(BaseCommand):
 
                 old_weight = brick['old_weight']
 
-                if old_weight is not None and not math.isclose(old_weight, weight, rel_tol=self.tolerance):
+                if old_weight is None or not math.isclose(old_weight, weight, rel_tol=self.tolerance):
 
                     sql.append(
                         "SELECT '{}', {}, '{}'".format(
