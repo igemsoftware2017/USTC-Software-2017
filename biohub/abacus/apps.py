@@ -7,4 +7,4 @@ class AbacusConfig(PluginConfig):
     title = 'ABACUS'
     author = 'Jay Lan, Jiansi Li'
     description = ''
-    js_url = 'https://raw.githubusercontent.com/USTC-Software2017-frontend/biohub-plugin-ABACUS/master/build/plugin.js'
+    js_url = 'https://ustc-software2017-frontend.github.io/biohub-plugin-ABACUS/build/plugin.js'

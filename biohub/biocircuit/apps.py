@@ -7,4 +7,4 @@ class BiocircuitConfig(PluginConfig):
     title = 'Biocircuit'
     author = 'zml, wxq'
     description = ''
-    js_url = 'https://raw.githubusercontent.com/USTC-Software2017-frontend/biohub-plugin-bioBLESS/master/build/plugin.js'
+    js_url = 'https://ustc-software2017-frontend.github.io/biohub-plugin-bioBLESS/build/plugin.js'
