@@ -7,6 +7,7 @@ class PluginSerializer(serializers.Serializer):
     author = serializers.CharField(read_only=True)
     title = serializers.CharField(read_only=True)
     description = serializers.CharField(read_only=True)
+    js_url = serializers.CharField(read_only=True)
 
     class Meta:
         fields = '__all__'
