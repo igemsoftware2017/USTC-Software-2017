@@ -145,9 +145,7 @@ CHANNEL_LAYERS = {
     }
 }
 
-EMAIL_USE_SSL = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_TIMEOUT = 10
 
 # Extra configurations
 
@@ -189,9 +187,12 @@ if biohub_settings.EMAIL:
     mail_conf = biohub_settings.EMAIL
 
     EMAIL_HOST = mail_conf['HOST']
-    EMAIL_HOST_USER = mail_conf['HOST_USER']
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER = mail_conf['HOST_USER']
     EMAIL_HOST_PASSWORD = mail_conf['HOST_PASSWORD']
     EMAIL_PORT = mail_conf['PORT']
+    EMAIL_USE_SSL = mail_conf.get('USE_SSL', True)
+    EMAIL_USE_TLS = mail_conf.get('USE_TLS', False)
+    EMAIL_TIMEOUT = mail_conf.get('TIMEOUT', 10)
 
     del mail_conf
 
