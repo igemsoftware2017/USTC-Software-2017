@@ -20,7 +20,7 @@ from . import exceptions
 
 logger = logging.getLogger('biohub.plugins')
 
-REQUIRED_PROPERTIES = ('title', 'author', 'description',)
+REQUIRED_PROPERTIES = ('title', 'author', 'description', 'js_url')
 
 PluginInfo = namedtuple('PluginInfo', REQUIRED_PROPERTIES)
 
