@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # 'django.contrib.admin',
+    'corsheaders',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -147,9 +149,13 @@ CHANNEL_LAYERS = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
+CORS_ORIGIN_ALLOW_ALL = False
+
 # Extra configurations
 
 from biohub.core.conf import settings as biohub_settings  # noqa:E402
+
+CORS_ORIGIN_WHITELIST = biohub_settings.CORS
 
 DATABASES['default'].update(biohub_settings.DEFAULT_DATABASE)
 INSTALLED_APPS += biohub_settings.BIOHUB_PLUGINS[:]

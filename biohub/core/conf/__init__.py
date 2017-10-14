@@ -28,7 +28,8 @@ mapping = {
     'SECRET_KEY': ('SECRET_KEY', ''),
     'BIOHUB_MAX_TASKS': ('MAX_TASKS', lambda: multiprocessing.cpu_count() * 5),
     'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180),
-    'EMAIL': ('EMAIL', dict)
+    'EMAIL': ('EMAIL', dict),
+    'CORS': ('CORS', list)
 }
 
 valid_settings_keys = tuple(mapping.values())
