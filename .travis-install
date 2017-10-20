@@ -41,7 +41,13 @@ cat > config.json << EOF
     "PLUGINS": ["biohub.abacus", "biohub.biocircuit"],
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "/tmp/biohub",
-    "REDIS_URI": "redis://localhost:6379"
+    "REDIS_URI": "redis://localhost:6379",
+    "THROTTLE": {
+        "post": 0,
+        "experience": 0,
+        "rate": 0,
+        "vote": 0
+    }
 }
 EOF
 
