@@ -33,8 +33,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         from django.core.cache import cache
         from biohub.core.conf import settings as biohub_settings
 
-        ip = get_ip_from_request(self.context['request'])
-        key = '{}_register'.format(ip)
+        request = self.context['request']
+        ip = get_ip_from_request(request)
+        key = '{}_{}_register'.format(ip, request.session.session_key)
 
         if cache.get(key) is not None:
             raise Throttled()

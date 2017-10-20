@@ -35,7 +35,7 @@ mapping = {
         'experience': 86400,
         'post': 15,
         'vote': 15,
-        'register': 300
+        'register': 3600
     })
 }
 
