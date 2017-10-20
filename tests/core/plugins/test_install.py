@@ -17,7 +17,8 @@ class Test(PluginTestCase):
         self.assertIn(name, self.current_settings['PLUGINS'])
         self.assertEqual(
             plugins.plugin_infos[name],
-            ('My Plugin', 'hsfzxjy', 'This is my plugin.'))
+            ('My Plugin', 'hsfzxjy',
+             'This is my plugin.', '/_plugins/tests.core.plugins.my_plugin/plugin.js'))
 
         # Phase 2
         install(['tests.core.plugins.another_plugin'],

@@ -20,9 +20,15 @@ from . import exceptions
 
 logger = logging.getLogger('biohub.plugins')
 
-REQUIRED_PROPERTIES = ('title', 'author', 'description', 'js_url')
+PLUGIN_FIELDS = (
+    ('title', False),
+    ('author', False),
+    ('description', False),
+    ('js_url', lambda c: '/_plugins/{}/plugin.js'.format(c.name))
+)
+REQUIRED_FIELDS = [item[0] for item in PLUGIN_FIELDS if not item[1]]
 
-PluginInfo = namedtuple('PluginInfo', REQUIRED_PROPERTIES)
+PluginInfo = namedtuple('PluginInfo', [item[0] for item in PLUGIN_FIELDS])
 
 manage_py_file_path = path_util.join(django_settings.BIOHUB_DIR, 'manage.py')
 
@@ -34,7 +40,7 @@ def validate_plugin_config(plugin_name, config_class):
     A plugin config class is valid if:
 
      + it's a subclass of `biohub.core.plugins.PluginConfig`
-     + it has all the properties specified in `REQUIRED_PROPERTIES`
+     + it has all the properties specified in `REQUIRED_FIELDS`
     """
 
     if not issubclass(config_class, PluginConfig):
@@ -43,7 +49,7 @@ def validate_plugin_config(plugin_name, config_class):
             "subclass of `biohub.core.plugins.PluginConfig`."
             % plugin_name)
 
-    missing_fields = set(REQUIRED_PROPERTIES) - set(dir(config_class))
+    missing_fields = set(REQUIRED_FIELDS) - set(dir(config_class))
 
     if missing_fields:
         raise exceptions.InstallationError(
@@ -241,8 +247,15 @@ class PluginManager(object):
         plugin_name = plugin_config.name
         self.plugin_configs[plugin_name] = plugin_config
 
-        properties = (getattr(plugin_config, pname)
-                      for pname in REQUIRED_PROPERTIES)
+        properties = []
+        for pname, default in PLUGIN_FIELDS:
+
+            try:
+                value = getattr(plugin_config, pname)
+            except AttributeError:
+                value = default(plugin_config)
+
+            properties.append(value)
 
         self.plugin_infos[plugin_name] = PluginInfo(*properties)
 
