@@ -26,7 +26,7 @@ def make_view(serializer_cls):
         if request.user.is_authenticated():
             raise NotFound
 
-        serializer = serializer_cls(data=request.data)
+        serializer = serializer_cls(data=request.data, context={'request': request})
 
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()

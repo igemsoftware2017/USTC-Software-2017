@@ -8,6 +8,31 @@ logger = logging.getLogger(__name__)
 
 class Test(APITestCase):
 
+    def test_throttle(self):
+        import time
+        from biohub.core.conf import settings
+
+        payload = {
+            'username': 'user1',
+            'email': '123@123.com',
+            'password': 'passws1ord',
+        }
+
+        payload2 = {
+            'username': 'user2',
+            'email': '1234@123.com',
+            'password': 'passws1ord',
+        }
+
+        settings.THROTTLE['register'] = 1
+        self.assertEqual(self.client.post('/api/users/register/', payload).status_code, 200)
+        self.client.get('/api/users/logout/')
+        self.assertEqual(self.client.post('/api/users/register/', payload2).status_code, 429)
+        time.sleep(1)
+        self.assertEqual(self.client.post('/api/users/register/', payload2).status_code, 200)
+
+        settings.THROTTLE['register'] = 0
+
     def _post_register(self, drops=None, **kwargs):
         payload = {
             'username': 'user1',

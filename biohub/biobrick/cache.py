@@ -2,23 +2,13 @@ import time
 from random import sample
 from biohub.utils import redis
 from biohub.utils.collections import unique
+from biohub.utils.http import get_ip_from_request
 
 from biohub.biobrick.models import Biobrick
 from biohub.biobrick.serializers import BiobrickSerializer
 
 _storage = redis.Storage('__biohub_biobrick_cache_storage__')
 _views_storage = redis.Storage('__biohub_biobrick_views_storage__')
-
-
-def get_client_ip(request):
-
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR', '')
-    return ip
-
 
 class BrickViewsManager:
     """
@@ -33,7 +23,7 @@ class BrickViewsManager:
         user = request.user
         user_id = str(user.id if user.is_authenticated() else '')
 
-        return user_id + get_client_ip(request)
+        return user_id + get_ip_from_request(request)
 
     def handle_request(self, request, brick_name):
 

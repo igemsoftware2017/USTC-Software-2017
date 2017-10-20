@@ -46,7 +46,8 @@ cat > config.json << EOF
         "post": 0,
         "experience": 0,
         "rate": 0,
-        "vote": 0
+        "vote": 0,
+        "register": 0
     }
 }
 EOF

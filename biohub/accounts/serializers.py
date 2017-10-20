@@ -9,6 +9,7 @@ from rest_framework.exceptions import Throttled
 
 from biohub.utils.rest.serializers import bind_model,\
     ModelSerializer
+from biohub.utils.http import get_ip_from_request
 from biohub.utils.url import add_params
 
 from .mail import get_password_reset_email
@@ -28,7 +29,21 @@ class UserSerializer(ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
 
+    def _check_throttle(self):
+        from django.core.cache import cache
+        from biohub.core.conf import settings as biohub_settings
+
+        ip = get_ip_from_request(self.context['request'])
+        key = '{}_register'.format(ip)
+
+        if cache.get(key) is not None:
+            raise Throttled()
+
+        cache.set(key, 1, timeout=biohub_settings.THROTTLE['register'])
+
     def create(self, validated_data):
+        self._check_throttle()
+
         password = validated_data.pop('password')
 
         user = User(**validated_data)
