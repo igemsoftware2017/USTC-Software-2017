@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import Throttled
 from haystack.models import SearchResult
 
 from biohub.utils.rest.fields import PackedField
@@ -14,6 +15,15 @@ class RateSerializer(serializers.Serializer):
     score = serializers.DecimalField(max_digits=2, decimal_places=1, max_value=5, min_value=0)
 
     def create(self, validated_data):
+
+        from django.core.cache import cache
+        from biohub.core.conf import settings as biohub_settings
+
+        key = 'user_{}_rate'.format(self.context['user'].id)
+        if cache.get(key) is not None:
+            raise Throttled()
+        cache.set(key, 1, timeout=biohub_settings.THROTTLE['rate'])
+
         return self.context['brick'].rate(
             self.context['user'], validated_data['score']
         )

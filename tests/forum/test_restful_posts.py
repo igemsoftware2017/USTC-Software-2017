@@ -91,3 +91,24 @@ class PostRestfulAPITest(APITestCase):
         response = client.get('/api/forum/posts/?author=abc')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['results']), 1)
+
+    def test_throttle(self):
+        from biohub.core.conf import settings as biohub_settings
+        import time
+
+        biohub_settings.THROTTLE['post'] = 1
+
+        self.client.force_authenticate(self.user1)
+        response = self.client.post('/api/forum/posts/', {
+            'experience_id': self.experience.id,
+            'content': 'test_test_test'
+        })
+        self.assertEqual(response.status_code, 429)
+        time.sleep(1)
+        response = self.client.post('/api/forum/posts/', {
+            'experience_id': self.experience.id,
+            'content': 'test_test_test'
+        })
+        self.assertNotEqual(response.status_code, 429)
+
+        biohub_settings.THROTTLE['post'] = 0

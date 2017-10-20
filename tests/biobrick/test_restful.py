@@ -1,3 +1,4 @@
+from unittest import SkipTest  # noqa
 from decimal import Decimal
 
 from biohub.biobrick.models import Biobrick
@@ -17,12 +18,14 @@ class Test(BiobrickTest):
         return '{}{}/'.format(self.base_url, brick.part_name)
 
     def test_retrieve(self):
+        # raise SkipTest
         self.assertFalse(self.brick.meta_exists)
         self.client.get(self.brick_url())
         self.brick.refresh_from_db()
         self.assertTrue(self.brick.meta_exists)
 
     def test_fields_exist(self):
+        # raise SkipTest
         meta = self.brick.ensure_meta_exists(fetch=True)
         meta.fetch()
         self.assertTrue(bool(meta.part_type))
@@ -101,6 +104,21 @@ class Test(BiobrickTest):
         )
         self.brick.refresh_from_db()
         self.assertEqual(self.brick.stars, 0)
+
+    def test_throttle_rate(self):
+        from biohub.core.conf import settings
+        import time
+        settings.THROTTLE['rate'] = 1
+
+        self.client.force_authenticate(self.me)
+        resp = self.client.post(self.brick_url() + 'rate/', {'score': 4})
+        resp = self.client.post(self.brick_url() + 'rate/', {'score': 4})
+        self.assertEqual(resp.status_code, 429)
+        time.sleep(1)
+        resp = self.client.post(self.brick_url() + 'rate/', {'score': 4})
+        self.assertNotEqual(resp.status_code, 429)
+
+        settings.THROTTLE['rate'] = 0
 
     def test_rate(self):
 

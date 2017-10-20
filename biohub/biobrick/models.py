@@ -297,6 +297,7 @@ class Biobrick(MetaBase, WeightBase):
                 return False
 
     def rate(self, user, score):
+
         if RatedUser.objects.filter(user=user.pk, brick=self.part_name).exists():
             return False
 

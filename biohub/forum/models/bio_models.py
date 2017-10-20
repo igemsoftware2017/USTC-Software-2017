@@ -1,3 +1,5 @@
+from rest_framework.exceptions import Throttled
+
 from django.conf import settings
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
@@ -99,6 +101,16 @@ class Experience(models.Model):
     objects = ExperienceQuerySet.as_manager()
 
     def vote(self, user):
+
+        from django.core.cache import cache
+        from biohub.core.conf import settings as biohub_settings
+
+        key = 'user_{}_vote'.format(user.id)
+        if cache.get(key) is not None:
+            raise Throttled()
+
+        cache.set(key, 1, timeout=biohub_settings.THROTTLE['vote'])
+
         if self.author is not None and self.author.id == user.id:
             return False
         if not self.voted_users.filter(pk=user.id).exists():

@@ -176,7 +176,7 @@ class ExperienceRestfulAPITest(APITestCase):
     def test_vote(self):
         client = self.client
         # unauthenticated user can't vote
-        response = client.post('/api/forum/experiences/' + str(self.post1.id) + '/vote/')
+        response = client.post('/api/forum/experiences/' + str(self.experience.id) + '/vote/')
         self.assertEqual(response.status_code, 403)
         # vote for others
         self.assertTrue(client.login(username='abc', password='abc546565132'))
@@ -218,3 +218,49 @@ class ExperienceRestfulAPITest(APITestCase):
         client.post('/api/forum/experiences/' + str(other.id) + '/unvote/')
         response = client.get('/api/forum/experiences/' + str(other.id) + '/')
         self.assertEqual(response.data['votes'], 0)
+
+    def test_throttle(self):
+        from biohub.core.conf import settings as biohub_settings
+        import time
+
+        biohub_settings.THROTTLE['experience'] = 1
+
+        self.client.force_authenticate(self.user1)
+        response = self.client.post('/api/forum/experiences/', {
+            'title': 'f**k',
+            'content_input': {
+                'text': 'hahaha',
+                'file_ids': []
+            },
+            'brick_name': self.brick_meta.part_name
+        }, format='json')
+        self.assertEqual(response.status_code, 429)
+        time.sleep(1)
+        self.client.force_authenticate(self.user1)
+        response = self.client.post('/api/forum/experiences/', {
+            'title': 'f**k',
+            'content_input': {
+                'text': 'hahaha',
+                'file_ids': []
+            },
+            'brick_name': self.brick_meta.part_name
+        }, format='json')
+        self.assertNotEqual(response.status_code, 429)
+
+        biohub_settings.THROTTLE['experience'] = 0
+
+    def test_throttle_vote(self):
+        from biohub.core.conf import settings as biohub_settings
+        import time
+
+        biohub_settings.THROTTLE['vote'] = 1
+
+        self.client.force_authenticate(self.user2)
+        response = self.client.post('/api/forum/experiences/' + str(self.experience.id) + '/vote/')
+        response = self.client.post('/api/forum/experiences/' + str(self.experience.id) + '/vote/')
+        self.assertEqual(response.status_code, 429)
+        time.sleep(1)
+        response = self.client.post('/api/forum/experiences/' + str(self.experience.id) + '/vote/')
+        self.assertNotEqual(response.status_code, 429)
+
+        biohub_settings.THROTTLE['vote'] = 0

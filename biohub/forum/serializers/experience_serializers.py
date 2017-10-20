@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import Throttled
 
 from biohub.utils.rest.serializers import ModelSerializer
 from biohub.accounts.serializers import UserSerializer
@@ -27,12 +28,26 @@ class ExperienceSerializer(ModelSerializer):
                             'content_url', 'brick_url', 'votes')
 
     def create(self, validated_data):
+
+        from biohub.core.conf import settings as biohub_settings
+        from datetime import timedelta
+        from django.utils.timezone import now
+
         brick = validated_data.pop('brick_name')
+        author = validated_data['author']
+
+        if Experience.objects.filter(
+            author=author,
+            brick=brick,
+            pub_time__gte=now() - timedelta(seconds=biohub_settings.THROTTLE['experience'])
+        ).exists():
+            raise Throttled()
+
         content_serializer = validated_data.pop('content_input')
         content = content_serializer.save()
         experience = Experience.objects.create(
             brick=brick, content=content,
-            author_name=validated_data['author'].username,
+            author_name=author.username,
             **validated_data
         )
         return experience
@@ -48,7 +63,7 @@ class ExperienceSerializer(ModelSerializer):
         return serializer
 
     def update(self, instance, validated_data):
-        instance.brick = validated_data.get('brick_name', instance.brick)
+        # instance.brick = validated_data.get('brick_name', instance.brick)
         instance.author_name = validated_data['author_name']
         if 'content_input' in validated_data:
             validated_data.pop('content_input').save()

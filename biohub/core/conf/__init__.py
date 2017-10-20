@@ -29,7 +29,13 @@ mapping = {
     'BIOHUB_MAX_TASKS': ('MAX_TASKS', lambda: multiprocessing.cpu_count() * 5),
     'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180),
     'EMAIL': ('EMAIL', dict),
-    'CORS': ('CORS', list)
+    'CORS': ('CORS', list),
+    'THROTTLE': ('THROTTLE', lambda: {
+        'rate': 15,
+        'experience': 86400,
+        'post': 15,
+        'rate': 15
+    })
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -46,7 +52,7 @@ class Settings(object):
     biohub relevant configuration items.
     """
 
-    def _validate(self, key, value):
+    def _validate(self, key, value, default):
         """
         A proxy function for validation, which will find `validate_<key>`
         method in self and feed `value` to it if the method exists. The
@@ -56,7 +62,7 @@ class Settings(object):
         validate_func = getattr(
             self, 'validate_%s' % key.lower(), None)
         if validate_func is not None:
-            value = validate_func(value)
+            value = validate_func(value, default)
 
         return value
 
@@ -88,7 +94,7 @@ class Settings(object):
                 value = default_value() if callable(default_value) \
                     else default_value
 
-            value = self._validate(dest_name, value)
+            value = self._validate(dest_name, value, default_value)
 
             setattr(self, dest_name, value)
 
@@ -103,19 +109,19 @@ class Settings(object):
 
             value = getattr(self, dest_name)
 
-            value = self._validate(dest_name, value)
+            value = self._validate(dest_name, value, _)
 
             result[org_name] = value
 
         return result
 
-    def validate_biohub_plugins(self, value):
+    def validate_biohub_plugins(self, value, default):
         """
         BIOHUB_PLUGINS should not contains duplicated items.
         """
         return unique(value)
 
-    def validate_redis_uri(self, value):
+    def validate_redis_uri(self, value, default):
 
         if not value:
             warnings.warn(
@@ -124,7 +130,7 @@ class Settings(object):
 
         return value
 
-    def validate_secret_key(self, value):
+    def validate_secret_key(self, value, default):
 
         if not value:
             warnings.warn(
@@ -133,21 +139,21 @@ class Settings(object):
 
         return value
 
-    def validate_biohub_max_tasks(self, value):
+    def validate_biohub_max_tasks(self, value, default):
 
         assert isinstance(value, int) and value > 0, \
             "'MAX_TASKS' should be positive integer."
 
         return value
 
-    def validate_biohub_task_max_timeout(self, value):
+    def validate_biohub_task_max_timeout(self, value, default):
 
         assert isinstance(value, (int, float)) and value > 0, \
             "'TASK_MAX_TIMEOUT' should be positive float."
 
         return value
 
-    def validate_upload_dir(self, value):
+    def validate_upload_dir(self, value, default):
 
         if value.startswith(tempfile.gettempdir()):
             warnings.warn(
@@ -157,7 +163,7 @@ class Settings(object):
 
         return os.path.abspath(value)
 
-    def validate_email(self, value):
+    def validate_email(self, value, default):
 
         if not isinstance(value, dict):
             raise TypeError("'EMAIL' should be a dict, got type %r." % type(type(value)))
@@ -175,6 +181,16 @@ class Settings(object):
                 value[field] = ''
 
         return value
+
+    def validate_throttle(self, value, default):
+
+        if not isinstance(value, dict):
+            raise TypeError("'THROTTLE' should be a dict, got type %r." % type(type(value)))
+
+        default_value = default()
+        default_value.update(value)
+
+        return default_value
 
     def __delattr__(self, name):
         """

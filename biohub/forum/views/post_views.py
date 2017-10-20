@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, exceptions
 from biohub.forum.serializers.post_serializers import PostSerializer
 from biohub.utils.rest import pagination, permissions
 from biohub.forum.models import Post
@@ -38,3 +38,17 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        from biohub.core.conf import settings as biohub_settings
+        from datetime import timedelta
+        from django.utils.timezone import now
+
+        user = self.request.user
+        if Post.objects.filter(
+            author=user,
+            pub_time__gte=now() - timedelta(seconds=biohub_settings.THROTTLE['post'])
+        ).exists():
+            raise exceptions.Throttled()
+
+        return super(PostViewSet, self).create(request, *args, **kwargs)
