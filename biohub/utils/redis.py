@@ -39,7 +39,7 @@ class Storage(object):
 
             return old_make_key(key, version, prefix)
 
-        client.make_key = make_key
+        self.make_key = client.make_key = make_key
 
     def decode(self, value):
         if value is not None:
@@ -125,3 +125,10 @@ class Storage(object):
 
         self.__dict__[name] = value
         return value
+
+    def zrange(self, name, start, end, desc=False, withscores=False,
+               score_cast_func=float):
+        return self._redis_client.zrange(
+            self.make_key(name),
+            start, end, desc, withscores, score_cast_func
+        )

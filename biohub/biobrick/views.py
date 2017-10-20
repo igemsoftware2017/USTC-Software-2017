@@ -17,6 +17,7 @@ from haystack.query import SQ, SearchQuerySet
 from .models import Biobrick, BiobrickMeta, StarredUser, WatchingUser, RatedUser
 from .serializers import BiobrickSerializer, RateSerializer
 from .exceptions import SpiderError
+from .cache import brick_views_manager, brick_getter
 
 from biohub.utils.collections import unique
 from biohub.utils.rest import pagination
@@ -176,6 +177,15 @@ class BiobrickViewSet(
         response.data.update(context)
         return response
 
+    @list_route(methods=['GET'])
+    def popular(self, request, *args, **kwargs):
+        try:
+            size = int(request.query_params.get('size', 4))
+        except ValueError:
+            size = 4
+
+        return Response(brick_views_manager.get_by_random(size))
+
     @detail_route(methods=['GET'])
     def stats(self, request, *args, **kwargs):
 
@@ -209,8 +219,9 @@ class BiobrickViewSet(
     def retrieve(self, request, *args, **kwargs):
 
         brick = self.get_object()
+        brick_views_manager.handle_request(request, brick.part_name)  # Process views count
 
-        if brick.should_fetch:
+        if not request.query_params.get('nofetch', '') and brick.should_fetch:
             try:
                 brick.fetch()
             except SpiderError as e:
@@ -283,6 +294,12 @@ class BiobrickViewSet(
         if serializer.is_valid(raise_exception=True):
             result = serializer.save()
             return self.assert_brick_action(lambda b: result)
+
+    @detail_route(methods=['GET'])
+    def related(self, request, *args, **kwargs):
+        part_name = self.get_brick_lookup_options()['part_name']
+
+        return Response(brick_getter.get_related_bricks(part_name))
 
 
 class UserBrickViewSet(mixins.ListModelMixin, BaseBrickViewSet, BaseUserViewSetMixin):
