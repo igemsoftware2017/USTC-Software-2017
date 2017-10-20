@@ -10,6 +10,7 @@ from biohub.biobrick.serializers import BiobrickSerializer
 _storage = redis.Storage('__biohub_biobrick_cache_storage__')
 _views_storage = redis.Storage('__biohub_biobrick_views_storage__')
 
+
 class BrickViewsManager:
     """
     A manager class to handle view counts of bricks.
