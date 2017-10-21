@@ -14,7 +14,7 @@ class StraightHandler(TemporaryFileUploadHandler):
     def file_complete(self, file_size):
         super(StraightHandler, self).file_complete(file_size)
 
-        self.file_name = default_storage.save(self.file_name + '_1', self.file)
+        self.file_name = default_storage.save(self.file_name, self.file)
 
         # Hacky approach to avoid annoying error.
         if hasattr(self.file.file, '_closer'):
