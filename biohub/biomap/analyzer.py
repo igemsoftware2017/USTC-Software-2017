@@ -3,6 +3,7 @@ class _Result:
     def __init__(self):
         self.nodes = {}
         self.edges = []
+        self.too_large = False
 
     def add_edge(self, source, target):
 
@@ -45,36 +46,34 @@ class Analyzer:
 
         return result
 
-    def analyze_reverse(self, part_name, max_depth=1):
-
-        if max_depth < 1:
-            max_depth = 1
-        elif max_depth > 1:
-            max_depth = 1
+    def analyze_reverse(self, part_name):
 
         result = _Result()
 
-        self._analyze_reverse(part_name, max_depth, result)
+        self._analyze_reverse(part_name, result)
 
         return result
 
-    def _analyze_reverse(self, part_name, depth, result):
+    def _analyze_reverse(self, part_name, result):
 
-        if depth < 0 or result.is_visited(part_name):
-            return
-
-        result.add_node(part_name, depth)
+        result.add_node(part_name, 0)
 
         self._builder.build(part_name)
-        parts = self._storage.smembers('rev_' + part_name)
+        parts = self._storage.srandmember('rev_' + part_name, 101)
 
+        counter = 0
         for part in parts:
+
+            counter += 1
 
             if str(part) == '0':
                 continue
 
+            result.add_node(part, 1)
             result.add_edge(part, part_name)
-            self._analyze(part, depth - 1, result)
+
+        if counter == 101:
+            result.too_large = True
 
     def _analyze(self, part_name, depth, result):
 

@@ -9,7 +9,8 @@ def analyze(request, part_name):
 
     return Response({
         'nodes': [dict(id=name, group=group) for name, group in result.nodes.items()],
-        'edges': result.edges
+        'edges': result.edges,
+        'too_large': result.too_large
     })
 
 
@@ -20,5 +21,6 @@ def analyze_reverse(request, part_name):
 
     return Response({
         'nodes': [dict(id=name, group=group) for name, group in result.nodes.items()],
-        'edges': result.edges
+        'edges': result.edges,
+        'too_large': result.too_large
     })

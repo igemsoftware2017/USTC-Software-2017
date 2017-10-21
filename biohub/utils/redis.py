@@ -18,6 +18,10 @@ class Storage(object):
     return_value_funcs = 'lpop rpop lindex hget rpoplpush spop'.split()
     return_iter_funcs = 'smembers hmget hvals lrange mget sdiff sinter'.split()
 
+    def srandmember(self, name, number=None):
+        for item in self._redis_client.srandmember(self.make_key(name), number):
+            yield self.decode(item)
+
     def __init__(self, namespace):
 
         from django.core.cache import cache
