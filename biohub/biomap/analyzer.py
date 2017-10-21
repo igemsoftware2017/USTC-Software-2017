@@ -1,33 +1,25 @@
 class _Result:
 
     def __init__(self):
-        self._mapping = {}
-        self._visited = {}
-        self.nodes = []
+        self.nodes = {}
         self.edges = []
-
-    def get_node_index(self, node):
-
-        if node in self._mapping:
-            return self._mapping[node]
-
-        self.nodes.append({'name': node})
-        index = self._mapping[node] = len(self.nodes) - 1
-        return index
 
     def add_edge(self, source, target):
 
         self.edges.append({
-            'source': self.get_node_index(source),
-            'target': self.get_node_index(target)
+            'source': source,
+            'target': target,
+            'value': 1
         })
 
     def mark_visited(self, node):
-        self.get_node_index(node)
         self._visited[node] = True
 
+    def add_node(self, node, group):
+        self.nodes[node] = group
+
     def is_visited(self, node):
-        return node in self._visited
+        return node in self.nodes
 
 
 class Analyzer:
@@ -53,12 +45,12 @@ class Analyzer:
 
         return result
 
-    def analyze_reverse(self, part_name, max_depth=100):
+    def analyze_reverse(self, part_name, max_depth=1):
 
         if max_depth < 1:
             max_depth = 1
-        elif max_depth > 100:
-            max_depth = 100
+        elif max_depth > 1:
+            max_depth = 1
 
         result = _Result()
 
@@ -71,7 +63,7 @@ class Analyzer:
         if depth < 0 or result.is_visited(part_name):
             return
 
-        result.mark_visited(part_name)
+        result.add_node(part_name, depth)
 
         self._builder.build(part_name)
         parts = self._storage.smembers('rev_' + part_name)
@@ -82,14 +74,14 @@ class Analyzer:
                 continue
 
             result.add_edge(part, part_name)
-            self._analyze(part_name, depth - 1, result)
+            self._analyze(part, depth - 1, result)
 
     def _analyze(self, part_name, depth, result):
 
         if depth < 0 or result.is_visited(part_name):
             return
 
-        result.mark_visited(part_name)
+        result.add_node(part_name, depth)
 
         self._builder.build(part_name)
         subparts = self._storage.smembers(part_name)
@@ -99,7 +91,7 @@ class Analyzer:
                 continue
 
             result.add_edge(part_name, subpart)
-            self._analyze(part_name, depth - 1, result)
+            self._analyze(subpart, depth - 1, result)
 
 
 analyzer = Analyzer()
