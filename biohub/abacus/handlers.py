@@ -61,6 +61,7 @@ class RemoteHandler(BaseHandler):
         task_id, server, signature = remote.start(self._request)
         result = AbacusAsyncResult(task_id)
         result._set_server(server)
+        result._set_status('RUNNING')
         result._set_signature(signature)
         return task_id
 
