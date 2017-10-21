@@ -381,8 +381,8 @@ class Part(models.Model):
     review_total_w = models.FloatField()
     review_count_w = models.FloatField()
     deep_count_w = models.FloatField()
-    ac = models.TextField()
-    ruler = models.TextField()
+    ac = PackedField(null=True)
+    ruler = PackedField(null=True)
 
     class Meta:
         db_table = 'parts'
