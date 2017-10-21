@@ -69,6 +69,7 @@ biohub/biobrick/bin/updateparts.py -c 1000
 biohub/manage.py migrate
 biohub/manage.py refreshweight
 time biohub/manage.py update_index -k 4
+time biohub/manage.py installgraph
 
 
 cat > biohub/abacus/config.json << EOF2
