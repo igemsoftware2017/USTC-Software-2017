@@ -46,17 +46,25 @@ class Analyzer:
 
         return result
 
-    def analyze_reverse(self, part_name):
+    def analyze_reverse(self, part_name, max_depth=2):
+
+        if max_depth < 1:
+            max_depth = 1
+        if max_depth > 2:
+            max_depth = 2
 
         result = _Result()
 
-        self._analyze_reverse(part_name, result)
+        self._analyze_reverse(part_name, max_depth, result)
 
         return result
 
-    def _analyze_reverse(self, part_name, result):
+    def _analyze_reverse(self, part_name, depth, result):
 
-        result.add_node(part_name, 0)
+        result.add_node(part_name, depth)
+
+        if depth <= 0:
+            return
 
         self._builder.build(part_name)
         parts = self._storage.srandmember('rev_' + part_name, 101)
@@ -66,11 +74,12 @@ class Analyzer:
 
             counter += 1
 
-            if str(part) == '0':
+            if str(part) == '0' or result.is_visited(part):
                 continue
 
-            result.add_node(part, 1)
+            result.add_node(part, depth - 1)
             result.add_edge(part, part_name)
+            self._analyze_reverse(part, depth - 1, result)
 
         if counter == 101:
             result.too_large = True
