@@ -23,14 +23,14 @@ class TestBiocircuit(APITestCase):
     def test_biocircuit(self):
         resp = self.client.get(reverse('api:biocircuit:biocircuit-build', args=('11--',)))
         resp_nodes = [
-            set([*circuit['nodes'], circuit['score']])
+            {*circuit['nodes'], circuit['score']}
             for circuit in resp.data
         ]
         expected_nodes = [
-            set(['INPUT', 'OR0', 'NOT3', 10]),
-            set(['INPUT', 'OR0', 'NOT3', 10]),
-            set(['INPUT', 'OR0', 'NOT6', 16.5]),
-            set(['INPUT', 'OR0', 'NOT6', 16.5]),
-            set(['INPUT', 'OR0', 'NOT5', 17.5])
+            {'INPUT', 'OR0', 'NOT3', 10},
+            {'INPUT', 'OR0', 'NOT3', 10},
+            {'INPUT', 'OR0', 'NOT6', 16.5},
+            {'INPUT', 'OR0', 'NOT6', 16.5},
+            {'INPUT', 'OR0', 'NOT5', 17.5}
         ]
         self.assertListEqual(resp_nodes, expected_nodes)
