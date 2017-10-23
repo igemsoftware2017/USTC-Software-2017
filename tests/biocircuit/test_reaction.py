@@ -3,7 +3,7 @@ try:
     from django.test import TestCase
 except:
     pass
-from .reaction_system import ReactionSystem
+from biohub.biocircuit.reaction_system import ReactionSystem
 
 if __name__ == "__main__":
     A = ReactionSystem([[["a"], ["b"], 1]], [["a", 100], "b"]) + ReactionSystem([[["b"], ["c"], 1]], [["b", 100], "c"])

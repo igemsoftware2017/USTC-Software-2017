@@ -4,9 +4,9 @@ try:
 except ModuleNotFoundError:
     pass
 
-from .data_test import system_data
-from .bio_system_old import bio_system
-from .stopwatch import sw_alloc, sw_start, sw_accmu, sw_print
+from biohub.biocircuit.data_test import system_data
+from biohub.biocircuit.bio_system_old import bio_system
+from biohub.biocircuit.stopwatch import sw_alloc, sw_start, sw_accmu, sw_print
 
 systems_data = [
     {'simulation_parameters': [{'device_parameter': {'initial': [10, 10, 10]}, 'e5': {'reg': 0.5}, 'e4': {'reg': 0.5},

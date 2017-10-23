@@ -10,6 +10,6 @@ register_api(r'^biocircuit/', [
     url(r'^biocircuit/(?P<string>.+)/$', views.BiocircuitView.as_view(), name='biocircuit-build'),  # the name seems wierd.
     url(r'^gates/$', views.GatesView.as_view(), name='biocircuit-gates'),
     url(r'^score/$', views.ScoreView.as_view(), name='biocircuit-score'),
-    url(r'^simulate/$', views.SimulateView.as_view()),
-    url(r'^parts/', views.PartsView.as_view()),
+    url(r'^simulate/$', views.SimulateView.as_view(), name='biocircuit-simulate'),
+    url(r'^parts/', views.PartsView.as_view(), name='biocircuit-parts'),
 ], 'biocircuit')

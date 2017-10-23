@@ -1,8 +1,8 @@
 __author__ = 'suquark'
-from .bio_system_cache import hash_gates_and_simulation, compare_biosystem
-from .data_test import system_data as biosystem_sample1, system_data_mixed as biosystem_sample2
-from .debug_tool import debug_info
-from .hash_tool import dump_ord
+from biohub.biocircuit.bio_system_cache import hash_gates_and_simulation, compare_biosystem
+from biohub.biocircuit.data_test import system_data as biosystem_sample1, system_data_mixed as biosystem_sample2
+from biohub.biocircuit.debug_tool import debug_info
+from biohub.biocircuit.hash_tool import dump_ord
 from django.test import TestCase
 
 if __name__ == "__main__":

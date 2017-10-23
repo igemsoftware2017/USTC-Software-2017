@@ -2,8 +2,8 @@ __author__ = 'suquark'
 # !/usr/bin/env python
 from django.test import TestCase
 
-from .debug_tool import debug_info
-from .hash_tool import hash_list, hash_dict, hash_string_list
+from biohub.biocircuit.debug_tool import debug_info
+from biohub.biocircuit.hash_tool import hash_list, hash_dict, hash_string_list
 
 
 class TestReaction(TestCase):
