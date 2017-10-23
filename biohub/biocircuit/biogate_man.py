@@ -8,7 +8,6 @@ import tempfile
 
 from django.utils.functional import SimpleLazyObject
 
-
 logger = logging.getLogger(__name__)
 
 dirname = os.path.dirname(os.path.abspath(__file__))
