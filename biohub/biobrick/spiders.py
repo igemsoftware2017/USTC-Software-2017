@@ -9,7 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from biohub.forum.models import Article
-from biohub.biobrick.models import BiobrickMeta, Biobrick
+from biohub.biobrick.models import BiobrickMeta, Biobrick, BiobrickWeight
 from biohub.biobrick.exceptions import NetworkError, ResourceNotFoundError
 
 
@@ -116,6 +116,10 @@ class BrickSpider:
         article = Article.objects.create(text=markdown)  # attach no files
         meta.document = article
         meta.last_fetched = timezone.now()
+        BiobrickWeight.objects.update_or_create(
+            part_name=brick_name,
+            defaults=dict(weight_updated_time=timezone.now())
+        )
         meta.save(fill_shared_fields=True)
 
         return True
