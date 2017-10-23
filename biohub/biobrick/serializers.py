@@ -35,6 +35,7 @@ class BiobrickSerializer(ModelSerializer):
     ruler = PackedField()
     parameters = PackedField()
     document = ArticleSerializer(fields=('text', 'digest'))
+    desc = serializers.SerializerMethodField()
 
     class Meta:
         model = Biobrick
@@ -65,9 +66,12 @@ class BiobrickSerializer(ModelSerializer):
                 'author',
                 'part_status',
                 'sample_status',
-                'short_desc'
+                'desc'
             )
         )
+
+    def get_desc(self, instance):
+        return instance.index_description
 
     def to_representation(self, obj):
 

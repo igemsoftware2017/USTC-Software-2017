@@ -1,6 +1,7 @@
 import decimal
 import datetime
 
+from django.core.cache import cache
 from django.utils import timezone
 from django.db import models, transaction
 
@@ -230,6 +231,27 @@ class Biobrick(MetaBase, WeightBase):
             self._meta_instance = self.ensure_meta_exists(fetch=True)
 
         return self._meta_instance
+
+    @property
+    def index_description(self):
+        if hasattr(self, '_index_description'):
+            return self._index_description
+
+        key = '__brick_{}_doc_cache'.format(self.part_name)
+        value = cache.get(key)
+
+        if value is not None:
+            self._index_description = value
+            return value
+
+        if self.group_name is not None:
+            self._index_description = self.document.digest
+        else:
+            self._index_description = self.short_desc
+
+        cache.set(key, self._index_description)
+
+        return self._index_description
 
     def ensure_meta_exists(self, fetch=False):
 

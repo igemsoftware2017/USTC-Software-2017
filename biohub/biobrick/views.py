@@ -114,6 +114,7 @@ class BiobrickViewSet(
         types = []
         names = []
         orderings = []
+        authors = []
         highlight = False
 
         for statement in statements:
@@ -125,6 +126,8 @@ class BiobrickViewSet(
                 types.append(statement[2:])
             elif statement.startswith('h:'):
                 highlight = True
+            elif statement.startswith('a:'):
+                authors.append(statement[2:])
             else:
                 keywords.append(statement)
 
@@ -133,7 +136,8 @@ class BiobrickViewSet(
         for field, items in (
             ('text', keywords),
             ('part_name', names),
-            ('part_type', types)
+            ('part_type', types),
+            ('author', authors)
         ):
             if items:
                 clause = reduce(
@@ -148,9 +152,11 @@ class BiobrickViewSet(
         if condition is not None:
             queryset = queryset.filter(condition)
 
-        orderings = unique(
-            ['-weight', '-creation_date'] + orderings
-        )
+        if not orderings:
+            orderings = ['-weight', '-creation_date']
+
+        orderings = unique(orderings)
+
         queryset = queryset.order_by(*orderings)
 
         if highlight:
