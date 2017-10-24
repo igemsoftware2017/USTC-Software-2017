@@ -165,6 +165,8 @@ class ExperienceSpider:
                     tds[0].p.text,
                     re.DOTALL
                 ).group(1)
+                if len(author_name) > 100:
+                    continue
                 experience, _ = meta.experiences.get_or_create(
                     author_name=author_name,
                     defaults={'title': '', 'brick': meta}
