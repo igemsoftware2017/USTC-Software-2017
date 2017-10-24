@@ -1,12 +1,12 @@
 [submodule "frontend/main"]
 	path = frontend/main
-	url = git@github.com:USTC-Software2017-frontend/Biohub-frontend.git
+	url = https://github.com:USTC-Software2017-frontend/Biohub-frontend
 [submodule "frontend/biocircuit"]
 	path = frontend/biocircuit
-	url = git@github.com:USTC-Software2017-frontend/biohub-plugin-BioBLESS.git
+	url = https://github.com:USTC-Software2017-frontend/biohub-plugin-BioBLESS
 [submodule "frontend/abacus"]
 	path = frontend/abacus
-	url = git@github.com:USTC-Software2017-frontend/biohub-plugin-ABACUS.git
+	url = https://github.com:USTC-Software2017-frontend/biohub-plugin-ABACUS
 [submodule "frontend/biomap"]
 	path = frontend/biomap
-	url = git@github.com:USTC-Software2017-frontend/biohub-plugin-BioMap.git
+	url = https://github.com:USTC-Software2017-frontend/biohub-plugin-BioMap
