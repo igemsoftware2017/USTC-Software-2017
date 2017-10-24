@@ -9,7 +9,7 @@ class Test(BiobrickTest):
         self.assertEqual(res.status_code, 200)
 
         for item in res.data['results']:
-            self.assertIn('bio', item['short_desc'].lower())
+            self.assertIn('bio', item['desc'].lower())
 
     def test_name(self):
 
