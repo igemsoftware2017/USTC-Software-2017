@@ -82,7 +82,7 @@ class BiobrickSerializer(ModelSerializer):
 
             # To get highlight
             if obj.highlighted is not None and len(obj.highlighted) > 0:
-                ret['short_desc'] = obj.highlighted[0]
+                ret['desc'] = obj.highlighted[0]
 
             querydict = self.context['request'].query_params
             if 'highlight' in querydict:
