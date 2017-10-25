@@ -63,6 +63,7 @@ BEGIN
         `review_total_w` double DEFAULT NULL,
         `review_count_w` double DEFAULT NULL,
         `deep_count_w` double DEFAULT NULL,
+        `has_subpart` tinyint(1),
         `ac` longtext,
         `ruler` longtext,
         PRIMARY KEY (`part_name`),
@@ -105,6 +106,7 @@ BEGIN
                 0
             ) as review_count_w,
             (deep_count - dc_inf) / dc_gap as deep_count_w,
+            0 as has_subpart,
             '' as ac,
             '' as ruler
         FROM

@@ -206,8 +206,13 @@ def process(data, force, connection):
             ac = build_ac(ac_re.findall(html))
 
             cursor.execute(
-                "UPDATE parts_filtered SET `ruler`=%s, `ac`=%s WHERE `part_id`=%s",
-                (json.dumps(ruler), json.dumps(ac), item['part_id'])
+                "UPDATE parts_filtered SET `ruler`=%s, `ac`=%s, `has_subpart`=%s WHERE `part_id`=%s",
+                (
+                    json.dumps(ruler),
+                    json.dumps(ac),
+                    1 if ruler['sub_parts'] else 0,
+                    item['part_id']
+                )
             )
 
     connection.commit()

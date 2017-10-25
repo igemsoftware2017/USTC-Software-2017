@@ -125,8 +125,12 @@ class Command(BaseCommand):
                 for field, (score, max_field, pass_if_zero) in self.parameters:
 
                     value = brick[field]
+
                     if value is None or not score or not value and pass_if_zero:
                         continue
+                    if field == 'uses_w' and brick['has_subpart'] and value <= .1:
+                        continue
+
                     value = decimal.Decimal(value)
 
                     if max_field and stats[max_field]:
