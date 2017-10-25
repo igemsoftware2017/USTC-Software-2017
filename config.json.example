@@ -6,11 +6,16 @@
         "HOST": "",
         "PORT": "",
         "TEST": {
-            "NAME": ""
+            "NAME": "",
+            "CHARSET": "utf8",
+            "COLLATION": null,
+            "MIRROR": null
         }
     },
     "PLUGINS": [
-        "biohub.abacus"
+        "biohub.abacus",
+        "biohub.biocircuit",
+        "biohub.biomap"
     ],
     "TIMEZONE": "UTC",
     "UPLOAD_DIR": "",
@@ -19,9 +24,17 @@
     "MAX_TASKS": 20,
     "TASK_MAX_TIMEOUT": 180,
     "EMAIL": {
-        "HOST": "",
-        "HOST_USER": "",
         "HOST_PASSWORD": "",
-        "PORT": 25
+        "HOST_USER": "",
+        "HOST": "",
+        "PORT": 465
+    },
+    "CORS": [],
+    "THROTTLE": {
+        "rate": 15,
+        "experience": 86400,
+        "post": 15,
+        "vote": 15,
+        "register": 3600
     }
 }
