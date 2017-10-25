@@ -12,12 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
 from rest_framework import status
-from rest_framework import serializers
 
 from . import biocircuit as biocircuit
 from .biogate_man import load_gates_json, biogate
-from . import bio_system as biosystem
-from . import bio_system_cache as cache
 
 
 class BiocircuitView(APIView):
