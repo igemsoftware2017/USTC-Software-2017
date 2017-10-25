@@ -25,6 +25,7 @@ class Command(BaseCommand):
         ('sample_status_w', (4, '', False)),
         ('works_w', (1, '', False)),
         ('uses_w', (5, '', False)),
+        ('ac_w', (2, '', False)),
         ('review_total_w', (1, '', False)),
         ('review_count_w', (1, '', False)),
         ('rates', (2, 'max_rates', True)),
@@ -179,7 +180,7 @@ class Command(BaseCommand):
             updated_counter += updated
 
         self.stdout.write(
-            "Done.\n{} bricks processed,{} bricks updated.".format(
+            "Done.\n{} bricks processed, {} bricks updated.".format(
                 total_counter, updated_counter
             ),
             self.style.SUCCESS

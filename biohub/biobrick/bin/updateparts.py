@@ -206,11 +206,12 @@ def process(data, force, connection):
             ac = build_ac(ac_re.findall(html))
 
             cursor.execute(
-                "UPDATE parts_filtered SET `ruler`=%s, `ac`=%s, `has_subpart`=%s WHERE `part_id`=%s",
+                "UPDATE parts_filtered SET `ruler`=%s, `ac`=%s, `has_subpart`=%s, `ac_w`=%s WHERE `part_id`=%s",
                 (
                     json.dumps(ruler),
                     json.dumps(ac),
                     1 if ruler['sub_parts'] else 0,
+                    sum(ac.values()) / len(ac),
                     item['part_id']
                 )
             )

@@ -10,6 +10,7 @@ SELECT
     p.review_count_w as review_count_w,
     p.has_subpart as has_subpart,
     p.deep_count_w as deep_count_w,
+    p.ac_w as ac_w,
     m.rates as rates,
     m.rate_score as rate_score,
     m.stars as stars,
