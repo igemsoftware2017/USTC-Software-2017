@@ -1,6 +1,6 @@
 # Biohub 2.0 - iGem Project by USTC Software 2017
 
-[![Build Status](https://travis-ci.org/hsfzxjy/Biohub-Server.svg?branch=master)](https://travis-ci.org/hsfzxjy/Biohub-Server)
+[![Build Status](https://travis-ci.org/igemsoftware2017/USTC-Software-2017.svg?branch=master)](https://travis-ci.org/igemsoftware2017/USTC-Software-2017)
 
 ## What is Biohub?
 
