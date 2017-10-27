@@ -257,7 +257,7 @@ class ManagementUtility(object):
             '--host', self.db_host,
             '--port', self.db_port,
             '--user', self.db_user,
-            '--password', self.db_password,
+            *(['--password', self.db_password] if self.db_password else []),
             '--chunk', '500'
         ], True)
 

@@ -19,7 +19,7 @@ cat > config.json << EOF
         "USER": "root",
         "PASSWORD": "",
         "HOST": "localhost",
-        "PORT": "",
+        "PORT": "3306",
         "TEST": {
             "NAME": "test_biohub_new",
             "CHARSET": "utf8",
