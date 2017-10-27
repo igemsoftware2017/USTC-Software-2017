@@ -10,6 +10,6 @@ notifications:
 cache:
   pip: true
   directories:
-    - tmp
+    - _download
 install: "bash .travis-install"
 script: "biohub/manage.py codestyle && biohub/manage.py test"

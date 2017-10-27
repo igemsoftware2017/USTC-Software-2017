@@ -41,12 +41,16 @@ cat > config.json << EOF
 }
 EOF
 
+python biohub-cli.py init
+if [$? -ne 0 ]; then
+    exit 1
+fi
+
 python -c "import os;os.chdir('biohub/biocircuit');from espresso import espresso"
 if [ $? -ne 0 ]; then
     exit 1
 fi
 
-python biohub-cli.py init
 
 # # Ensure biobricks.sql is ready
 # if [ ! -f tmp/biobricks.sql ]; then
