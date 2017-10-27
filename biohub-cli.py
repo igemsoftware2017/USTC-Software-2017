@@ -190,7 +190,7 @@ class ManagementUtility(object):
         return self._run_cmd([
             'mysql',
             '-u%s' % self.db_user,
-            '-p%s' % self.db_password,
+            ('-p%s' % self.db_password if self.db_password else ''),
             '-h%s' % self.db_host,
             '-P%s' % self.db_port,
             *commands
