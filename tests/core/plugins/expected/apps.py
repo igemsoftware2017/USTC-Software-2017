@@ -7,3 +7,4 @@ class TestConfig(PluginConfig):
     title = ''
     author = ''
     description = ''
+    js_url = ''  # the URL of `plugin.js`, you may leave it to blank

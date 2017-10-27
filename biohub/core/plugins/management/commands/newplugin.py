@@ -3,6 +3,7 @@ import io
 import importlib
 import shutil
 import errno
+from functools import partial
 from os import path
 
 import django
@@ -20,6 +21,9 @@ class Command(BaseCommand):
     rewrite_template_suffixes = (
         # Allow shipping invalid .py files without byte-compilation.
         ('.py-tpl', '.py'),
+        ('.json-tpl', '.json'),
+        ('.js-tpl', '.js'),
+        ('.vue-tpl', '.vue')
     )
 
     def add_arguments(self, parser):
@@ -32,6 +36,12 @@ class Command(BaseCommand):
             '--directory',
             dest='target',
             help='Optional destination directory (without the plugin name).')
+        parser.add_argument(
+            '-f',
+            '--with-frontend',
+            default=False,
+            action='store_true',
+            help='If given, front-end templates will be downloaded.')
 
     def _validate_template(self, target):
         """
@@ -71,6 +81,17 @@ class Command(BaseCommand):
         self.label = plugin_name.rsplit('.', 1)[-1]
         self.plugin_name = plugin_name
 
+    def _ensure_path_exists(self, directory):
+
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                if os.listdir(directory):
+                    raise CommandError("'%s' already exists." % directory)
+            else:
+                raise CommandError(e)
+
     def _prepare_dest_dir(self, target):
         """
         To ensure that the destination directory exists and is prepared.
@@ -83,26 +104,19 @@ class Command(BaseCommand):
                 path.abspath(path.expanduser(target)),
                 self.label)
 
-        try:
-            os.makedirs(top_dir)
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                if os.listdir(top_dir):
-                    raise CommandError("'%s' already exists." % top_dir)
-            else:
-                raise CommandError(e)
+        self._ensure_path_exists(top_dir)
 
         return top_dir
 
-    def _render_plugin_dir(self, top_dir, **options):
+    def _render_dir(self, top_dir, template_dir, **options):
         """
         Reference: django.core.management.templates:110
 
-        To copy and render the plugin templates to the destination directory
+        To copy and render templates to the destination directory
         specified by `top_dir`.
         """
 
-        camel_case_value = ''.join(x for x in self.label.title() if x != '_')
+        self.camel_case_value = camel_case_value = ''.join(x for x in self.label.title() if x != '_')
 
         context = Context(dict(options, **{
             'plugin_label': self.label,
@@ -115,9 +129,6 @@ class Command(BaseCommand):
             settings.configure()
             django.setup()
 
-        template_dir = path.join(
-            modpath('biohub.core.plugins'),
-            'plugin_template')
         self._validate_template(template_dir)
 
         prefix_length = len(template_dir) + 1
@@ -167,9 +178,95 @@ class Command(BaseCommand):
                         "probably using an uncommon filesystem setup. No "
                         "problem." % new_path, self.style.NOTICE)
 
+    def _render_plugin_dir(self, top_dir, **options):
+        self._render_dir(
+            top_dir,
+            path.join(
+                modpath('biohub.core.plugins'),
+                'plugin_template'
+            ),
+            **options
+        )
         if self.verbosity >= 1:
             self.stdout.write(
-                "Successfully created a plugin '%s'." % self.plugin_name,
+                'Successfully prepared plugin directory.\n\n',
+                self.style.SUCCESS
+            )
+
+    def _download(self, url):
+        import requests
+        import tempfile
+
+        dest_fp, dest_name = tempfile.mkstemp(suffix='.zip')
+
+        self.stdout.write('Downloading from {}...'.format(url))
+        r = requests.get(url, stream=True)
+
+        total = int(r.headers['Content-Length'])
+        received = 0
+        f = open(dest_fp, 'w+b')
+
+        for chunk in r.iter_content(chunk_size=512 * 1024):
+            if chunk:
+                f.write(chunk)
+                received += len(chunk)
+                self.stdout.write('Completed {}%'.format(received / total * 100))
+
+        self.stdout.write('Downloaded %s.' % dest_name)
+
+        f.seek(0)
+        return f, dest_name
+
+    def _render_frontend_dir(self, top_dir, **options):
+        from zipfile import ZipFile
+
+        f, temp_file_name = self._download(
+            'https://github.com/USTC-Software2017-frontend/biohub-plugin-scaffold/archive/master.zip'
+        )
+        zip_file = ZipFile(f)
+
+        resolve = partial(path.join, top_dir)
+        dest_dir = resolve('frontend')
+        template_dir = resolve('biohub-plugin-scaffold-master')
+
+        self.stdout.write('Extracting...')
+        zip_file.extractall(path=top_dir)
+
+        self.stdout.write('Rendering...')
+        self._ensure_path_exists(dest_dir)
+        self._render_dir(dest_dir, template_dir, **options)
+
+        self.stdout.write('Cleaning temporary files...')
+        zip_file.close()
+        shutil.rmtree(template_dir)
+        os.remove(temp_file_name)
+
+        self.stdout.write(
+            (
+                "Frontend directory prepared. "
+                "Run `npm install` within {} to install the dependencies.\n\n"
+            ).format(dest_dir),
+            self.style.SUCCESS
+        )
+
+    def handle(self, plugin_name, target=None, **options):
+
+        self.verbosity = options['verbosity']
+
+        self._validate_plugin_name(plugin_name)
+
+        top_dir = self._prepare_dest_dir(target)
+        self._render_plugin_dir(top_dir, **options)
+
+        if options['with_frontend']:
+            self._render_frontend_dir(top_dir)
+
+        if self.verbosity >= 1:
+            self.stdout.write(
+                (
+                    "Successfully created a plugin '{name}'.\n"
+                    "You can run `manage.py installplugin {name}` to activate it."
+                ).format(name=self.plugin_name),
                 self.style.SUCCESS)
             self.stdout.write(
                 "Notice: Label of the plugin is automatically set to '%s' "
@@ -180,14 +277,7 @@ class Command(BaseCommand):
                 % (
                     self.label,
                     self.plugin_name,
-                    camel_case_value,
-                    path.join(top_dir, 'apps.py')), self.style.WARNING)
-
-    def handle(self, plugin_name, target=None, **options):
-
-        self.verbosity = options['verbosity']
-
-        self._validate_plugin_name(plugin_name)
-
-        top_dir = self._prepare_dest_dir(target)
-        self._render_plugin_dir(top_dir, **options)
+                    self.camel_case_value,
+                    path.join(top_dir, 'apps.py')
+                ), self.style.WARNING
+            )
