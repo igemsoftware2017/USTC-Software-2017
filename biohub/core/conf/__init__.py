@@ -30,6 +30,7 @@ mapping = {
     'BIOHUB_TASK_MAX_TIMEOUT': ('TASK_MAX_TIMEOUT', 180),
     'EMAIL': ('EMAIL', dict),
     'CORS': ('CORS', list),
+    'ES_URL': ('ES_URL', 'http://127.0.0.1:9200/'),
     'THROTTLE': ('THROTTLE', lambda: {
         'rate': 15,
         'experience': 86400,

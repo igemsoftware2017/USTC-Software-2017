@@ -23,6 +23,7 @@
     "SECRET_KEY": "",
     "MAX_TASKS": 20,
     "TASK_MAX_TIMEOUT": 180,
+    "ES_URL": "http://127.0.0.1:9200/",
     "EMAIL": {
         "HOST_PASSWORD": "",
         "HOST_USER": "",

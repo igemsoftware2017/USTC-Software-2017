@@ -48,6 +48,9 @@ class ManagementUtility(object):
         },
         'installjob': {
 
+        },
+        'runserver': {
+
         }
     }
 
@@ -164,6 +167,10 @@ class ManagementUtility(object):
         from biohub.biobrick.management.commands.installjob import Command
         Command().run_from_argv(self.argv[:])
 
+    def runserver(self):
+        from django.core.management.commands.runserver import Command
+        Command().run_from_argv(self.argv[:])
+
     def _run_cmd(self, commands, output, input=sys.stdin):
 
         from subprocess import Popen, PIPE
@@ -213,7 +220,7 @@ class ManagementUtility(object):
         self.db_host = db_config['HOST']
         self.db_port = db_config['PORT']
 
-        if self._run_mysql_cmd('select 1;'):
+        if self._run_mysql_cmd('select 1 as test;'):
             print('mysql was incorrectly configured.')
             sys.exit(1)
 

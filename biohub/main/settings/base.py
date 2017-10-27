@@ -88,7 +88,7 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = 'main.wsgi.application'
+WSGI_APPLICATION = 'biohub.main.wsgi.application'
 
 
 # Password validation
@@ -203,14 +203,13 @@ if biohub_settings.EMAIL:
 
     del mail_conf
 
-del biohub_settings
-
-# For searching engine in bbk manager
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://127.0.0.1:9200/',
+        'URL': biohub_settings.ES_URL,
         'INDEX_NAME': 'products',
         'INCLUDE_SPELLING': True,
     },
 }
+
+del biohub_settings
