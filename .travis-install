@@ -1,24 +1,13 @@
 #!/bin/bash
 
-mkdir tmp
+mkdir _download
 
 # Install a specific version of elasticsearch
-if [ ! -f tmp/es2.deb ]; then
-    wget https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.4.6/elasticsearch-2.4.6.deb -O tmp/es2.deb
+if [ ! -f _download/es2.deb ]; then
+    wget https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.4.6/elasticsearch-2.4.6.deb -O _download/es2.deb
 fi
-sudo dpkg -i --force-confnew tmp/es2.deb
+sudo dpkg -i --force-confnew _download/es2.deb
 sudo service elasticsearch start
-
-# Compile espresso
-# Since python3.6 on travis server has no .lib file, python3.4, which is the default
-# version, should be used for compilation
-python3.4 biohub/biocircuit/compile-espresso.py
-
-# Check if compilation succeeded.abort if not
-python -c "import os;os.chdir('biohub/biocircuit');from espresso import espresso"
-if [ $? -ne 0 ]; then
-    exit 1
-fi
 
 pip install -r requirements/dev.txt
 pip install -r requirements/abacus-server.txt
@@ -52,24 +41,31 @@ cat > config.json << EOF
 }
 EOF
 
-# Ensure biobricks.sql is ready
-if [ ! -f tmp/biobricks.sql ]; then
-    wget http://parts.igem.org/partsdb/download.cgi?type=parts_sql -O tmp/biobricks.sql.gz
-    gunzip tmp/biobricks.sql.gz
+python -c "import os;os.chdir('biohub/biocircuit');from espresso import espresso"
+if [ $? -ne 0 ]; then
+    exit 1
 fi
 
-# Database preparation
+./biohub
 
-# The line below is necessary as test command needs production database to be existed
-mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS igem;'
-mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new character set utf8;'
-mysql -uroot igem < tmp/biobricks.sql
-biohub/biobrick/bin/updateparts.py -c 1000
+# # Ensure biobricks.sql is ready
+# if [ ! -f tmp/biobricks.sql ]; then
+#     wget http://parts.igem.org/partsdb/download.cgi?type=parts_sql -O tmp/biobricks.sql.gz
+#     gunzip tmp/biobricks.sql.gz -k -f
+# fi
 
-biohub/manage.py migrate
-biohub/manage.py refreshweight
-time biohub/manage.py update_index -k 4
-time biohub/manage.py installgraph
+# # Database preparation
+
+# # The line below is necessary as test command needs production database to be existed
+# mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS igem;'
+# mysql -uroot -e 'CREATE DATABASE IF NOT EXISTS biohub_new character set utf8;'
+# mysql -uroot igem < tmp/biobricks.sql
+# biohub/biobrick/bin/updateparts.py -c 1000
+
+# biohub/manage.py migrate
+# biohub/manage.py refreshweight
+# time biohub/manage.py update_index -k 4
+# time biohub/manage.py installgraph
 
 
 cat > biohub/abacus/config.json << EOF2

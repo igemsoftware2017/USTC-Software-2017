@@ -194,28 +194,9 @@ class Command(BaseCommand):
             )
 
     def _download(self, url):
-        import requests
-        import tempfile
+        from biohub.utils.download import download
 
-        dest_fp, dest_name = tempfile.mkstemp(suffix='.zip')
-
-        self.stdout.write('Downloading from {}...'.format(url))
-        r = requests.get(url, stream=True)
-
-        total = int(r.headers['Content-Length'])
-        received = 0
-        f = open(dest_fp, 'w+b')
-
-        for chunk in r.iter_content(chunk_size=512 * 1024):
-            if chunk:
-                f.write(chunk)
-                received += len(chunk)
-                self.stdout.write('Completed {}%'.format(received / total * 100))
-
-        self.stdout.write('Downloaded %s.' % dest_name)
-
-        f.seek(0)
-        return f, dest_name
+        return download(url, '.zip', self.stdout)
 
     def _render_frontend_dir(self, top_dir, **options):
         from zipfile import ZipFile
