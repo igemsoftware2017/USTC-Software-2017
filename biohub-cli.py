@@ -186,7 +186,7 @@ class ManagementUtility(object):
         else:
             print('{} detected.\n'.format(name))
 
-    def _run_mysql(self, *commands, input=None, output=False):
+    def _run_mysql(self, *commands, input=None, output=True):
         return self._run_cmd([
             'mysql',
             '-u%s' % self.db_user,

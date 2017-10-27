@@ -4,7 +4,7 @@
         "USER": "",
         "PASSWORD": "",
         "HOST": "",
-        "PORT": "",
+        "PORT": 3306,
         "TEST": {
             "NAME": "",
             "CHARSET": "utf8",
