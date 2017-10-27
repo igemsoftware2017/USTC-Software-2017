@@ -190,7 +190,7 @@ class ManagementUtility(object):
         return self._run_cmd([
             'mysql',
             '-u%s' % self.db_user,
-            ('-p%s' % self.db_password if self.db_password else ''),
+            *(['-p%s' % self.db_password] if self.db_password else []),
             '-h%s' % self.db_host,
             '-P%s' % self.db_port,
             *commands
@@ -212,6 +212,10 @@ class ManagementUtility(object):
         self.db_password = db_config['PASSWORD']
         self.db_host = db_config['HOST']
         self.db_port = db_config['PORT']
+
+        if self._run_mysql_cmd('select 1;'):
+            print('mysql was incorrectly configured.')
+            sys.exit(1)
 
         self._prepare_igem()
 
