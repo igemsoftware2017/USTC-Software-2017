@@ -10,3 +10,6 @@
 [submodule "frontend/biomap"]
 	path = frontend/biomap
 	url = https://github.com/USTC-Software2017-frontend/biohub-plugin-BioMap
+[submodule "frontend/scaffold"]
+	path = frontend/scaffold
+	url = https://github.com/USTC-Software2017-frontend/biohub-plugin-scaffold.git
