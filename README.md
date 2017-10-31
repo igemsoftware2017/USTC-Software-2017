@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/igemsoftware2017/USTC-Software-2017.svg?branch=master)](https://travis-ci.org/igemsoftware2017/USTC-Software-2017)
 
+[our wiki](http://2017.igem.org/Team:USTC-Software)
+
 ## What is Biohub?
 
 [Biohub](https://github.com/igemsoftware2016/USTC-Software-2016) is a web-based software authored by USTC Software 2016, focusing on more convenient data handling for synthetic biologists. Technically Biohub is a extensible plugin system, where each functional module is packed and integrated as a plugin. Several plugins (Pano, PathFinder, etc.) are initially included, but users are also allowed to develop and deploy their own plugins, with the help of documentation and demonstration. In this way, new algorithms can be acquainted and discussed by other scholars as early as possible.
