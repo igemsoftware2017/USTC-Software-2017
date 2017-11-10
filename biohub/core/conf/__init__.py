@@ -1,3 +1,4 @@
+import sys
 import os
 import os.path
 import json
@@ -37,7 +38,8 @@ mapping = {
         'post': 15,
         'vote': 15,
         'register': 3600
-    })
+    }),
+    'PLUGINS_DIR': ('PLUGINS_DIR', lambda: os.path.join(tempfile.gettempdir(), 'biohub_plugins'))
 }
 
 valid_settings_keys = tuple(mapping.values())
@@ -162,6 +164,23 @@ class Settings(object):
                 'Your UPLOAD_DIR is within the temporary directory. All '
                 'files will be erased once system reboots.',
                 BiohubSettingsWarning)
+
+        return os.path.abspath(value)
+
+    def validate_plugins_dir(self, value, default):
+
+        if value.startswith(tempfile.gettempdir()):
+            warnings.warn(
+                'Your PLUGINS_DIR is within the temporary directory. All '
+                'files will be erased once system reboots.',
+                BiohubSettingsWarning)
+
+        try:
+            os.makedirs(value)
+        except OSError:
+            pass
+
+        sys.path.append(value)
 
         return os.path.abspath(value)
 

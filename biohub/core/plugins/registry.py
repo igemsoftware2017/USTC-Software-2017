@@ -1,8 +1,10 @@
+import gc
 import sys
 import subprocess
 import threading
 import logging
 import importlib
+import os.path as path
 from collections import OrderedDict, namedtuple, Counter
 
 from django.core.exceptions import ImproperlyConfigured
@@ -17,6 +19,7 @@ from biohub.core.conf import settings as biohub_settings, dump_config
 
 from .config import PluginConfig
 from . import exceptions
+from . import ipc_slave
 
 logger = logging.getLogger('biohub.plugins')
 
@@ -147,8 +150,35 @@ class PluginManager(object):
         """
         to_remove = set(to_remove)
 
-        return self._populate_apps([
+        result = self._populate_apps([
             x for x in self.installed_apps if x not in to_remove])
+
+        self._drop_modules(to_remove)
+
+        return result
+
+    def _drop_modules(self, to_drop):
+        """
+        Remove imported modules from global namespaces.
+        """
+
+        paths = [
+            path.realpath(path.dirname(module_util.module_from_path(name).__file__))
+            for name in to_drop
+        ]
+        to_remove = []
+        for name, module in sys.modules.items():
+            if not hasattr(module, '__file__'):
+                continue
+
+            this_path = path.realpath(module.__file__)
+            if any(this_path.startswith(base) for base in paths):
+                to_remove.append(name)
+
+        for name in to_remove:
+            del sys.modules[name]
+
+        gc.collect()
 
     def _add_apps(self, to_add):
         """
@@ -223,6 +253,17 @@ class PluginManager(object):
 
         self.populate_plugins()
 
+    def refresh_plugins(self, plugins):
+        """
+        To refresh plugins specified by `plugins`.
+        """
+
+        removed = self.remove(plugins, populate=False)
+
+        if removed:
+            self.install(removed)
+            self.populate_plugins()
+
     def populate_plugins(self):
         """
         Update plugins storage after new plugins installed.
@@ -268,7 +309,7 @@ class PluginManager(object):
 
         for name in plugin_names:
 
-            if not module_util.is_valid_module_path(name):
+            if not module_util.is_valid_module_path(name, try_import=True):
                 raise exceptions.InstallationError(
                     "'%s' is not a valid dot-separated python module path."
                     % name)
@@ -361,6 +402,8 @@ class PluginManager(object):
             if update_config:
                 dump_config()
 
+        if removed:
+            logger.info('removed plugins {}'.format(', '.join(removed)))
         return removed
 
     def install(self, plugin_names,
@@ -405,6 +448,8 @@ class PluginManager(object):
             if update_config:
                 dump_config()
 
+        if plugin_names:
+            logger.info('installed plugins {}'.format(', '.join(plugin_names)))
         return plugin_names
 
     def prepare_database(self, plugin_names, new_process=False,
@@ -473,3 +518,38 @@ class PluginManager(object):
 
 
 manager = PluginManager(apps_registry.apps)
+
+
+def ipc_data_received_handler(sender, data, **kwargs):
+
+    valid = True
+
+    try:
+        action, arguments = data
+    except (TypeError, ValueError):
+        valid = False
+    else:
+        valid = (
+            isinstance(action, (str, bytes)) and
+            isinstance(arguments, (list, tuple)) and
+            all(isinstance(x, (str, bytes)) for x in arguments)
+        )
+
+    if not valid:
+        logger.warn('Format error: {}. Ignored.'.format(data))
+        return
+
+    action = action.decode()
+    arguments = list(map(bytes.decode, arguments))
+
+    if action == 'install':
+        manager.install(arguments, migrate_database=False)
+    elif action == 'remove':
+        manager.remove(arguments)
+    elif action == 'refresh':
+        manager.refresh_plugins(arguments)
+    else:
+        logger.warn('Unknown action {}. Ignored.'.format(action))
+
+
+ipc_slave.ipc_data_received.connect(ipc_data_received_handler)

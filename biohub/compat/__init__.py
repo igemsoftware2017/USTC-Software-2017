@@ -1,1 +1,1 @@
-from . import db, warnings, redis, rest  # noqa
+from . import db, warnings, redis, rest, channel_worker  # noqa

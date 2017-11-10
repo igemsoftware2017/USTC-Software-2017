@@ -87,7 +87,7 @@ class Command(BaseCommand):
             os.makedirs(directory)
         except OSError as e:
             if e.errno == errno.EEXIST:
-                if os.listdir(directory):
+                if not path.isdir(directory):
                     raise CommandError("'%s' already exists." % directory)
             else:
                 raise CommandError(e)

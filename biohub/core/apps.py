@@ -8,5 +8,7 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         from biohub.core.conf.signal import register
+        from biohub.core.plugins.ipc_slave import bridge
 
+        bridge.register()
         register()

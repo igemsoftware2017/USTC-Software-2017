@@ -40,6 +40,11 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': True
+        },
+        'biohub': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False
         }
     }
 }
