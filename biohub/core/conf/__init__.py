@@ -12,6 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.functional import LazyObject, empty
 
 from biohub.utils.collections import unique
+from biohub.utils.module import is_valid_module_path
 
 logger = logging.getLogger('biohub.conf')
 
@@ -123,7 +124,18 @@ class Settings(object):
         """
         BIOHUB_PLUGINS should not contains duplicated items.
         """
-        return unique(value)
+        result = []
+
+        for item in unique(value):
+            if not is_valid_module_path(item, try_import=True):
+                warnings.warn(
+                    "Module '%s' not found. Skipped." % item,
+                    BiohubSettingsWarning
+                )
+            else:
+                result.append(item)
+
+        return result
 
     def validate_redis_uri(self, value, default):
 

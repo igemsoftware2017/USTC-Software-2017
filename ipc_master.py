@@ -36,7 +36,7 @@ while inputs:
             print(f'connection established {client_address}')
             connection.setblocking(0)
             inputs.append(connection)
-            message_queues[connection] = queue.Queue()
+            message_queues[connection] = queue.Queue(maxsize=40)
         else:
             data = s.recv(1024)
 

@@ -32,6 +32,7 @@ class basicauth:
             return response
         return wrapper
 
+
 def get_ip_from_request(request):
     """
     An intelligent method to get real IP address.
