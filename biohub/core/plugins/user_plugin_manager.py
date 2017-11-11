@@ -334,6 +334,7 @@ class Repository:
         self.delete_redis()
 
         plugin_manager.remove([self.__info.repo], update_config=True)
+        bridge.send(('remove', [self.__info.repo]))
         self.__drop_repository()
 
     @cached_property
