@@ -34,3 +34,5 @@ class Test(PluginTestCase):
             self.client.get('/api/my_plugin/hello/').data,
             'Hello'
         )
+
+        plugins.remove(['tests.core.plugins.my_plugin'])

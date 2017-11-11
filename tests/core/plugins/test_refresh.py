@@ -1,3 +1,4 @@
+import importlib
 import os
 from ._base import PluginTestCase
 
@@ -11,6 +12,7 @@ class Test(PluginTestCase):
             f.write('String = \'{}\'\n'.format(string))
 
     def tearDown(self):
+        super(PluginTestCase, self).tearDown()
         self.write('Hello')
 
     def test_refresh(self):
@@ -39,7 +41,7 @@ class Test(PluginTestCase):
         plugins.refresh_plugins([name])
 
         self.assertEqual(
-            self.client.get('/api/my_plugin/hello/').data,
+            importlib.import_module('tests.core.plugins.my_plugin.consts').String,
             'Patching'
         )
 

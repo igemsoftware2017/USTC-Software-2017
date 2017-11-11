@@ -261,7 +261,7 @@ class PluginManager(object):
         removed = self.remove(plugins, populate=False)
 
         if removed:
-            self.install(removed)
+            self.install(removed, populate=False)
             self.populate_plugins()
 
     def populate_plugins(self):
