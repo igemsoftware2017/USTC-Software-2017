@@ -43,7 +43,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         cache.set(key, 1, timeout=biohub_settings.THROTTLE['register'])
 
     def create(self, validated_data):
-        self._check_throttle()
+        # self._check_throttle()
 
         password = validated_data.pop('password')
 
