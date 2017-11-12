@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class Test(APITestCase):
 
     def test_throttle(self):
+        raise SkipTest
         import time
         from biohub.core.conf import settings
 
@@ -35,7 +36,6 @@ class Test(APITestCase):
         settings.THROTTLE['register'] = 0
 
     def _post_register(self, drops=None, **kwargs):
-        raise SkipTest
         payload = {
             'username': 'user1',
             'email': '123@123.com',
